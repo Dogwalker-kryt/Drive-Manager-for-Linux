@@ -1,10 +1,75 @@
-# Drive-Manager-for-Linux
-I wanted to make an Terminal based (probably making a gui version of it later) Drive Manager with many funktions
-This is for Linux systems only
+# Drive Manager for Linux
 
-## Functions
-Here are all fuctions that are or will be added in the future 
-1. List all Drives connected                                 -> in development
-2. Format Drives                                             -> in development
-3. Encrypt/Decrypt Drives (this is very dangerious, if the key is lost) -> not implemented yet
-4. More will be added
+A terminal-based drive management tool for Linux systems, written in C++. The goal of this project is to provide an easy-to-use interface for managing drives directly from the terminal, with plans for future GUI support.
+
+> **Warning**  
+> This tool is intended for users who understand the risks involved with formatting, encrypting, or otherwise modifying drives. Always back up your data and double-check your selections!
+
+## Features
+
+- **List all drives**: View all drives currently connected to your system.
+- **Format drives**: Format drives with optional label and filesystem type (e.g., ext4).
+- **Encrypt/Decrypt drives**: (Planned) Secure your drives using encryption. _Warning: Losing your key means losing your data!_
+- **Resize drives**: (Planned) Adjust the size of existing drives.
+- **Check drive health**: (Planned) Basic S.M.A.R.T. health check of your drives.
+- **More features coming soon!**
+
+## Usage
+
+1. **Build the project**  
+   Make sure you have a C++ compiler and necessary development tools installed.
+
+   ```sh
+   g++ -o DriveMgr DriveMgr/DriveMgr.cpp
+   ```
+
+2. **Run the program**  
+   You need to run as root to manage drives:
+
+   ```sh
+   sudo ./DriveMgr
+   ```
+
+3. **Follow the menu**  
+   The program will present a menu:
+   ```
+   Welcome to DriveMgr
+   ------------- Menu -------------
+   1. List drives
+   2. Format drive
+   3. Encrypt/Decrypt drive
+   4. Resize drive
+   5. Check drive health
+   --------------------------------
+   ```
+
+   Enter the number corresponding to the desired operation and follow the prompts.
+
+## Example
+
+- **Listing Drives**  
+  Shows all connected drives with their device name, size, type, and mountpoint.
+
+- **Formatting a Drive**  
+  You can select a drive, optionally provide a label and filesystem type, and confirm before any irreversible actions are performed.
+
+## Requirements
+
+- Linux system (Debian-based distros tested)
+- C++17 or newer
+- Root privileges for most operations
+
+## Roadmap
+
+- [ ] Implement encryption/decryption
+- [ ] Implement resizing and health checking
+- [ ] Add a GUI version
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for more details.
+
+---
+
+**Disclaimer:**  
+This tool is under active development. Some features may not be fully implemented or stable. Use with caution, and always test on non-critical drives first!

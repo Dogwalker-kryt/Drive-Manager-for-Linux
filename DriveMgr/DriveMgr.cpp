@@ -27,15 +27,20 @@ std::vector<std::string> listDrives() {
     std::vector<std::string> drives;
     std::string lsblk = execTerminal("lsblk -o NAME,SIZE,TYPE,MOUNTPOINT -d -n -p");
     std::cout << "\nConnected Drives:\n";
-    std::cout << "Device              Size    Type      Mountpoint\n";
-    std::cout << "---------------------------------------------------\n";
+    std::cout << std::left << std::setw(3) << "#" << std::setw(20) << "Device" << std::setw(10) << "Size" << std::setw(10) << "Type" << "Mountpoint" << std::endl;
+    std::cout << std::string(60, '-') << "\n";
     std::istringstream iss(lsblk);
     std::string line;
     int idx = 0;
     while (std::getline(iss, line)) {
         if (line.find("disk") != std::string::npos) {
-            std::cout << idx << ": " << line << std::endl;
-            drives.push_back(line);
+            std::istringstream lss(line);
+            std::string device, size, type, mountpoint;
+            lss >> device >> size >> type;
+            std::getline(lss, mountpoint); 
+            if (!mountpoint.empty() && mountpoint[0] == ' ') mountpoint = mountpoint.substr(1);
+            std::cout << std::left << std::setw(3) << idx << std::setw(20) << device << std::setw(10) << size << std::setw(10) << type << mountpoint << std::endl;
+            drives.push_back(device);
             idx++;
         }
     }
@@ -46,8 +51,6 @@ std::vector<std::string> listDrives() {
     std::cout << "Press Enter to return to the main menu...\n";
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     std::cin.get();
-
-
 }
 
 // Dummy implementations for the other functions (to avoid linker errors)
@@ -183,6 +186,7 @@ int main() {
     std::cout << "3. Encrypt/Decrypt drive\n";
     std::cout << "4. Resize drive\n";
     std::cout << "5. Check drive health\n";
+    std::cout << "6. Exit\n";
     std::cout << "--------------------------------\n";
     int menuinput;
     std::cin >> menuinput;
@@ -202,9 +206,11 @@ int main() {
         case 5:
             checkDriveHealth();
             break;
+        case 6:
+            std::cout << "Exiting DriveMgr\n";
         default:
             std::cout << "Invalid selection\n";
             return 1;
     }
-    return 0;
+    //return 0;
 }

@@ -62,7 +62,7 @@ A terminal-based drive management tool for Linux systems, written in C++. The go
 ## Roadmap
 
 - [ ] Implement encryption/decryption
-- [ ] Implement resizing and health checking
+- [x] Implement resizing and health checking
 - [ ] Add a GUI version
 
 ## License

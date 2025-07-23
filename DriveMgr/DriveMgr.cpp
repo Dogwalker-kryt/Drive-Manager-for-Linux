@@ -8,6 +8,9 @@
 #include <memory>
 #include <stdexcept>
 #include <array>
+#include <limits>
+//#include <vector>
+//#include <sstream>
 
 std::string execTerminal(const char* cmd) {
     std::array<char, 128> buffer;
@@ -20,7 +23,6 @@ std::string execTerminal(const char* cmd) {
     return result;
 }
 
-// Implementierung von listDrives für Linux (Debian-basiert)
 std::vector<std::string> listDrives() {
     std::vector<std::string> drives;
     std::string lsblk = execTerminal("lsblk -o NAME,SIZE,TYPE,MOUNTPOINT -d -n -p");
@@ -41,6 +43,11 @@ std::vector<std::string> listDrives() {
         std::cout << "No drives found!\n";
     }
     return drives;
+    std::cout << "Press Enter to return to the main menu...\n";
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::cin.get();
+
+
 }
 
 // Dummy implementations for the other functions (to avoid linker errors)
@@ -104,11 +111,63 @@ void formatDrive() {
     }
 }
 
+int checkDriveHealth() {
+    auto drives = listDrives();
+    if (drives.empty()) {
+        std::cout << "No drives found!\n";
+        return 1;
+    }
+    for (size_t i = 0; i < drives.size(); ++i) {
+        std::cout << i << ": " << drives[i] << "\n";
+    }
+    std::cout << "Enter drive number to check Health:\n";
+    int driveNumber_health;
+    std::cin >> driveNumber_health;
+    if (driveNumber_health < 0 || driveNumber_health >= (int) drives.size()) {
+        std::cout << "Invalid selection!\n";
+        return 1;
+    }
+    // Check the health of the selected drive
+    if (checkDriveHealth(drives[driveNumber_health])) {
+        std::cout << "Drive " << drives[driveNumber_health] << " is healthy.\n";
+    } else {
+        std::cout << "Drive " << drives[driveNumber_health] << " has issues.\n";
+    }
+    std::cout << "Press Enter to return to the main menu...\n";
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::cin.get();
+}
 
-
-
-
-
+void resizeDrive() {
+    auto drives = listDrives();
+    if (drives.empty()) {
+        std::cout << "No drives found!\n";
+        return;
+    }
+    std::cout << "Enter drive number to resize:\n";
+    int driveNumber_resize;
+    std::cin >> driveNumber_resize;
+    if (driveNumber_resize < 0 || driveNumber_resize >= (int) drives.size()) {
+        std::cout << "Invalid selection!\n";
+        return;
+    }
+    std::cout << "Enter new size in GB for drive " << drives[driveNumber_resize] << ":\n";
+    int newSize;
+    std::cin >> newSize;
+    if (newSize <= 0) {
+        std::cout << "Invalid size entered!\n";
+        return;
+    }
+    std::cout << "Resizing drive " << drives[driveNumber_resize] << " to " << newSize << " GB...\n";
+    if (resizeDrive(drives[driveNumber_resize], newSize)) {
+        std::cout << "Drive resized successfully\n";
+    } else {
+        std::cout << "Failed to resize drive\n";
+    }
+    std::cout << "Press Enter to return to the main menu...\n";
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::cin.get();
+}
 
 
 
@@ -138,10 +197,10 @@ int main() {
             std::cout << "Function follows...\n";
             break;
         case 4:
-            std::cout << "Function follows...\n";
+            resizeDrive();
             break;
         case 5:
-            std::cout << "Function follows...\n";
+            checkDriveHealth();
             break;
         default:
             std::cout << "Invalid selection\n";

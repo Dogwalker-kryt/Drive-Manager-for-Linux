@@ -40,6 +40,7 @@ A terminal-based drive management tool for Linux systems, written in C++. The go
    3. Encrypt/Decrypt drive
    4. Resize drive
    5. Check drive health
+   6. Exit
    --------------------------------
    ```
 

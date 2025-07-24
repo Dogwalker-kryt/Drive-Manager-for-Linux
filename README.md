@@ -14,7 +14,7 @@ DriveMgr.cpp (i try so it only contains the newest bug/erros free version)
 in the other file outside the folder is the newest version (beta), this version will not be bug free, but atleast compilable
 
 
-! If you dowload one of the source code files you need to have the header file (drivefunk.h) with it !
+! If you dowload one of the source code files you need to have the header file drivefunk.h with it !
 
 
 ## Features

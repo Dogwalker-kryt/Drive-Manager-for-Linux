@@ -5,6 +5,18 @@ A terminal-based drive management tool for Linux systems, written in C++. The go
 > **Warning**  
 > This tool is intended for users who understand the risks involved with formatting, encrypting, or otherwise modifying drives. Always back up your data and double-check your selections!
 
+## Files
+in the current state of the repo 24 july, there is the folder with 2 files:
+```
+drivefunk.h (contains the funktions for the programm)
+DriveMgr.cpp (contains the newest bug/erros free version)
+```
+in the other file outside the folder is the newest version (beta), this version will not be bug free, but atleast compilable
+
+
+! If you dowload one of the source code files you need to have the header file (drivefunk.h) with it !
+
+
 ## Features
 
 - **List all drives**: View all drives currently connected to your system.

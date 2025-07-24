@@ -9,18 +9,28 @@
 #include <stdexcept>
 #include <array>
 #include <limits>
+#include <iomanip>
 //#include <vector>
 //#include <sstream>
 
 std::string execTerminal(const char* cmd) {
     std::array<char, 128> buffer;
     std::string result;
-    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+    auto deleter = [](FILE* f) { if (f) pclose(f); };
+    std::unique_ptr<FILE, decltype(deleter)> pipe(popen(cmd, "r"), deleter);
     if (!pipe) throw std::runtime_error("popen() failed!");
     while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
         result += buffer.data();
     }
     return result;
+}
+
+void advancedListDrives() {
+    std::string lsblk = execTerminal("lsblk");
+    std::cout << lsblk;
+    std::cout << "press Enter to return to the main menu...\n";
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::cin.get();
 }
 
 std::vector<std::string> listDrives() {
@@ -48,10 +58,9 @@ std::vector<std::string> listDrives() {
         std::cout << "No drives found!\n";
     }
     return drives;
-    std::cout << "Press Enter to return to the main menu...\n";
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    std::cin.get();
 }
+
+
 
 // Dummy implementations for the other functions (to avoid linker errors)
 bool formatDrive(const std::string&, const std::string&, const std::string&) { return false; }
@@ -96,7 +105,6 @@ void formatDrive() {
                 std::string label;
                 std::cin >> label;
                 std::cout << "Formatting drive with label: " << label << "\n";
-
             }
             break;
         case 3:
@@ -139,6 +147,7 @@ int checkDriveHealth() {
     std::cout << "Press Enter to return to the main menu...\n";
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     std::cin.get();
+    return 1;
 }
 
 void resizeDrive() {
@@ -208,6 +217,7 @@ int main() {
             break;
         case 6:
             std::cout << "Exiting DriveMgr\n";
+            return 0;
         default:
             std::cout << "Invalid selection\n";
             return 1;

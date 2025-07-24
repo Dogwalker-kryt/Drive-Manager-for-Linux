@@ -70,7 +70,7 @@ in the other file outside the folder is the newest version (beta), this version 
 
 - Linux system (Debian-based distros tested)
 - C++17 or newer
-- Root privileges for most operations
+- Root privileges for most operations (Formatinn for example)
 
 ## Roadmap
 
@@ -78,6 +78,7 @@ in the other file outside the folder is the newest version (beta), this version 
 - [x] Implement resizing and health checking
 - [ ] Add a GUI version
 
+The GUI version will be in development if the Terminal based version funktions as it should!
 ## License
 
 This project is licensed under the MIT License. See [LICENSE](LICENSE) for more details.

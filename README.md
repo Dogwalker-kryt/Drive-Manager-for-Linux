@@ -9,7 +9,7 @@ A terminal-based drive management tool for Linux systems, written in C++. The go
 in the current state of the repo 24 july, there is the folder with 2 files:
 ```
 drivefunk.h (contains the funktions for the programm)
-DriveMgr.cpp (contains the newest bug/erros free version)
+DriveMgr.cpp (i try so it only contains the newest bug/erros free version)
 ```
 in the other file outside the folder is the newest version (beta), this version will not be bug free, but atleast compilable
 

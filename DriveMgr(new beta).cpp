@@ -1,4 +1,4 @@
-// ! Warning this is the last version with bugs and so 
+// ! Warning this version has bugs and so or is not finisehd or tested 
 // The correct version is now in the folder DriveMgr with no bugs and such
 // 25 july
 

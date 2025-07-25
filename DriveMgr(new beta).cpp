@@ -202,39 +202,43 @@ void resizeDrive() {
     */
 }
 
-bool encryptorDecryptDrive() {
+void encryptDecryptDrive() {
     std::vector<std::string> drives;
     listDrives(drives);
     if (drives.empty()) {
         std::cout << "No drives found!\n";
-        return false;
+        return;
     }
     std::cout << "Enter drive number to encrypt/decrypt: ";
     int driveNumber;
     std::cin >> driveNumber;
     if (driveNumber < 0 || driveNumber >= (int)drives.size()) {
         std::cout << "Invalid selection!\n";
-        return false;
+        return;
     }
     std::cout << "Type 'e' to encrypt or 'd' to decrypt: ";
-    char action;
-    std::cin >> action;
+    char endecryptselect;
+    std::cin >> endecryptselect;
     std::string device = drives[driveNumber];
-    if (action == 'e') {
+    if (endecryptselect == 'e' || endecryptselect == 'E') {
         std::cout << "Encrypting " << device << " using LUKS...\n";
         std::string cmd = "sudo cryptsetup luksFormat " + device;
         std::cout << "Command: " << cmd << "\n";
-        system(cmd.c_str());
-    } else if (action == 'd') {
+        std::string result = execTerminal(cmd.c_str());
+        std::cout << result;
+    } else if (endecryptselect == 'd' || endecryptselect == 'D') {
+        std::cout << "Enter a name for the decrypted mapping (e.g. secure_data): ";
+        std::string mappingName;
+        std::cin >> mappingName;
         std::cout << "Decrypting (opening) " << device << " using LUKS...\n";
-        std::string cmd = "sudo cryptsetup luksOpen " + device + " my_encrypted_drive";
+        std::string cmd = "sudo cryptsetup luksOpen " + device + " " + mappingName;
         std::cout << "Command: " << cmd << "\n";
-        system(cmd.c_str());
+        std::string result = execTerminal(cmd.c_str());
+        std::cout << result;
     } else {
         std::cout << "Invalid action!\n";
-        return false;
+        return;
     }
-    return true;
 }
 
 

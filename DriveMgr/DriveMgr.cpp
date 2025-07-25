@@ -1,4 +1,3 @@
-// Drive manager
 #include <iostream>
 #include <string>
 #include <cstdlib>
@@ -10,8 +9,7 @@
 #include <array>
 #include <limits>
 #include <iomanip>
-//#include <vector>
-//#include <sstream>
+
 
 std::string execTerminal(const char* cmd) {
     std::array<char, 128> buffer;
@@ -28,13 +26,15 @@ std::string execTerminal(const char* cmd) {
 void advancedListDrives() {
     std::string lsblk = execTerminal("lsblk");
     std::cout << lsblk;
-    std::cout << "press Enter to return to the main menu...\n";
+    /*
+    std::cout << "\nPress Enter to return to the main menu...\n";
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     std::cin.get();
+    */
 }
 
-std::vector<std::string> listDrives() {
-    std::vector<std::string> drives;
+void listDrives(std::vector<std::string>& drives) {
+    drives.clear();
     std::string lsblk = execTerminal("lsblk -o NAME,SIZE,TYPE,MOUNTPOINT -d -n -p");
     std::cout << "\nConnected Drives:\n";
     std::cout << std::left << std::setw(3) << "#" << std::setw(20) << "Device" << std::setw(10) << "Size" << std::setw(10) << "Type" << "Mountpoint" << std::endl;
@@ -57,7 +57,15 @@ std::vector<std::string> listDrives() {
     if (drives.empty()) {
         std::cout << "No drives found!\n";
     }
-    return drives;
+    /*
+    std::cout << "Press '1' to return to main menu or '2' for advanced listing...\n";
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::string input;
+    std::getline(std::cin, input);
+    if (input == "2") {
+        advancedListDrives();
+    }
+    */
 }
 
 
@@ -79,7 +87,8 @@ void formatDrive() {
         case 1:
             std::cout << "Choose a Drive to Format\n";
             {
-                auto drives = listDrives();
+                std::vector<std::string> drives;
+                listDrives(drives);
                 if (drives.empty()) break;
                 std::cout << "Enter drive number: ";
                 int driveNumber;
@@ -123,7 +132,8 @@ void formatDrive() {
 }
 
 int checkDriveHealth() {
-    auto drives = listDrives();
+    std::vector<std::string> drives;
+    listDrives(drives);
     if (drives.empty()) {
         std::cout << "No drives found!\n";
         return 1;
@@ -144,14 +154,18 @@ int checkDriveHealth() {
     } else {
         std::cout << "Drive " << drives[driveNumber_health] << " has issues.\n";
     }
+    /*
     std::cout << "Press Enter to return to the main menu...\n";
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     std::cin.get();
     return 1;
+    */
+   return 1;
 }
 
 void resizeDrive() {
-    auto drives = listDrives();
+    std::vector<std::string> drives;
+    listDrives(drives);
     if (drives.empty()) {
         std::cout << "No drives found!\n";
         return;
@@ -176,15 +190,12 @@ void resizeDrive() {
     } else {
         std::cout << "Failed to resize drive\n";
     }
+    /*
     std::cout << "Press Enter to return to the main menu...\n";
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     std::cin.get();
+    */
 }
-
-
-
-
-
 
 
 int main() {
@@ -200,20 +211,82 @@ int main() {
     int menuinput;
     std::cin >> menuinput;
     switch (menuinput) {
-        case 1:
-            listDrives();
+        case 1: {
+            std::vector<std::string> drives;
+            listDrives(drives);
+            std::cout << "\nPress '1' for returning to the main menu, '2' for advnaced listing or '3' to exit\n";
+            int menuques;
+            std::cin >> menuques;
+            if (menuques == 1) {
+                main();
+            } else if (menuques == 2) {
+                advancedListDrives();
+            } else if (menuques == 3) {
+                return 0;
+            } else {
+                std::cout << "[Error] Wrong input";
+                return 1;
+            }
             break;
-        case 2:
+        }
+        case 2:{
             formatDrive();
+            std::cout << "\nPress '1' for returning to the main menu, '2' to exit\n";
+            int menuques1;
+            std::cin >> menuques1;
+            if (menuques1 == 1) {
+                main();
+            } else if (menuques1 == 2) {
+                return 0;
+            } else {
+                std::cout << "[Error] Wrong input\n";
+                return 1;
+            }
             break;
+        }
         case 3:
-            std::cout << "Function follows...\n";
+            std::cout << "Function in development...\n";
+            /*
+            std::cout << "\nPress '1' for returning to the main menu, '2' to exit";
+            int menuques4;
+            std::cin >> menuques4;
+            if (menuques4 == 1) {
+                main();
+            } else if (menuques4 == 2) {
+                return 0;
+            } else {
+                std::cout << "[Error] Wrong input";
+                return 1;
+            }
+            */
             break;
         case 4:
             resizeDrive();
+            std::cout << "\nPress '1' for returning to the main menu, '2' to exit\n";
+            int menuques2;
+            std::cin >> menuques2;
+            if (menuques2 == 1) {
+                main();
+            } else if (menuques2 == 2) {
+                return 0;
+            } else {
+                std::cout << "[Error] Wrong input";
+                return 1;
+            }
             break;
         case 5:
             checkDriveHealth();
+            std::cout << "\nPress '1' for returning to the main menu, '2' to exit\n";
+            int menuques3;
+            std::cin >> menuques3;
+            if (menuques3 == 1) {
+                main();
+            } else if (menuques3 == 2) {
+                return 0;
+            } else {
+                std::cout << "[Error] Wrong input";
+                return 1;
+            }
             break;
         case 6:
             std::cout << "Exiting DriveMgr\n";
@@ -222,5 +295,5 @@ int main() {
             std::cout << "Invalid selection\n";
             return 1;
     }
-    //return 0;
+    return 1;
 }

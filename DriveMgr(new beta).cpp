@@ -1,4 +1,11 @@
-// Drive manager
+// ! Warning this is the last version with bugs and so 
+// The correct version is now in the folder DriveMgr with no bugs and such
+// the next version will be here, but this is not the newest !
+// dont use this
+// 25 july
+
+
+/*
 #include <iostream>
 #include <string>
 #include <cstdlib>
@@ -260,3 +267,4 @@ int main() {
     }
     //return 0;
 }
+*/

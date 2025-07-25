@@ -1,11 +1,8 @@
 // ! Warning this is the last version with bugs and so 
 // The correct version is now in the folder DriveMgr with no bugs and such
-// the next version will be here, but this is not the newest !
-// dont use this
 // 25 july
 
 
-/*
 #include <iostream>
 #include <string>
 #include <cstdlib>
@@ -17,12 +14,7 @@
 #include <array>
 #include <limits>
 #include <iomanip>
-//#include <vector>
-//#include <sstream>
 
-int exit() {
-    return 0;
-}
 
 std::string execTerminal(const char* cmd) {
     std::array<char, 128> buffer;
@@ -39,15 +31,11 @@ std::string execTerminal(const char* cmd) {
 void advancedListDrives() {
     std::string lsblk = execTerminal("lsblk");
     std::cout << lsblk;
+    /*
     std::cout << "\nPress Enter to return to the main menu...\n";
-    int advlistinput;
-    std::cin >> advlistinput;
-    if (advlistinput == 1) {
-        return;
-    } else {
-        exit();
-    }
-
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::cin.get();
+    */
 }
 
 void listDrives(std::vector<std::string>& drives) {
@@ -74,16 +62,15 @@ void listDrives(std::vector<std::string>& drives) {
     if (drives.empty()) {
         std::cout << "No drives found!\n";
     }
-    std::cout << "\nPress '1' to return to main menu or '2' for advanced listing...\n";
-    int listinput;
-    std::cin >> listinput;
-    if (listinput == 1) {
-        return;
-    } else if (listinput == 2) {
+    /*
+    std::cout << "Press '1' to return to main menu or '2' for advanced listing...\n";
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::string input;
+    std::getline(std::cin, input);
+    if (input == "2") {
         advancedListDrives();
-    } else {
-        exit();
     }
+    */
 }
 
 
@@ -147,14 +134,6 @@ void formatDrive() {
         default:
             std::cout << "Invalid option selected.\n";
     }
-    std::cout << "\nPress '1' to return to the main menu...\n";
-    int formatInput;
-    std::cin >> formatInput;
-    if (formatInput == 1) {
-        return;
-    } else {
-        exit();
-    }
 }
 
 int checkDriveHealth() {
@@ -180,14 +159,13 @@ int checkDriveHealth() {
     } else {
         std::cout << "Drive " << drives[driveNumber_health] << " has issues.\n";
     }
-    std::cout << "\nPress '1' to return to the main menu...\n";
-    int checkHealthInput;
-    std::cin >> checkHealthInput;
-    if (checkHealthInput == 1) {
-        return 1;
-    } else {
-        return 0;
-    }
+    /*
+    std::cout << "Press Enter to return to the main menu...\n";
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::cin.get();
+    return 1;
+    */
+   return 1;
 }
 
 void resizeDrive() {
@@ -217,15 +195,49 @@ void resizeDrive() {
     } else {
         std::cout << "Failed to resize drive\n";
     }
-    std::cout << "\nPress '1' to return to the main menu...\n";
-    int resizeInput;
-    std::cin >> resizeInput;
-    if (resizeInput == 1) {
-        return;
-    } else {
-        exit();
-    }
+    /*
+    std::cout << "Press Enter to return to the main menu...\n";
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::cin.get();
+    */
 }
+
+bool encryptorDecryptDrive() {
+    std::vector<std::string> drives;
+    listDrives(drives);
+    if (drives.empty()) {
+        std::cout << "No drives found!\n";
+        return false;
+    }
+    std::cout << "Enter drive number to encrypt/decrypt: ";
+    int driveNumber;
+    std::cin >> driveNumber;
+    if (driveNumber < 0 || driveNumber >= (int)drives.size()) {
+        std::cout << "Invalid selection!\n";
+        return false;
+    }
+    std::cout << "Type 'e' to encrypt or 'd' to decrypt: ";
+    char action;
+    std::cin >> action;
+    std::string device = drives[driveNumber];
+    if (action == 'e') {
+        std::cout << "Encrypting " << device << " using LUKS...\n";
+        std::string cmd = "sudo cryptsetup luksFormat " + device;
+        std::cout << "Command: " << cmd << "\n";
+        system(cmd.c_str());
+    } else if (action == 'd') {
+        std::cout << "Decrypting (opening) " << device << " using LUKS...\n";
+        std::string cmd = "sudo cryptsetup luksOpen " + device + " my_encrypted_drive";
+        std::cout << "Command: " << cmd << "\n";
+        system(cmd.c_str());
+    } else {
+        std::cout << "Invalid action!\n";
+        return false;
+    }
+    return true;
+}
+
+
 
 
 int main() {
@@ -244,19 +256,78 @@ int main() {
         case 1: {
             std::vector<std::string> drives;
             listDrives(drives);
+            std::cout << "\nPress '1' for returning to the main menu, '2' for advnaced listing or '3' to exit\n";
+            int menuques;
+            std::cin >> menuques;
+            if (menuques == 1) {
+                main();
+            } else if (menuques == 2) {
+                advancedListDrives();
+            } else if (menuques == 3) {
+                return 0;
+            } else {
+                std::cout << "[Error] Wrong input";
+                return 1;
+            }
             break;
         }
-        case 2:
+        case 2:{
             formatDrive();
+            std::cout << "\nPress '1' for returning to the main menu, '2' to exit\n";
+            int menuques1;
+            std::cin >> menuques1;
+            if (menuques1 == 1) {
+                main();
+            } else if (menuques1 == 2) {
+                return 0;
+            } else {
+                std::cout << "[Error] Wrong input\n";
+                return 1;
+            }
             break;
+        }
         case 3:
-            std::cout << "Function in development...\n";
+            encryptorDecryptDrive();
+            std::cout << "\nPress '1' for returning to the main menu, '2' to exit";
+            int menuques4;
+            std::cin >> menuques4;
+            if (menuques4 == 1) {
+                main();
+            } else if (menuques4 == 2) {
+                return 0;
+            } else {
+                std::cout << "[Error] Wrong input";
+                return 1;
+            }
+            
             break;
         case 4:
             resizeDrive();
+            std::cout << "\nPress '1' for returning to the main menu, '2' to exit\n";
+            int menuques2;
+            std::cin >> menuques2;
+            if (menuques2 == 1) {
+                main();
+            } else if (menuques2 == 2) {
+                return 0;
+            } else {
+                std::cout << "[Error] Wrong input";
+                return 1;
+            }
             break;
         case 5:
             checkDriveHealth();
+            std::cout << "\nPress '1' for returning to the main menu, '2' to exit\n";
+            int menuques3;
+            std::cin >> menuques3;
+            if (menuques3 == 1) {
+                main();
+            } else if (menuques3 == 2) {
+                return 0;
+            } else {
+                std::cout << "[Error] Wrong input";
+                return 1;
+            }
             break;
         case 6:
             std::cout << "Exiting DriveMgr\n";
@@ -265,6 +336,5 @@ int main() {
             std::cout << "Invalid selection\n";
             return 1;
     }
-    //return 0;
+    return 1;
 }
-*/

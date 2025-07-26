@@ -74,7 +74,7 @@ in the other file outside the folder is the newest version (beta), this version 
 
 ## Roadmap
 
-- [ ] Implement encryption/decryption
+- [x] Implement encryption/decryption
 - [x] Implement resizing and health checking
 - [ ] Add a GUI version
 

@@ -26,6 +26,11 @@ std::string execTerminal(const char* cmd) {
 void advancedListDrives() {
     std::string lsblk = execTerminal("lsblk");
     std::cout << lsblk;
+    /*
+    std::cout << "\nPress Enter to return to the main menu...\n";
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::cin.get();
+    */
 }
 
 void listDrives(std::vector<std::string>& drives) {
@@ -52,7 +57,56 @@ void listDrives(std::vector<std::string>& drives) {
     if (drives.empty()) {
         std::cout << "No drives found!\n";
     }
+    /*
+    std::cout << "Press '1' to return to main menu or '2' for advanced listing...\n";
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::string input;
+    std::getline(std::cin, input);
+    if (input == "2") {
+        advancedListDrives();
+    }
+    */
 }
+
+void listpartisions(std::vector<std::string>& drive) {
+    std::vector<std::string> drives;
+    listDrives(drives);
+    if (drives.empty()) {
+        std::cout << "No drives found!\n";
+        return;
+    }
+    std::cout << "\nEnter number of a drive you want to see the partisions of:\n";
+    int listpartdrivenum;
+    std::cin >> listpartdrivenum;
+    if (listpartdrivenum < 0 || listpartdrivenum >= (int)drives.size()) {
+        std::cout << "Invalid selection!\n";
+    }
+
+    std::string driveName = drives[listpartdrivenum];
+    //std::string lsblk = execTerminal("lsblk");
+    std::cout << "\nPartitions of drive " << driveName << ":\n";
+
+    std::string cmd = "lsblk -o NAME,SIZE,TYPE,MOUNTPOINT -n -p " + driveName;
+
+    std::string output = execTerminal(cmd.c_str());
+
+    std::istringstream iss(output);
+    std::string line;
+
+    std::cout << std::left << std::setw(15) << "Name" 
+              << std::setw(10) << "Size" 
+              << std::setw(10) << "Type" 
+              << "Mountpoint" << "\n";
+    std::cout << std::string(50, '-') << "\n";
+
+    while (std::getline(iss, line)) {
+        if (line.find("part") != std::string::npos) {
+            std::cout << line << "\n";
+        }
+    }
+}
+
+
 
 
 
@@ -76,7 +130,7 @@ void formatDrive() {
                 std::vector<std::string> drives;
                 listDrives(drives);
                 if (drives.empty()) break;
-                std::cout << "Enter drive number: ";
+                std::cout << "Enter drive number:\n";
                 int driveNumber;
                 std::cin >> driveNumber;
                 if (driveNumber < 0 || driveNumber >= (int)drives.size()) {
@@ -113,7 +167,7 @@ void formatDrive() {
             }
             break;
         default:
-            std::cout << "Invalid option selected.\n";
+            std::cout << "[Error] Invalid option selected.\n";
     }
 }
 
@@ -127,11 +181,11 @@ int checkDriveHealth() {
     for (size_t i = 0; i < drives.size(); ++i) {
         std::cout << i << ": " << drives[i] << "\n";
     }
-    std::cout << "Enter drive number to check Health:\n";
+    std::cout << "\nEnter drive number to check Health:\n";
     int driveNumber_health;
     std::cin >> driveNumber_health;
     if (driveNumber_health < 0 || driveNumber_health >= (int) drives.size()) {
-        std::cout << "Invalid selection!\n";
+        std::cout << "[Error] Invalid selection!\n";
         return 1;
     }
     // Check the health of the selected drive
@@ -140,6 +194,12 @@ int checkDriveHealth() {
     } else {
         std::cout << "Drive " << drives[driveNumber_health] << " has issues.\n";
     }
+    /*
+    std::cout << "Press Enter to return to the main menu...\n";
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::cin.get();
+    return 1;
+    */
    return 1;
 }
 
@@ -154,22 +214,78 @@ void resizeDrive() {
     int driveNumber_resize;
     std::cin >> driveNumber_resize;
     if (driveNumber_resize < 0 || driveNumber_resize >= (int) drives.size()) {
-        std::cout << "Invalid selection!\n";
+        std::cout << "[Error] Invalid selection!\n";
         return;
     }
     std::cout << "Enter new size in GB for drive " << drives[driveNumber_resize] << ":\n";
     int newSize;
     std::cin >> newSize;
     if (newSize <= 0) {
-        std::cout << "Invalid size entered!\n";
+        std::cout << "[Error] Invalid size entered!\n";
         return;
     }
     std::cout << "Resizing drive " << drives[driveNumber_resize] << " to " << newSize << " GB...\n";
     if (resizeDrive(drives[driveNumber_resize], newSize)) {
         std::cout << "Drive resized successfully\n";
     } else {
-        std::cout << "Failed to resize drive\n";
+        std::cout << "[Error] Failed to resize drive\n";
     }
+    /*
+    std::cout << "Press Enter to return to the main menu...\n";
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::cin.get();
+    */
+}
+
+void encryptDecryptDrive() {
+    std::vector<std::string> drives;
+    listDrives(drives);
+    if (drives.empty()) {
+        std::cout << "No drives found!\n";
+        return;
+    }
+    std::cout << "Enter drive number to encrypt/decrypt:\n";
+    int driveNumber;
+    std::cin >> driveNumber;
+    if (driveNumber < 0 || driveNumber >= (int)drives.size()) {
+        std::cout << "[Error] Invalid selection!\n";
+        return;
+    }
+    std::cout << "Type 'e' to encrypt or 'd' to decrypt: ";
+    char endecryptselect;
+    std::cin >> endecryptselect;
+    std::string device = drives[driveNumber];
+    if (endecryptselect == 'e' || endecryptselect == 'E') {
+        std::cout << "Encrypting " << device << " using LUKS...\n";
+        std::string cmd = "sudo cryptsetup luksFormat " + device;
+        std::cout << "Command: " << cmd << "\n";
+        std::string result = execTerminal(cmd.c_str());
+        std::cout << result;
+    } else if (endecryptselect == 'd' || endecryptselect == 'D') {
+        std::cout << "Enter a name for the decrypted mapping (e.g. secure_data): ";
+        std::string mappingName;
+        std::cin >> mappingName;
+        std::cout << "Decrypting (opening) " << device << " using LUKS...\n";
+        std::string cmd = "sudo cryptsetup luksOpen " + device + " " + mappingName;
+        std::cout << "Command: " << cmd << "\n";
+        std::string result = execTerminal(cmd.c_str());
+        std::cout << result;
+    } else {
+        std::cout << "[Error] Invalid action!\n";
+        return;
+    }
+}
+
+void Info() {
+    std::cout << "\n----------- Info -----------\n";
+    std::cout << "Welcome to Drive Manager, this is a porgram for linux to view, operate,... your Drives in your system\n";
+    std::cout << "Warning! You should know some basic things about drives so you dont loose any data\n";
+    std::cout << "If you found any problems, visit my Github page and send an issue template\n";
+    std::cout << "Basic info:\n";
+    std::cout << "Version: 0.8.74\n";
+    std::cout << "Github: https://github.com/Dogwalker-kryt/Drive-Manager-for-Linux\n";
+    std::cout << "Author: Dogwalker-kryt\n";
+    std::cout << "----------------------------\n";
 }
 
 
@@ -181,7 +297,9 @@ int main() {
     std::cout << "3. Encrypt/Decrypt drive\n";
     std::cout << "4. Resize drive\n";
     std::cout << "5. Check drive health\n";
-    std::cout << "6. Exit\n";
+    std::cout << "6. View Partition of Dirve\n";
+    std::cout << "8  View Info";
+    std::cout << "9. Exit\n";
     std::cout << "--------------------------------\n";
     int menuinput;
     std::cin >> menuinput;
@@ -220,14 +338,15 @@ int main() {
             break;
         }
         case 3:
-            std::cout << "Function in development...\n";
+            std::cout << "The function en/decrpt drives is disabled due to bugs";
+            //encryptDecryptDrive();
             /*
-            std::cout << "\nPress '1' for returning to the main menu, '2' to exit";
-            int menuques4;
-            std::cin >> menuques4;
-            if (menuques4 == 1) {
+            std::cout << "\nPress '1' for returning to the main menu, '2' to exit\n";
+            int menuques2;
+            std::cin >> menuques2;
+            if (menuques2 == 1) {
                 main();
-            } else if (menuques4 == 2) {
+            } else if (menuques2 == 2) {
                 return 0;
             } else {
                 std::cout << "[Error] Wrong input";
@@ -263,11 +382,30 @@ int main() {
                 return 1;
             }
             break;
-        case 6:
+        case 6:{
+            std::vector<std::string> drives;
+            listpartisions(drives);
+            std::cout << "\nPress '1' for returning to the main menu, '2' to exit\n";
+            int menuques3;
+            std::cin >> menuques3;
+            if (menuques3 == 1) {
+                main();
+            } else if (menuques3 == 2) {
+                return 0;
+            } else {
+                std::cout << "[Error] Wrong input";
+                return 1;
+            }
+            break;
+        }
+        case 8:
+            Info();
+            break;
+        case 9:
             std::cout << "Exiting DriveMgr\n";
             return 0;
         default:
-            std::cout << "Invalid selection\n";
+            std::cout << "[Error] Invalid selection\n";
             return 1;
     }
     return 1;

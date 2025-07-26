@@ -52,7 +52,9 @@ in the other file outside the folder is the newest version (beta), this version 
    3. Encrypt/Decrypt drive
    4. Resize drive
    5. Check drive health
-   6. Exit
+   6. View Partitions
+   8. Info
+   9. Exit
    --------------------------------
    ```
 

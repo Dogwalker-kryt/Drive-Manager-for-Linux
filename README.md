@@ -96,3 +96,7 @@ This project is licensed under the MIT License. See [LICENSE](LICENSE) for more 
 
 **Disclaimer:**  
 This tool is under active development. Some features may not be fully implemented or stable. Use with caution, and always test on non-critical drives first!
+
+**Ideas or requests?**
+
+send a feature report or a custom one, so i can inprove my tool

@@ -28,9 +28,9 @@ in the other file outside the folder is the newest version (beta), this version 
 
 - **List all drives**: View all drives currently connected to your system.
 - **Format drives**: Format drives with optional label and filesystem type (e.g., ext4).
-- **Encrypt/Decrypt drives**: (Planned) Secure your drives using encryption. _Warning: Losing your key means losing your data!_
-- **Resize drives**: (Planned) Adjust the size of existing drives.
-- **Check drive health**: (Planned) Basic S.M.A.R.T. health check of your drives.
+- **Encrypt/Decrypt drives**: (doesnt realy work) Secure your drives using encryption. _Warning: Losing your key means losing your data!_
+- **Resize drives**: Adjust the size of existing drives.
+- **Check drive health**: Basic S.M.A.R.T. health check of your drives.
 - **More features coming soon!**
 
 ## Usage

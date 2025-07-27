@@ -31,11 +31,6 @@ std::string execTerminal(const char* cmd) {
 void advancedListDrives() {
     std::string lsblk = execTerminal("lsblk");
     std::cout << lsblk;
-    /*
-    std::cout << "\nPress Enter to return to the main menu...\n";
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    std::cin.get();
-    */
 }
 
 void listDrives(std::vector<std::string>& drives) {
@@ -62,15 +57,6 @@ void listDrives(std::vector<std::string>& drives) {
     if (drives.empty()) {
         std::cout << "No drives found!\n";
     }
-    /*
-    std::cout << "Press '1' to return to main menu or '2' for advanced listing...\n";
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    std::string input;
-    std::getline(std::cin, input);
-    if (input == "2") {
-        advancedListDrives();
-    }
-    */
 }
 
 void listpartisions(std::vector<std::string>& drive) {
@@ -88,13 +74,9 @@ void listpartisions(std::vector<std::string>& drive) {
     }
 
     std::string driveName = drives[listpartdrivenum];
-    //std::string lsblk = execTerminal("lsblk");
     std::cout << "\nPartitions of drive " << driveName << ":\n";
-
     std::string cmd = "lsblk -o NAME,SIZE,TYPE,MOUNTPOINT -n -p " + driveName;
-
     std::string output = execTerminal(cmd.c_str());
-
     std::istringstream iss(output);
     std::string line;
 
@@ -266,12 +248,6 @@ int checkDriveHealth() {
     } else {
         std::cout << "Drive " << drives[driveNumber_health] << " has issues.\n";
     }
-    /*
-    std::cout << "Press Enter to return to the main menu...\n";
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    std::cin.get();
-    return 1;
-    */
    return 1;
 }
 
@@ -302,11 +278,6 @@ void resizeDrive() {
     } else {
         std::cout << "[Error] Failed to resize drive\n";
     }
-    /*
-    std::cout << "Press Enter to return to the main menu...\n";
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    std::cin.get();
-    */
 }
 
 void encryptDecryptDrive() {
@@ -413,8 +384,7 @@ int main() {
         }
         case 3:
             std::cout << "The function en/decrpt drives is disabled due to bugs";
-            //encryptDecryptDrive();
-            /*
+            encryptDecryptDrive();
             std::cout << "\nPress '1' for returning to the main menu, '2' to exit\n";
             int menuques2;
             std::cin >> menuques2;
@@ -426,7 +396,6 @@ int main() {
                 std::cout << "[Error] Wrong input";
                 return 1;
             }
-            */
             break;
         case 4:
             resizeDrive();

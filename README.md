@@ -94,6 +94,10 @@ This project is licensed under the MIT License. See [LICENSE](LICENSE) for more 
 
 ---
 
+**Known Bug/issues:**
+
+en/decrypt function wont en/decrypt USB
+
 **Disclaimer:**  
 This tool is under active development. Some features may not be fully implemented or stable. Use with caution, and always test on non-critical drives first!
 

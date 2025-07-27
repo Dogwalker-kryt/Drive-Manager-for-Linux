@@ -371,8 +371,9 @@ int main() {
     std::cout << "5. Check drive health\n";
     std::cout << "6. View Partition of Dirve\n";
     std::cout << "7. Analyze Disk Space\n";
-    std::cout << "8. View Info\n";
-    std::cout << "9. Exit\n";
+    std::cout << "8. Unkown Function\n";
+    std::cout << "9. View Info\n";
+    std::cout << "0. Exit\n";
     std::cout << "--------------------------------\n";
     int menuinput;
     std::cin >> menuinput;
@@ -486,10 +487,14 @@ int main() {
             }
             break;
         }
-        case 8:
+        case 8:{
+            std::cout << "This Function is empty, you can request some ideas for this function!\n";
+            break;
+        }
+        case 9:
             Info();
             break;
-        case 9:
+        case 0:
             std::cout << "Exiting DriveMgr\n";
             return 0;
         default:

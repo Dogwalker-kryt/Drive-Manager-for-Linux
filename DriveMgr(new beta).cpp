@@ -79,7 +79,6 @@ void listpartisions(std::vector<std::string>& drive) {
     std::string output = execTerminal(cmd.c_str());
     std::istringstream iss(output);
     std::string line;
-
     std::cout << std::left << std::setw(15) << "Name" 
               << std::setw(10) << "Size" 
               << std::setw(10) << "Type" 
@@ -92,7 +91,6 @@ void listpartisions(std::vector<std::string>& drive) {
         }
     }
 }
-
 
 void analyDiskSpace() {
     std::vector<std::string> drives;
@@ -242,7 +240,6 @@ int checkDriveHealth() {
         std::cout << "[Error] Invalid selection!\n";
         return 1;
     }
-    // Check the health of the selected drive
     if (checkDriveHealth(drives[driveNumber_health])) {
         std::cout << "Drive " << drives[driveNumber_health] << " is healthy.\n";
     } else {
@@ -319,18 +316,41 @@ void encryptDecryptDrive() {
     }
 }
 
+void func7() {
+    std::vector<std::string> drives;
+    listDrives(drives);
+    if (drives.empty()) {
+        std::cout << "No drives found!\n";
+        return;
+    }
+
+
+
+
+
+
+
+
+
+    
+}
+
+
+
+
+
+
 void Info() {
     std::cout << "\n----------- Info -----------\n";
     std::cout << "Welcome to Drive Manager, this is a porgram for linux to view, operate,... your Drives in your system\n";
     std::cout << "Warning! You should know some basic things about drives so you dont loose any data\n";
     std::cout << "If you found any problems, visit my Github page and send an issue template\n";
     std::cout << "Basic info:\n";
-    std::cout << "Version: 0.8.78\n";
+    std::cout << "Version: 0.8.79\n";
     std::cout << "Github: https://github.com/Dogwalker-kryt/Drive-Manager-for-Linux\n";
     std::cout << "Author: Dogwalker-kryt\n";
     std::cout << "----------------------------\n";
 }
-
 
 int main() {
     std::cout << "\nWelcome to Drive-Manager\n";
@@ -342,7 +362,7 @@ int main() {
     std::cout << "5. Check drive health\n";
     std::cout << "6. View Partition of Dirve\n";
     std::cout << "7. Analyze Disk Space\n";
-    std::cout << "8. Unkown Function\n";
+    std::cout << "8. Unknown Function\n";
     std::cout << "9. View Info\n";
     std::cout << "0. Exit\n";
     std::cout << "--------------------------------\n";
@@ -384,7 +404,7 @@ int main() {
         }
         case 3:
             std::cout << "The function en/decrpt drives is disabled due to bugs";
-            encryptDecryptDrive();
+            //encryptDecryptDrive();
             std::cout << "\nPress '1' for returning to the main menu, '2' to exit\n";
             int menuques2;
             std::cin >> menuques2;
@@ -400,11 +420,11 @@ int main() {
         case 4:
             resizeDrive();
             std::cout << "\nPress '1' for returning to the main menu, '2' to exit\n";
-            int menuques2;
-            std::cin >> menuques2;
-            if (menuques2 == 1) {
+            int menuques3;
+            std::cin >> menuques3;
+            if (menuques3 == 1) {
                 main();
-            } else if (menuques2 == 2) {
+            } else if (menuques3 == 2) {
                 return 0;
             } else {
                 std::cout << "[Error] Wrong input";
@@ -414,11 +434,11 @@ int main() {
         case 5:
             checkDriveHealth();
             std::cout << "\nPress '1' for returning to the main menu, '2' to exit\n";
-            int menuques3;
-            std::cin >> menuques3;
-            if (menuques3 == 1) {
+            int menuques4;
+            std::cin >> menuques4;
+            if (menuques4 == 1) {
                 main();
-            } else if (menuques3 == 2) {
+            } else if (menuques4 == 2) {
                 return 0;
             } else {
                 std::cout << "[Error] Wrong input";
@@ -429,11 +449,11 @@ int main() {
             std::vector<std::string> drives;
             listpartisions(drives);
             std::cout << "\nPress '1' for returning to the main menu, '2' to exit\n";
-            int menuques3;
-            std::cin >> menuques3;
-            if (menuques3 == 1) {
+            int menuques5;
+            std::cin >> menuques5;
+            if (menuques5 == 1) {
                 main();
-            } else if (menuques3 == 2) {
+            } else if (menuques5 == 2) {
                 return 0;
             } else {
                 std::cout << "[Error] Wrong input";
@@ -444,11 +464,11 @@ int main() {
         case 7:{
             analyDiskSpace();
             std::cout << "\nPress '1' for returning to the main menu, '2' to exit\n";
-            int menuques3;
-            std::cin >> menuques3;
-            if (menuques3 == 1) {
+            int menuques6;
+            std::cin >> menuques6;
+            if (menuques6 == 1) {
                 main();
-            } else if (menuques3 == 2) {
+            } else if (menuques6 == 2) {
                 return 0;
             } else {
                 std::cout << "[Error] Wrong input";
@@ -457,7 +477,7 @@ int main() {
             break;
         }
         case 8:{
-            std::cout << "This Function is empty, you can request some ideas for this function!\n";
+            std::cout << "This function is empty you can request some ideas!\n";
             break;
         }
         case 9:

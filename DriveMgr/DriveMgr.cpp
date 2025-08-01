@@ -26,11 +26,6 @@ std::string execTerminal(const char* cmd) {
 void advancedListDrives() {
     std::string lsblk = execTerminal("lsblk");
     std::cout << lsblk;
-    /*
-    std::cout << "\nPress Enter to return to the main menu...\n";
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    std::cin.get();
-    */
 }
 
 void listDrives(std::vector<std::string>& drives) {
@@ -57,15 +52,6 @@ void listDrives(std::vector<std::string>& drives) {
     if (drives.empty()) {
         std::cout << "No drives found!\n";
     }
-    /*
-    std::cout << "Press '1' to return to main menu or '2' for advanced listing...\n";
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    std::string input;
-    std::getline(std::cin, input);
-    if (input == "2") {
-        advancedListDrives();
-    }
-    */
 }
 
 void listpartisions(std::vector<std::string>& drive) {
@@ -83,16 +69,11 @@ void listpartisions(std::vector<std::string>& drive) {
     }
 
     std::string driveName = drives[listpartdrivenum];
-    //std::string lsblk = execTerminal("lsblk");
     std::cout << "\nPartitions of drive " << driveName << ":\n";
-
     std::string cmd = "lsblk -o NAME,SIZE,TYPE,MOUNTPOINT -n -p " + driveName;
-
     std::string output = execTerminal(cmd.c_str());
-
     std::istringstream iss(output);
     std::string line;
-
     std::cout << std::left << std::setw(15) << "Name" 
               << std::setw(10) << "Size" 
               << std::setw(10) << "Type" 
@@ -106,8 +87,73 @@ void listpartisions(std::vector<std::string>& drive) {
     }
 }
 
-
-
+void analyDiskSpace() {
+    std::vector<std::string> drives;
+    listDrives(drives);
+    if (drives.empty()) {
+        std::cout << "No drives found!\n";
+        return;
+    }
+    std::cout << "\nEnter the number of a drive you want to analyze:\n";
+    int diskspacemenu1input;
+    std::cin >> diskspacemenu1input;
+    if (diskspacemenu1input < 0 || diskspacemenu1input >= (int)drives.size()) {
+        std::cout << "Invalid selection!\n";
+        return;
+    }
+    std::string driveName = drives[diskspacemenu1input];
+    std::cout << "\n------ Disk Information ------\n";
+    std::string cmd = "lsblk -b -o NAME,SIZE,TYPE,MOUNTPOINT -n -p " + driveName;
+    std::string output = execTerminal(cmd.c_str());
+    std::istringstream iss(output);
+    std::string line;
+    bool found = false;
+    std::string mountpoint;
+    std::string size;
+    while (std::getline(iss, line)) {
+        std::istringstream lss(line);
+        std::string name, type;
+        lss >> name >> size >> type;
+        std::getline(lss, mountpoint);
+        if (!mountpoint.empty() && mountpoint[0] == ' ') mountpoint = mountpoint.substr(1);
+        if (type == "disk") {
+            found = true;
+            std::cout << "Device:      " << name << "\n";
+            try {
+                unsigned long long bytes = std::stoull(size);
+                const char* units[] = {"B", "KB", "MB", "GB", "TB"};
+                int unit = 0;
+                double humanSize = bytes;
+                while (humanSize >= 1024 && unit < 4) {
+                    humanSize /= 1024;
+                    ++unit;
+                }
+                std::cout << "Size:        " << humanSize << " " << units[unit] << "\n";
+            } catch (...) {
+                std::cout << "Size:        " << size << " bytes\n";
+            }
+            std::cout << "Type:        " << type << "\n";
+            std::cout << "Mountpoint:  " << (mountpoint.empty() ? "-" : mountpoint) << "\n";
+        }
+    }
+    if (!found) {
+        std::cout << "No disk info found!\n";
+    } else {
+        if (!mountpoint.empty() && mountpoint != "-") {
+            std::string dfcmd = "df -h '" + mountpoint + "' | tail -1";
+            std::string dfout = execTerminal(dfcmd.c_str());
+            std::istringstream dfiss(dfout);
+            std::string filesystem, size, used, avail, usep, mnt;
+            dfiss >> filesystem >> size >> used >> avail >> usep >> mnt;
+            std::cout << "Used:        " << used << "\n";
+            std::cout << "Available:   " << avail << "\n";
+            std::cout << "Used %:      " << usep << "\n";
+        } else {
+            std::cout << "No mountpoint, cannot show used/free space.\n";
+        }
+    }
+    std::cout << "------------------------------\n";
+}
 
 
 // Dummy implementations for the other functions (to avoid linker errors)
@@ -117,10 +163,11 @@ bool resizeDrive(const std::string&, int) { return false; }
 bool checkDriveHealth(const std::string&) { return false; }
 
 void formatDrive() {
-    std::cout << "Choose an option:\n";
+    std::cout << "\nChoose an option:\n";
     std::cout << "1. Format drive\n";
     std::cout << "2. Format drive with label\n";
     std::cout << "3. Format drive with label and filesystem\n";
+    std::cout << "------------------\n";
     int fdinput;
     std::cin >> fdinput;
     switch (fdinput) {
@@ -188,18 +235,11 @@ int checkDriveHealth() {
         std::cout << "[Error] Invalid selection!\n";
         return 1;
     }
-    // Check the health of the selected drive
     if (checkDriveHealth(drives[driveNumber_health])) {
         std::cout << "Drive " << drives[driveNumber_health] << " is healthy.\n";
     } else {
         std::cout << "Drive " << drives[driveNumber_health] << " has issues.\n";
     }
-    /*
-    std::cout << "Press Enter to return to the main menu...\n";
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    std::cin.get();
-    return 1;
-    */
    return 1;
 }
 
@@ -230,11 +270,6 @@ void resizeDrive() {
     } else {
         std::cout << "[Error] Failed to resize drive\n";
     }
-    /*
-    std::cout << "Press Enter to return to the main menu...\n";
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    std::cin.get();
-    */
 }
 
 void encryptDecryptDrive() {
@@ -276,21 +311,44 @@ void encryptDecryptDrive() {
     }
 }
 
+void func7() {
+    std::vector<std::string> drives;
+    listDrives(drives);
+    if (drives.empty()) {
+        std::cout << "No drives found!\n";
+        return;
+    }
+
+
+
+
+
+
+
+
+
+    
+}
+
+
+
+
+
+
 void Info() {
     std::cout << "\n----------- Info -----------\n";
     std::cout << "Welcome to Drive Manager, this is a porgram for linux to view, operate,... your Drives in your system\n";
     std::cout << "Warning! You should know some basic things about drives so you dont loose any data\n";
     std::cout << "If you found any problems, visit my Github page and send an issue template\n";
     std::cout << "Basic info:\n";
-    std::cout << "Version: 0.8.74\n";
+    std::cout << "Version: 0.8.79\n";
     std::cout << "Github: https://github.com/Dogwalker-kryt/Drive-Manager-for-Linux\n";
     std::cout << "Author: Dogwalker-kryt\n";
     std::cout << "----------------------------\n";
 }
 
-
 int main() {
-    std::cout << "Welcome to DriveMgr\n";
+    std::cout << "\nWelcome to Drive-Manager\n";
     std::cout << "------------- Menu -------------\n";
     std::cout << "1. List drives\n";
     std::cout << "2. Format drive\n";
@@ -298,8 +356,10 @@ int main() {
     std::cout << "4. Resize drive\n";
     std::cout << "5. Check drive health\n";
     std::cout << "6. View Partition of Dirve\n";
-    std::cout << "8  View Info";
-    std::cout << "9. Exit\n";
+    std::cout << "7. Analyze Disk Space\n";
+    std::cout << "8. Unknown Function\n";
+    std::cout << "9. View Info\n";
+    std::cout << "0. Exit\n";
     std::cout << "--------------------------------\n";
     int menuinput;
     std::cin >> menuinput;
@@ -340,7 +400,6 @@ int main() {
         case 3:
             std::cout << "The function en/decrpt drives is disabled due to bugs";
             //encryptDecryptDrive();
-            /*
             std::cout << "\nPress '1' for returning to the main menu, '2' to exit\n";
             int menuques2;
             std::cin >> menuques2;
@@ -352,16 +411,15 @@ int main() {
                 std::cout << "[Error] Wrong input";
                 return 1;
             }
-            */
             break;
         case 4:
             resizeDrive();
             std::cout << "\nPress '1' for returning to the main menu, '2' to exit\n";
-            int menuques2;
-            std::cin >> menuques2;
-            if (menuques2 == 1) {
+            int menuques3;
+            std::cin >> menuques3;
+            if (menuques3 == 1) {
                 main();
-            } else if (menuques2 == 2) {
+            } else if (menuques3 == 2) {
                 return 0;
             } else {
                 std::cout << "[Error] Wrong input";
@@ -371,11 +429,11 @@ int main() {
         case 5:
             checkDriveHealth();
             std::cout << "\nPress '1' for returning to the main menu, '2' to exit\n";
-            int menuques3;
-            std::cin >> menuques3;
-            if (menuques3 == 1) {
+            int menuques4;
+            std::cin >> menuques4;
+            if (menuques4 == 1) {
                 main();
-            } else if (menuques3 == 2) {
+            } else if (menuques4 == 2) {
                 return 0;
             } else {
                 std::cout << "[Error] Wrong input";
@@ -386,11 +444,11 @@ int main() {
             std::vector<std::string> drives;
             listpartisions(drives);
             std::cout << "\nPress '1' for returning to the main menu, '2' to exit\n";
-            int menuques3;
-            std::cin >> menuques3;
-            if (menuques3 == 1) {
+            int menuques5;
+            std::cin >> menuques5;
+            if (menuques5 == 1) {
                 main();
-            } else if (menuques3 == 2) {
+            } else if (menuques5 == 2) {
                 return 0;
             } else {
                 std::cout << "[Error] Wrong input";
@@ -398,10 +456,29 @@ int main() {
             }
             break;
         }
-        case 8:
+        case 7:{
+            analyDiskSpace();
+            std::cout << "\nPress '1' for returning to the main menu, '2' to exit\n";
+            int menuques6;
+            std::cin >> menuques6;
+            if (menuques6 == 1) {
+                main();
+            } else if (menuques6 == 2) {
+                return 0;
+            } else {
+                std::cout << "[Error] Wrong input";
+                return 1;
+            }
+            break;
+        }
+        case 8:{
+            std::cout << "This function is empty you can request some ideas!\n";
+            break;
+        }
+        case 9:
             Info();
             break;
-        case 9:
+        case 0:
             std::cout << "Exiting DriveMgr\n";
             return 0;
         default:

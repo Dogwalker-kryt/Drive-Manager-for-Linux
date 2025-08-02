@@ -277,14 +277,14 @@ void resizeDrive() {
     }
 }
 
-void encryptDecryptDrive() {
+void EnDecryptDrive() {
     std::vector<std::string> drives;
     listDrives(drives);
     if (drives.empty()) {
         std::cout << "No drives found!\n";
         return;
     }
-    std::cout << "Enter drive number to encrypt/decrypt:\n";
+    std::cout << "Enter drive number to encrypt/decrypt with AES-256:\n";
     int driveNumber;
     std::cin >> driveNumber;
     if (driveNumber < 0 || driveNumber >= (int)drives.size()) {
@@ -296,12 +296,31 @@ void encryptDecryptDrive() {
     std::cin >> endecryptselect;
     std::string device = drives[driveNumber];
     if (endecryptselect == 'e' || endecryptselect == 'E') {
-        std::cout << "Encrypting " << device << " using LUKS...\n";
+        std::cout << "Encrypting " << device << " with AES-256...\n";
         std::string cmd = "sudo cryptsetup luksFormat " + device;
         std::cout << "Command: " << cmd << "\n";
         std::string result = execTerminal(cmd.c_str());
         std::cout << result;
+        std::cout << "Enter a name for the encrypted device: \n";
+        std::string deviceNameEncrypt;
+        std::cin >> deviceNameEncrypt;
+        // defenetly not code from satckoverflow, because i dont know how to use en/decrypting stuff
+        /*
+        unsigned char key[KEY_128] = "very strong key";
+        unsigned char plaintext[16] = "this is a test";
+        unsigned char ciphertext[16];
+        unsigned char decptext[16];
+        aes_ctx_t *ctx;
+        virtualAES::Initialize();
+        ctx = virtualAES::AllocateCTX(key, sizeof(key));
+        virtualAES::Encrypt(ctx, plaintext, ciphertext);
+        cout << "encrypted: " << ciphertext << endl;
+        virtualAES::Encrypt(ctx, ciphertext, decptext);
+        cout << "decrypted: " << decptext << endl;
+        return 0;
+        */
     } else if (endecryptselect == 'd' || endecryptselect == 'D') {
+        std::cout << "Decrypting " << device << "...\n";
         std::cout << "Enter a name for the decrypted mapping (e.g. secure_data): ";
         std::string mappingName;
         std::cin >> mappingName;
@@ -316,25 +335,58 @@ void encryptDecryptDrive() {
     }
 }
 
-void func7() {
+std::string execTerminal2ZeroDrive(const std::string &command) {
+    std::array<char, 128> buffer;
+    std::string result;
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(command.c_str(), "r"), pclose);
+    if (!pipe) return "";
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+        result += buffer.data();
+    }
+    return result;
+}
+
+void ZeroDrive() {
     std::vector<std::string> drives;
     listDrives(drives);
     if (drives.empty()) {
         std::cout << "No drives found!\n";
         return;
     }
-
-
-
-
-
-
-
-
-
-    
+    std::cout << "Enter the name of an Drive you want to Zero:\n";
+    std::string driveName;
+    std::cin >> driveName;
+    std::cout << "Are you sure you want to zero the drive " << driveName << "?\n";
+    char confirmationzerodrive;
+    std::cin >> confirmationzerodrive;
+    if (confirmationzerodrive == 'y' || confirmationzerodrive == 'Y' || confirmationzerodrive == 'yes' || confirmationzerodrive == 'Yes') {
+        char randomconfirmationkey[] = {'a', 'A', 'b', 'B', 'c', 'C', 'd', 'D', 'e', 'E', 'f', 'F', 'g', 'G', 'h', 'H', 'i', 'I', 'j', 'J', 'k', 'K', 'l', 'L', 'm', 'M', 'n', 'N', 'o', 'O', 'p', 'P', 'q', 'Q', 'r', 'R', 's', 'S', 't', 'T', 'u', 'U', 'v', 'V', 'w', 'W', 'x', 'X', 'y', 'Y', 'z', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
+        for (int i = 0; i < 10; i++) {
+            int randomIndex = rand() % (sizeof(randomconfirmationkey) / sizeof(randomconfirmationkey[0]));
+            std::cout << randomconfirmationkey[randomIndex];
+        }
+        std::cout << "\nPlease enter the confirmationkey to preceed with the operation:\n";
+        std::cout << randomconfirmationkey << "\n";
+        char randomconfirmationkeyinput[10];
+        std::cin >> randomconfirmationkeyinput;
+        if (std::string(randomconfirmationkeyinput) == std::string(randomconfirmationkey)) {
+            std::cout << "Proceeding with zeroing " << driveName << "...\n";
+            std::string devrandom = execTerminal2ZeroDrive("sudo dd if=/dev/urandom of=" + driveName + " bs=1M status=progress");
+            std::string devZero = execTerminal2ZeroDrive("sudo dd if=/dev/zero of=" + driveName + " bs=1M status=progress");
+            if (devZero.empty() || devrandom.empty()) {
+                std::cout << "[Error] Failed to zero the drive\n";
+            } else if (devZero.empty() && devrandom.empty()) {
+                std::cout << "[Warning] the drive was not completely zeroed, please check the drive and try again if necessary\n";
+            } else {
+                std::cout << "Drive " << driveName << " has been zerod successfully\n";
+            }
+        } else {
+            std::cout << "[Error] Invalid confirmation of the Key or unexpected error\n";
+        }
+    } else {
+        std::cout << "Zeroing cancelled\n";
+    }
 }
-
 
 
 
@@ -346,23 +398,25 @@ void Info() {
     std::cout << "Warning! You should know some basic things about drives so you dont loose any data\n";
     std::cout << "If you found any problems, visit my Github page and send an issue template\n";
     std::cout << "Basic info:\n";
-    std::cout << "Version: 0.8.79\n";
+    std::cout << "Version: 0.8.83\n";
     std::cout << "Github: https://github.com/Dogwalker-kryt/Drive-Manager-for-Linux\n";
     std::cout << "Author: Dogwalker-kryt\n";
     std::cout << "----------------------------\n";
 }
 
 int main() {
+    std::string clear = execTerminal("clear");
+    std::cout << clear;
     std::cout << "\nWelcome to Drive-Manager\n";
     std::cout << "------------- Menu -------------\n";
     std::cout << "1. List drives\n";
     std::cout << "2. Format drive\n";
-    std::cout << "3. Encrypt/Decrypt drive\n";
+    std::cout << "3. Encrypt/Decrypt drive with AES-256\n";
     std::cout << "4. Resize drive\n";
     std::cout << "5. Check drive health\n";
-    std::cout << "6. View Partition of Dirve\n";
+    std::cout << "6. View Partition of Drive\n";
     std::cout << "7. Analyze Disk Space\n";
-    std::cout << "8. Unknown Function\n";
+    std::cout << "8. Zero Drive\n";
     std::cout << "9. View Info\n";
     std::cout << "0. Exit\n";
     std::cout << "--------------------------------\n";
@@ -404,7 +458,7 @@ int main() {
         }
         case 3:
             std::cout << "The function en/decrpt drives is disabled due to bugs";
-            //encryptDecryptDrive();
+            //EnDecryptDrive();
             std::cout << "\nPress '1' for returning to the main menu, '2' to exit\n";
             int menuques2;
             std::cin >> menuques2;
@@ -477,11 +531,35 @@ int main() {
             break;
         }
         case 8:{
-            std::cout << "This function is empty you can request some ideas!\n";
+            std::cout << "[Warning] This funcion is Overwriting the hole data to Zeros\n"; 
+            std::cout << "if you dont know what you are doing then dont use this function for no data loss\n";
+            std::cout << "Do you want to proceed?\n";
+            char zerodriveinput;
+            if (zerodriveinput == 'y' || zerodriveinput == 'Y' || zerodriveinput == 'yes' || zerodriveinput == 'Yes') {
+                ZeroDrive();
+            } else {
+                main();
+            }
+	        std::cout << "\nPress '1' to return to the main menu or '2' for exit\n";
+	        int menuques7;
+	        std::cin >> menuques7;
+	        if (menuques7 == 1) {
+		        main();
+	        } else if (menuques7 == 2) {
+		        return 0;
+	        }
             break;
         }
         case 9:
             Info();
+	        std::cout << "\nPress '1' to return to the main menu or '2' for exit\n";
+	        int infoques;
+	        std::cin >> infoques;
+	        if (infoques == 1) {
+		        main();
+	        } else if (infoques == 2) {
+		        return 0;
+	        }
             break;
         case 0:
             std::cout << "Exiting DriveMgr\n";

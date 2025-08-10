@@ -1,7 +1,7 @@
 // ! Warning this version has bugs and so or is not finisehd or tested 
 // The correct version is now in the folder DriveMgr with no bugs and such
 // Curretn version of this code is in the Info() function below
-// v0.8.83
+// v0.8.84
 
 #include <iostream>
 #include <string>
@@ -28,10 +28,6 @@ std::string execTerminal(const char* cmd) {
     return result;
 }
 
-void advancedListDrives() {
-    std::string lsblk = execTerminal("lsblk");
-    std::cout << lsblk;
-}
 
 void listDrives(std::vector<std::string>& drives) {
     drives.clear();
@@ -373,9 +369,9 @@ void ZeroDrive() {
             std::cout << "Proceeding with zeroing " << driveName << "...\n";
             std::string devrandom = execTerminal2ZeroDrive("sudo dd if=/dev/urandom of=" + driveName + " bs=1M status=progress");
             std::string devZero = execTerminal2ZeroDrive("sudo dd if=/dev/zero of=" + driveName + " bs=1M status=progress");
-            if (devZero.empty() || devrandom.empty()) {
+            if (devZero.empty() && devrandom.empty()) {
                 std::cout << "[Error] Failed to zero the drive\n";
-            } else if (devZero.empty() && devrandom.empty()) {
+            } else if (devZero.empty() || devrandom.empty()) {
                 std::cout << "[Warning] the drive was not completely zeroed, please check the drive and try again if necessary\n";
             } else {
                 std::cout << "Drive " << driveName << " has been zerod successfully\n";
@@ -398,7 +394,7 @@ void Info() {
     std::cout << "Warning! You should know some basic things about drives so you dont loose any data\n";
     std::cout << "If you found any problems, visit my Github page and send an issue template\n";
     std::cout << "Basic info:\n";
-    std::cout << "Version: 0.8.83\n";
+    std::cout << "Version: 0.8.84\n";
     std::cout << "Github: https://github.com/Dogwalker-kryt/Drive-Manager-for-Linux\n";
     std::cout << "Author: Dogwalker-kryt\n";
     std::cout << "----------------------------\n";
@@ -414,9 +410,8 @@ int main() {
     std::cout << "3. Encrypt/Decrypt drive with AES-256\n";
     std::cout << "4. Resize drive\n";
     std::cout << "5. Check drive health\n";
-    std::cout << "6. View Partition of Drive\n";
-    std::cout << "7. Analyze Disk Space\n";
-    std::cout << "8. Zero Drive\n";
+    std::cout << "6. Analyze Disk Space\n";
+    std::cout << "7. Zero Drive\n";
     std::cout << "9. View Info\n";
     std::cout << "0. Exit\n";
     std::cout << "--------------------------------\n";
@@ -432,7 +427,7 @@ int main() {
             if (menuques == 1) {
                 main();
             } else if (menuques == 2) {
-                advancedListDrives();
+                listpartisions(drives);
             } else if (menuques == 3) {
                 return 0;
             } else {
@@ -500,22 +495,6 @@ int main() {
             }
             break;
         case 6:{
-            std::vector<std::string> drives;
-            listpartisions(drives);
-            std::cout << "\nPress '1' for returning to the main menu, '2' to exit\n";
-            int menuques5;
-            std::cin >> menuques5;
-            if (menuques5 == 1) {
-                main();
-            } else if (menuques5 == 2) {
-                return 0;
-            } else {
-                std::cout << "[Error] Wrong input";
-                return 1;
-            }
-            break;
-        }
-        case 7:{
             analyDiskSpace();
             std::cout << "\nPress '1' for returning to the main menu, '2' to exit\n";
             int menuques6;
@@ -530,7 +509,7 @@ int main() {
             }
             break;
         }
-        case 8:{
+        case 7:{
             std::cout << "[Warning] This funcion is Overwriting the hole data to Zeros\n"; 
             std::cout << "if you dont know what you are doing then dont use this function for no data loss\n";
             std::cout << "Do you want to proceed?\n";
@@ -548,7 +527,17 @@ int main() {
 	        } else if (menuques7 == 2) {
 		        return 0;
 	        }
-            break;
+            break; 
+        }
+        case 8:{
+            std::cout << "This fuction is not implemented yet!\n";
+	        std::cout << "\nPress '1' to return to the main menu or '2' for exit\n";
+	        int menuques8;
+	        if (menuques8 == 1) {
+		        main(); 
+	        } else if (menuques8 == 2) {
+		        return 0;
+	        } 
         }
         case 9:
             Info();
@@ -570,3 +559,4 @@ int main() {
     }
     return 1;
 }
+

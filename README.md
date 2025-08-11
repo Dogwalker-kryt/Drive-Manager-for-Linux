@@ -39,7 +39,7 @@ in the other file outside the folder is the newest version (beta), this version 
    Make sure you have a C++ compiler and necessary development tools installed.
 
    ```sh
-   g++ -o DriveMgr DriveMgr/DriveMgr.cpp
+   g++ DriveMgr.cpp -o DriveMgr -lssl -lcrypto 
    ```
 
 2. **Run the program**  

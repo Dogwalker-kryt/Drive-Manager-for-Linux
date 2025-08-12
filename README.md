@@ -13,7 +13,7 @@ always check if a new version has been released
 > This tool is intended for users who understand the risks involved with formatting, encrypting, or otherwise modifying drives. Always back up your data and double-check your selections!
 
 ## Files
-in the current state of the repo, there are two folders: include (with all .h files) and src (with the source code files (experi = beta; stable = the last version that is ready to use with no issues))
+in the current state of the repo, there are two folders: include (with all .h files) and src (with the source code files (experi = beta; stable = the last version that is ready to use with no issues)). The src and include folders are for the CLI version, every other file/folder that i important to the GUI verison will be in the GUI folder
 ```
 ├─/include
 |  ├─/drivefunctions.h

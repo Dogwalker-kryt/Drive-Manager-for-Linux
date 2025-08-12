@@ -43,11 +43,11 @@ in the other file outside the folder is the newest version (beta), this version 
    Make sure you have a C++ compiler and necessary development tools installed.
 
    ```sh
-   g++ DriveMgr_expari.cpp -o DriveMgr -lssl -lcrypto 
+   g++ DriveMgr_experi.cpp -I.. -o DriveMgr -lssl -lcrypto 
    ```
    or
    ```sh
-   g++ DriveMgr_stable.cpp -o DriveMgr -lssl -lcrypto 
+   g++ DriveMgr_stable.cpp -I.. -o DriveMgr -lssl -lcrypto 
    ```
    i will also upload the finished executable
 3. **Run the program**  

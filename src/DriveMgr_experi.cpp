@@ -6,7 +6,7 @@
 #include <iostream>
 #include <string>
 #include <cstdlib>
-#include "include/drivefunk.h"
+#include "include/drivefunctions.h"
 #include <cstdio>
 #include <sstream>
 #include <memory>

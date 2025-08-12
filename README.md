@@ -41,7 +41,7 @@ in the other file outside the folder is the newest version (beta), this version 
    ```sh
    g++ DriveMgr.cpp -o DriveMgr -lssl -lcrypto 
    ```
-
+   i will also upload the finished executable
 2. **Run the program**  
    You need to run as root to manage drives:
 
@@ -59,7 +59,8 @@ in the other file outside the folder is the newest version (beta), this version 
    3. Encrypt/Decrypt drive
    4. Resize drive
    5. Check drive health
-   6. View Partitions
+   6. Analyse Disk space
+   7. Overwrite Disk Data
    8. Info
    9. Exit
    --------------------------------

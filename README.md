@@ -4,7 +4,7 @@ A terminal-based drive management tool for Linux systems, written in C++. The go
 
 Current version in non beta: 0.8.79
 
-Current version in beta: 0.8.83
+Current version in beta: 0.8.86
 
 always check if a new version has been released
 
@@ -13,15 +13,19 @@ always check if a new version has been released
 > This tool is intended for users who understand the risks involved with formatting, encrypting, or otherwise modifying drives. Always back up your data and double-check your selections!
 
 ## Files
-in the current state of the repo 24 july, there is the folder with 2 files:
+in the current state of the repo, there are two folders: include (with all .h files) and src (with the source code files (experi = beta; stable = the last version that is ready to use with no issues))
 ```
-drivefunk.h (contains the funktions for the programm)
-DriveMgr.cpp (i try so it only contains the newest bug/erros free version)
+├─/include
+|  ├─/drivefunctions.h
+|  └─/encryption.h
+└─/src
+   ├─/DriveMgr_experi.cpp
+   └─/DriveMgr_stable.cpp
 ```
 in the other file outside the folder is the newest version (beta), this version will not be bug free, but atleast compilable
 
 
-! If you dowload one of the source code files you need to have the header file drivefunk.h with it !
+! If you dowload one of the source code files you need to have the header files drivefunctions.h and encryption.h with it !
 
 
 ## Features
@@ -39,17 +43,21 @@ in the other file outside the folder is the newest version (beta), this version 
    Make sure you have a C++ compiler and necessary development tools installed.
 
    ```sh
-   g++ DriveMgr.cpp -o DriveMgr -lssl -lcrypto 
+   g++ DriveMgr_expari.cpp -o DriveMgr -lssl -lcrypto 
+   ```
+   or
+   ```sh
+   g++ DriveMgr_stable.cpp -o DriveMgr -lssl -lcrypto 
    ```
    i will also upload the finished executable
-2. **Run the program**  
+3. **Run the program**  
    You need to run as root to manage drives:
 
    ```sh
    sudo ./DriveMgr
    ```
 
-3. **Follow the menu**  
+4. **Follow the menu**  
    The program will present a menu:
    ```
    Welcome to DriveMgr

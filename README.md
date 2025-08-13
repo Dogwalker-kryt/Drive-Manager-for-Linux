@@ -4,7 +4,7 @@ A terminal-based drive management tool for Linux systems, written in C++. The go
 
 Current version in non beta: 0.8.79
 
-Current version in beta: 0.8.86
+Current version in beta: 0.8.88-01
 
 always check if a new version has been released
 

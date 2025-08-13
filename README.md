@@ -19,7 +19,7 @@ in the current state of the repo, there are two folders: include (with all .h fi
 |   ├─/include
 |   |  ├─/drivefunctions.h
 |   |  └─/encryption.h
-|   └─/src
+|   ├─/src
 |   |   ├─/DriveMgr_experi.cpp
 |   |   └─/DriveMgr_stable.cpp
 ├─/DriveMgr_GUI

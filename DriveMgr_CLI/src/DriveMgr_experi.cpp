@@ -1,7 +1,7 @@
 // ! Warning this version has bugs and so or is not finisehd or tested 
 // The correct version is now in the folder DriveMgr with no bugs and such
 // Curretn version of this code is in the Info() function below
-// v0.8.86
+// v0.8.88-01
 
 #include <iostream>
 #include <string>
@@ -38,6 +38,7 @@ std::string execTerminal(const char* cmd) {
 
 void listDrives(std::vector<std::string>& drives) {
     drives.clear();
+    std::cout << "\nListing connected drives...\n";
     std::string lsblk = execTerminal("lsblk -o NAME,SIZE,TYPE,MOUNTPOINT -d -n -p");
     std::cout << "\nConnected Drives:\n";
     std::cout << std::left << std::setw(3) << "#" << std::setw(20) << "Device" << std::setw(10) << "Size" << std::setw(10) << "Type" << "Mountpoint" << std::endl;
@@ -63,6 +64,7 @@ void listDrives(std::vector<std::string>& drives) {
 }
 
 void listpartisions(std::vector<std::string>& drive) {
+    std::cout << "\nListing partitions...\n";
     std::vector<std::string> drives;
     listDrives(drives);
     if (drives.empty()) {
@@ -96,6 +98,7 @@ void listpartisions(std::vector<std::string>& drive) {
 }
 
 void analyDiskSpace() {
+    std::cout << "\nAnalyzing disk space...\n";
     std::vector<std::string> drives;
     listDrives(drives);
     if (drives.empty()) {
@@ -171,7 +174,7 @@ bool resizeDrive(const std::string&, int) { return false; }
 bool checkDriveHealth(const std::string&) { return false; }
 
 void formatDrive() {
-    std::cout << "\nChoose an option:\n";
+    std::cout << "\nChoose an option for how to format:\n";
     std::cout << "1. Format drive\n";
     std::cout << "2. Format drive with label\n";
     std::cout << "3. Format drive with label and filesystem\n";
@@ -197,6 +200,12 @@ void formatDrive() {
                 std::cin >> confirmationfd;
                 if (confirmationfd == "y" || confirmationfd == "Y" || confirmationfd == "yes" || confirmationfd == "Yes") {
                     std::cout << "Formatting drive: " << drives[driveNumber] << "...\n";
+                    std::string execTerminal(("mkfs.ext4 " + drives[driveNumber]).c_str());
+                    if (execTerminal.find("error") != std::string::npos) {
+                        std::cout << "[Error] Failed to format drive: " << drives[driveNumber] << "\n";
+                    } else {
+                        std::cout << "Drive formatted successfully: " << drives[driveNumber] << "\n";
+                    }
                 } else {
                     std::cout << "Formatting cancelled!\n";
                     return;
@@ -205,20 +214,69 @@ void formatDrive() {
             break;
         case 2:
             {
+                std::vector<std::string> drives;
+                listDrives(drives);
+                if (drives.empty()) break;
+                std::cout << "Enter drive number:\n";
+                int driveNumberfd;
+                std::cin >> driveNumberfd;
+                if (driveNumberfd < 0 || driveNumberfd >= (int)drives.size()) {
+                    std::cout << "Invalid selection!\n";
+                    break;
+                }
                 std::cout << "Enter label: ";
                 std::string label;
                 std::cin >> label;
                 std::cout << "Formatting drive with label: " << label << "\n";
+                if (label.empty()) {
+                    std::cout << "[Error] label cannot be empty!\n";
+                    return;
+                }
+                std::cout << "Are you sure you want to format drive " << drives[driveNumberfd] << " with label '" << label << "' ?\n";
+                char confirmationfd;
+                std::cin >> confirmationfd;
+                if (confirmationfd != 'y' || confirmationfd != 'Y' || confirmationfd != 'yes' || confirmationfd != 'Yes') {
+                    std::cout << "[Info] Formating cancled!\n";
+                    break;
+                }
+                std::string execTerminal(("mkfs.ext4 -L " + label + " " + drives[driveNumberfd]).c_str());
+                if (execTerminal.find("error") != std::string::npos) {
+                    std::cout << "[Error] Failed to format drive: " << drives[driveNumberfd] << "\n";
+                } else {
+                    std::cout << "Drive formatted successfully with label: " << label << "\n";
+                }
             }
             break;
         case 3:
             {
+                std::vector<std::string> drives;
+                listDrives(drives);
+                if (drives.empty()) break;
+                std::cout << "Enter drive number:\n";
+                int drivenumberfd3;
+                std::cin >> drivenumberfd3;
+                if (drivenumberfd3 < 0 || drivenumberfd3 >= (int)drives.size()) {
+                    std::cout << "Invalid selection!\n";
+                    break;
+                }
                 std::string label, fsType;
                 std::cout << "Enter label: ";
                 std::cin >> label;
                 std::cout << "Enter filesystem type (e.g. ext4): ";
                 std::cin >> fsType;
-                std::cout << "Formatting drive with label: " << label << " and filesystem: " << fsType << "\n";
+                std::cout << "Are you sure you want to format drive " << drives[drivenumberfd3] << " with label '" << label << "' and filesystem type '" << fsType << "' ?\n";
+                char confirmationfd3;
+                std::cin >> confirmationfd3;
+                if (confirmationfd3 != 'y' || confirmationfd3 != 'Y' || confirmationfd3 != 'yes' || confirmationfd3 != 'Yes') {
+                    std::cout << "[Info] Formating cancelled!\n";
+                    return;
+                }
+                std::string execTerminal(("mkfs." + fsType + " -L " + label + " " + drives[drivenumberfd3]).c_str());
+                if (execTerminal.find("error") != std::string::npos) {
+                    std::cout << "[Error] Failed to format drive: " << drives[drivenumberfd3] << "\n";
+                } else {
+                    std::cout << "Drive formatted successfully with label: " << label << " and filesystem type: " << fsType << "\n";
+                }
             }
             break;
         default:
@@ -282,6 +340,11 @@ void resizeDrive() {
 
 const std::string KEY_STORAGE_PATH = std::string(getenv("HOME")) + "/.var/app/DriveMgr/keys.savekey";
 
+struct EncryptionInfo {
+    std::string driveName;
+    unsigned char key[32];  // 256-bit key
+    unsigned char iv[16];   // 128-bit IV for CBC mode
+};
 
 void saveEncryptionInfo(const EncryptionInfo& info) {
     std::ofstream file(KEY_STORAGE_PATH, std::ios::app | std::ios::binary);
@@ -405,7 +468,6 @@ void EnDecryptDrive() {
             return;
         }
 
-        // Your original random confirmation key system
         char randomconfirmationkey[] = {'a', 'A', 'b', 'B', 'c', 'C', 'd', 'D', 'e', 'E', 'f', 'F', 'g', 'G', 'h', 'H', 'i', 'I', 'j', 'J', 'k', 'K', 'l', 'L', 'm', 'M', 'n', 'N', 'o', 'O', 'p', 'P', 'q', 'Q', 'r', 'R', 's', 'S', 't', 'T', 'u', 'U', 'v', 'V', 'w', 'W', 'x', 'X', 'y', 'Y', 'z', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
         std::string displayKey;
         for (int i = 0; i < 10; i++) {
@@ -461,8 +523,6 @@ void EnDecryptDrive() {
             return;
         }
         
-
-        // Your original random confirmation key system
         char randomconfirmationkey[] = {'a', 'A', 'b', 'B', 'c', 'C', 'd', 'D', 'e', 'E', 'f', 'F', 'g', 'G', 'h', 'H', 'i', 'I', 'j', 'J', 'k', 'K', 'l', 'L', 'm', 'M', 'n', 'N', 'o', 'O', 'p', 'P', 'q', 'Q', 'r', 'R', 's', 'S', 't', 'T', 'u', 'U', 'v', 'V', 'w', 'W', 'x', 'X', 'y', 'Y', 'z', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
         std::string displayKey;
         for (int i = 0; i < 10; i++) {
@@ -573,7 +633,7 @@ void Info() {
     std::cout << "Warning! You should know some basic things about drives so you dont loose any data\n";
     std::cout << "If you found any problems, visit my Github page and send an issue template\n";
     std::cout << "Basic info:\n";
-    std::cout << "Version: 0.8.86\n";
+    std::cout << "Version: 0.8.88-01\n";
     std::cout << "Github: https://github.com/Dogwalker-kryt/Drive-Manager-for-Linux\n";
     std::cout << "Author: Dogwalker-kryt\n";
     std::cout << "----------------------------\n";
@@ -642,8 +702,7 @@ int main() {
             break;
         }
         case 3:
-            std::cout << "The function en/decrpt drives is disabled, beacause its in development\n";
-            //EnDecryptDrive();
+            EnDecryptDrive();
             std::cout << "\nPress '1' for returning to the main menu, '2' to exit\n";
             int menuques2;
             std::cin >> menuques2;

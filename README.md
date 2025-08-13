@@ -16,17 +16,16 @@ always check if a new version has been released
 in the current state of the repo, there are two folders: include (with all .h files) and src (with the source code files (experi = beta; stable = the last version that is ready to use with no issues)). All files to be needed are in the corosponding folders.
 ```
 ├─/DriveMgr_CLI
-|  ├─/include
-|  |  ├─/drivefunctions.h
-|  |  └─/encryption.h
-|  └─/src
-|     ├─/DriveMgr_experi.cpp
-|     └─/DriveMgr_stable.cpp
+|   ├─/include
+|   |  ├─/drivefunctions.h
+|   |  └─/encryption.h
+|   └─/src
+|   |   ├─/DriveMgr_experi.cpp
+|   |   └─/DriveMgr_stable.cpp
 ├─/DriveMgr_GUI
-
-
-
-
+|   ├─/include
+|   ├─/build_src
+|   └─/src 
 ```
 in the other file outside the folder is the newest version (beta), this version will not be bug free, but atleast compilable
 

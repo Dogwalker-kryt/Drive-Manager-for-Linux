@@ -2,9 +2,9 @@
 
 A terminal-based drive management tool for Linux systems, written in C++. The goal of this project is to provide an easy-to-use interface for managing drives directly from the terminal, with plans for future GUI support.
 
-Current version in non beta: 0.8.79
+Current version in stable: 0.8.79
 
-Current version in beta: 0.8.88-01
+Current version in experimental: 0.8.88-01
 
 always check if a new version has been released
 
@@ -13,7 +13,7 @@ always check if a new version has been released
 > This tool is intended for users who understand the risks involved with formatting, encrypting, or otherwise modifying drives. Always back up your data and double-check your selections!
 
 ## Files
-in the current state of the repo, there are two folders: include (with all .h files) and src (with the source code files (experi = beta; stable = the last version that is ready to use with no issues)). All files to be needed are in the corosponding folders.
+in the current state of the repo, there are two folders: include (with all .h files) and src (with the source code files. All files to be needed are in the corosponding folders.
 ```
 ├─/DriveMgr_CLI
 |   ├─/include

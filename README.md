@@ -104,7 +104,14 @@ in the other file outside the folder is the newest version (beta), this version 
 The GUI version will be in development if the Terminal based version funktions as it should!
 ## License
 
-This project is licensed under the GPL v3.0 Licens. See [LICENSE](LICENSE) for more details.
+This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**.
+
+You are free to use, modify, and distribute this software, **provided that** any modifications are also licensed under GPL-3.0, and proper attribution is given to the original author(s). If you redistribute the software (modified or unmodified), you must make the source code available and include a copy of this license.
+
+**NO WARRANTY**: This software is provided "as-is," without any warranty of any kind, express or implied, including but not limited to the warranties of merchantability or fitness for a particular purpose. In no event shall the authors or copyright holders be liable for any claim, damages, or other liability arising from, out of, or in connection with the software or the use or other dealings in the software.
+
+For full details of the license, see the [LICENSE](./LICENSE) file.
+
 
 ---
 

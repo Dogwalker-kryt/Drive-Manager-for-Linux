@@ -104,7 +104,7 @@ in the other file outside the folder is the newest version (beta), this version 
 The GUI version will be in development if the Terminal based version funktions as it should!
 ## License
 
-This project is licensed under the MIT Licens., However, please note that if you redistribute or publish this software, you must give credit to the original author in your documantaion. See [LICENSE](LICENSE) for more details.
+This project is licensed under the GPL v3.0 Licens. See [LICENSE](LICENSE) for more details.
 
 ---
 

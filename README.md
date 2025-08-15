@@ -43,8 +43,14 @@ in the other file outside the folder is the newest version (beta), this version 
 - **More features coming soon!**
 
 ## Usage
+1. **download the project**
+   copy this command in your Terminal:
+   
+   ```sh
+   git clone https://github.com/Dogwalker-kryt/Drive-Manager-for-Linux
+   ```
 
-1. **Build the project**  
+2. **Build the project**  
    Make sure you have a C++ compiler and necessary development tools installed.
 
    ```sh

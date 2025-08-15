@@ -125,11 +125,11 @@ For full details of the license, see the [LICENSE](./LICENSE) file.
 
 **Known Bug/issues:**
 
-en/decrypt function wont en/decrypt USB
+No current bug/issues found in the code
 
 **Disclaimer:**  
 This tool is under active development. Some features may not be fully implemented or stable. Use with caution, and always test on non-critical drives first!
 
 ## Ideas or requests?
 
-send me a mesage/dicussion/request/... for some ideas to improve my tool!
+send me a mesage, dicussion, request,... for some ideas to improve my tool!

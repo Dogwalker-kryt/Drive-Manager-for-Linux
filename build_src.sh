@@ -12,15 +12,15 @@ if [ $? -ne 0 ]; then
         sudo apt install g++
     fi
 fi
-cd ~/DriveMgr
-cd ~/DriveMgr/DriveMgr_CLI/src
+cd ~/Drive-Manager-for-Linux
+cd ~/DriveMgr-Manager-for-Linux/DriveMgr_CLI/src
 g++ DriveMgr_experi.cpp -I.. -o DriveMgr_experi -lssl -lcrypto 
 g++ DriveMgr_stable.cpp -I.. -o DriveMgr_stable -lssl -lcrypto 
-cd ~/DriveMgr/DriveMgr_GUI/src
+cd ~/DriveMgr-Manager-for-Linux/DriveMgr_GUI/src
 g++ DriveMgr_GUI.cpp -I.. -o DriveMgr_GUI -lssl -lcrypto `pkg-config --cflags --libs gtk4`
-mkdir -p ~/DriveMgr/bin
-find ~/DriveMgr -executable -exec mv {} ~/DriveMgr/bin \;
-echo "Build completed successfully. Executables are located in ~/DriveMgr/bin."
+mkdir -p ~/Drive-Manager-for-Linux/bin
+find ~/DriveMgr-Manager-for-Linux -executable -exec mv {} ~/Drive-Manager-for-Linux/bin \;
+echo "Build completed successfully. Executables are located in ~/Drive-Manager-for-Linux/bin."
 echo "Creating  ~/-var/app/DriveMgr directrory"
 cd ~/.var/app
 mkdir -p DriveMgr

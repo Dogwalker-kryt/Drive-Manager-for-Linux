@@ -30,9 +30,6 @@ in the current state of the repo, there are two folders: include (with all .h fi
 in the other file outside the folder is the newest version (beta), this version will not be bug free, but atleast compilable
 
 
-! If you dowload one of the source code files you need to have the header files drivefunctions.h and encryption.h with it !
-
-
 ## Features
 
 - **List all drives**: View all drives currently connected to your system.
@@ -70,17 +67,21 @@ in the other file outside the folder is the newest version (beta), this version 
    - ~/.var/app/DriveMgr/bin
    - ~/.var/app/DriveMgr/log.txt
    - ~/.var/app/DriveMgr/keys.savekey
+   - 
    **or do it the easier way**
      
    2.2 **easier way!!!**
    
    you can run the build_src.sh, this script will create all necessery files, compile the executable, install the nessecary build essentials if not installed (openssl, g++ and gtk-4.0), make the directory's it needs. so basicly it does everything for you
+   ```sh
+   ./build_src.sh
+   ```
    
 4. **Run the program**  
    You need to run as root to manage drives:
 
    ```sh
-   sudo ./DriveMgr
+   sudo ./DriveMgr_(the version name, like satble, gui, experi)
    ```
 
 5. **Follow the menu**  
@@ -115,6 +116,7 @@ in the other file outside the folder is the newest version (beta), this version 
 - Linux system (Debian-based distros tested)
 - C++17 or newer
 - Root privileges for most operations (Formatinn for example)
+- build-essetials, like openssl, g++, gtk-4.0
 
 ## Roadmap
 

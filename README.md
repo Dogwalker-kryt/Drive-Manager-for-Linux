@@ -52,7 +52,10 @@ in the other file outside the folder is the newest version (beta), this version 
    git clone https://github.com/Dogwalker-kryt/Drive-Manager-for-Linux
    ```
 
-2. **Build the project**  
+2. **Build the project**
+   
+   2.1 **Normal way**
+   
    Make sure you have a C++ compiler and necessary development tools installed.
 
    ```sh
@@ -62,15 +65,25 @@ in the other file outside the folder is the newest version (beta), this version 
    ```sh
    g++ DriveMgr_stable.cpp -I.. -o DriveMgr -lssl -lcrypto 
    ```
-   i will also upload the finished executable
-3. **Run the program**  
+   you need to also create following:
+   - ~/.var/app/DriveMgr
+   - ~/.var/app/DriveMgr/bin
+   - ~/.var/app/DriveMgr/log.txt
+   - ~/.var/app/DriveMgr/keys.savekey
+   **or do it the easier way**
+     
+   2.2 **easier way!!!**
+   
+   you can run the build_src.sh, this script will create all necessery files, compile the executable, install the nessecary build essentials if not installed (openssl, g++ and gtk-4.0), make the directory's it needs. so basicly it does everything for you
+   
+4. **Run the program**  
    You need to run as root to manage drives:
 
    ```sh
    sudo ./DriveMgr
    ```
 
-4. **Follow the menu**  
+5. **Follow the menu**  
    The program will present a menu:
    ```
    Welcome to DriveMgr

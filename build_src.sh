@@ -21,4 +21,14 @@ g++ DriveMgr_GUI.cpp -I.. -o DriveMgr_GUI -lssl -lcrypto `pkg-config --cflags --
 mkdir -p ~/DriveMgr/bin
 find ~/DriveMgr -executable -exec mv {} ~/DriveMgr/bin \;
 echo "Build completed successfully. Executables are located in ~/DriveMgr/bin."
+echo "Creating  ~/-var/app/DriveMgr directrory"
+cd ~/.var/app
+mkdir -p DriveMgr
+cd DriveMgr
+mkdir -p bin
+cp ~/DriveMgr/bin/* ~/.var/app/DriveMgr/bin/
+touch ~/.var/app/DriveMgr/log.txt
+touch ~/.var/app/DriveMgr/keys.savekey
+echo "Executables copied to ~/.var/app/DriveMgr/bin/"
+echo "log and keys files created in ~/.var/app/DriveMgr/"
 exit 0

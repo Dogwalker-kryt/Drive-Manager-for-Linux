@@ -4,7 +4,7 @@ A terminal-based drive management tool for Linux systems, written in C++. The go
 
 Current version in stable: 0.8.88-01
 
-Current version in experimental: 0.8.88-01
+Current version in experimental: 0.8.88-07
 
 always check if a new version has been released
 
@@ -39,7 +39,8 @@ in the other file outside the folder is the newest version (beta), this version 
 - **Check drive health**: Basic S.M.A.R.T. health check of your drives.
 - **view Partitions adn manage them**:
 - **Overwrite the data on a drive**
-- **More features coming soon!**
+- **Active Logging**: for runtime debugging, histroy of waht things you done, if somthing brakes
+- **More features coming soon! or aim to layz to add them in the Readme**
 
 ## Usage
 1. **download the project**
@@ -148,3 +149,9 @@ This tool is under active development. Some features may not be fully implemente
 ## Ideas or requests?
 
 send me a mesage, dicussion, request,... for some ideas to improve my tool!
+
+## Current Development of functions
+-DriveMgr_experi.cpp
+   - Logging
+   - function 8
+-DriveMgr_GUI

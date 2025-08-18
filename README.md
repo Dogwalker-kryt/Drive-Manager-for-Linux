@@ -70,7 +70,7 @@ in the other file outside the folder is the newest version (beta), this version 
    - 
    **or do it the easier way**
      
-   2.2 **easier way!!!**
+   2.2 **easier way!!! (Not wroking a the moment)**
    
    you can run the build_src.sh, this script will create all necessery files, compile the executable, install the nessecary build essentials if not installed (openssl, g++ and gtk-4.0), make the directory's it needs. so basicly it does everything for you
    ```sh

@@ -22,6 +22,7 @@ if [ "${NEED_INSTALL}" = "1" ]; then
     if [ "$install_choice" = "y" ]; then
         sudo apt update
         sudo apt install openssl
+        sudo apt-get libssl
         sudo apt install gtk-4.0
         sudo apt install g++
     fi

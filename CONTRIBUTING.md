@@ -45,7 +45,6 @@ To contribute code:
 ## Coding Style (C++)
 
 - Use **4 spaces or 1 tab** for indentation (just stay consistent)
-- Stick to **procedural or minimal OOP** — this project avoids classes unless necessary
 - Use **clear, descriptive names** for variables and functions
 - Comment your code **only when necessary** — keep comments helpful and to the point
 - Use C++ 17 or later

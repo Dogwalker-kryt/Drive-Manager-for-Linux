@@ -75,7 +75,7 @@ in the other file outside the folder is the newest version (beta), this version 
    
    you can run the build_src.sh, this script will create all necessery files, compile the executable, install the nessecary build essentials if not installed (openssl, g++ and gtk-4.0), make the directory's it needs. so basicly it does everything for you
    ```sh
-   ./build_src.sh
+   bash build_src.sh
    ```
    
 4. **Run the program**  

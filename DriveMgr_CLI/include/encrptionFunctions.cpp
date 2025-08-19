@@ -1,3 +1,10 @@
+/*
+i deavied the need of use for this function becasue with thsi printciapal it compieing harder
+by hand, but also teh build_src.sh doesnt wrok correctly, so i redone everyhting
+if oyu want to try to compile this headrs,... mistery, go ahead
+*/
+
+/*
 #include "../include/encryption.h"
 #include "../include/drivefunctions.h"
 
@@ -44,3 +51,4 @@ void generateKeyAndIV(unsigned char* key, unsigned char* iv) {
         Logger::log("[ERROR] Failed to generate random key/IV for encryption -> generateKeyAndIV()");
     }
 }
+*/

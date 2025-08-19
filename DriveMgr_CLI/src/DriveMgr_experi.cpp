@@ -19,7 +19,7 @@
 // ! Warning this version is teh experimentl version of the prorgam,
 // This version has teh latest and newest functions, but my contain bugs and errors
 // Curretn version of this code is in the Info() function below
-// v0.8.88-07
+// v0.8.88-08
 
 #include <iostream>
 #include <string>
@@ -41,7 +41,74 @@
 #include <fstream>
 #include "include/encryption.h"
 
+// general side functions
+// Logger
+class Logger {
+public:
+    static void log(const std::string& operation) {
+        auto now = std::chrono::system_clock::now();
+        std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
+        
+        char timeStr[100];
+        std::strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", std::localtime(&currentTime));
+        
+        std::string logMsg = std::string("[") + timeStr + "] executed " + operation;
+        
+        std::cout << logMsg << std::endl;
 
+        std::string logPath = std::string(getenv("HOME")) + "/.var/log/DriveMgr/operations.log";
+        
+        std::ofstream logFile(logPath, std::ios::app);
+        if (logFile) {
+            logFile << logMsg << std::endl;
+        }
+    }
+};
+
+// Command executer
+/*
+std::string execTerminal(const char* cmd) {
+    std::array<char, 128> buffer;
+    std::string result;
+    auto deleter = [](FILE* f) { if (f) pclose(f); };
+    std::unique_ptr<FILE, decltype(deleter)> pipe(popen(cmd, "r"), deleter);
+    if (!pipe) throw std::runtime_error("popen() failed!");
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+        result += buffer.data();
+    }
+    return result;
+}
+*/
+// v2
+class Terminalexec {
+public:
+    static std::string execTerminal(const char* cmd) {
+        std::array<char, 128> buffer;
+        std::string result;
+        auto deleter = [](FILE* f) { if (f) pclose(f); };
+        std::unique_ptr<FILE, decltype(deleter)> pipe(popen(cmd, "r"), deleter);
+        if (!pipe) throw std::runtime_error("popen() failed!");
+        while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+            result += buffer.data();
+        }
+        return result;
+    }
+    //v2
+    static std::string execTerminalv2(const std::string &command) {
+        std::array<char, 128> buffer;
+        std::string result;
+        std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(command.c_str(), "r"), pclose);
+        if (!pipe) return "";
+        while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+            result += buffer.data();
+        }
+        return result;
+    }
+
+};
+
+
+// cehskfielsytem
 std::string checkFilesystem(const std::string& device, const std::string& fstype) {
     if (fstype.empty()) return "Unknown filesystem";
     
@@ -56,7 +123,7 @@ std::string checkFilesystem(const std::string& device, const std::string& fstype
             cmd = "dosfsck -n " + device + " 2>&1";
         }
         if (!cmd.empty()) {
-            result = execTerminal(cmd.c_str());
+            result = Terminalexec::execTerminal(cmd.c_str());
         }
     } catch (const std::exception& e) {
         return "Check failed: " + std::string(e.what());
@@ -70,10 +137,11 @@ std::string checkFilesystem(const std::string& device, const std::string& fstype
     return "Unknown state";
 }
 
+// ListDrives
 void listDrives(std::vector<std::string>& drives) {
     drives.clear();
     std::cout << "\nListing connected drives...\n";
-    std::string lsblk = execTerminal("lsblk -o NAME,SIZE,TYPE,MOUNTPOINT,FSTYPE -d -n -p");
+    std::string lsblk = Terminalexec::execTerminal("lsblk -o NAME,SIZE,TYPE,MOUNTPOINT,FSTYPE -d -n -p");
     std::cout << "\nConnected Drives:\n";
     std::cout << std::left 
               << std::setw(3) << "#" 
@@ -120,6 +188,44 @@ void listDrives(std::vector<std::string>& drives) {
     }
 }
 
+// Partitions
+bool resizePartition(const std::string& device, uint64_t newSizeMB) {
+    try {
+        std::string cmd = "parted --script " + device + " resizepart 1 " + 
+                         std::to_string(newSizeMB) + "MB";
+        std::string output = Terminalexec::execTerminal(cmd.c_str());
+        return output.find("error") == std::string::npos;
+    } catch (const std::exception&) {
+        return false;
+    }
+}
+
+bool movePartition(const std::string& device, int partNum, uint64_t startSectorMB) {
+    try {
+        std::string cmd = "parted --script " + device + " move " + 
+                         std::to_string(partNum) + " " + 
+                         std::to_string(startSectorMB) + "MB";
+        std::string output = Terminalexec::execTerminal(cmd.c_str());
+        return output.find("error") == std::string::npos;
+    } catch (const std::exception&) {
+        return false;
+    }
+}
+
+bool changePartitionType(const std::string& device, int partNum, const std::string& newType) {
+    try {
+        std::string backupCmd = "sfdisk -d " + device + " > " + device + "_backup.sf";
+        Terminalexec::execTerminal(backupCmd.c_str());
+
+        std::string cmd = "echo 'type=" + newType + "' | sfdisk --part-type " + 
+                         device + " " + std::to_string(partNum);
+        std::string output = Terminalexec::execTerminal(cmd.c_str());
+        return output.find("error") == std::string::npos;
+    } catch (const std::exception&) {
+        return false;
+    }
+}
+
 void listpartisions(std::vector<std::string>& drive) {
     std::cout << "\nListing partitions...\n";
     std::vector<std::string> drives;
@@ -139,7 +245,7 @@ void listpartisions(std::vector<std::string>& drive) {
     std::string driveName = drives[listpartdrivenum];
     std::cout << "\nPartitions of drive " << driveName << ":\n";
     std::string cmd = "lsblk --ascii -o NAME,SIZE,TYPE,MOUNTPOINT,FSTYPE -n -p " + driveName;
-    std::string output = execTerminal(cmd.c_str());
+    std::string output = Terminalexec::execTerminal(cmd.c_str());
     std::istringstream iss(output);
     std::string line;
     std::cout << std::left 
@@ -279,6 +385,7 @@ void listpartisions(std::vector<std::string>& drive) {
     }
 }
 
+// analyzeDriskapce
 void analyDiskSpace() {
     std::cout << "\nAnalyzing disk space...\n";
     std::vector<std::string> drives;
@@ -297,7 +404,7 @@ void analyDiskSpace() {
     std::string driveName = drives[diskspacemenu1input];
     std::cout << "\n------ Disk Information ------\n";
     std::string cmd = "lsblk -b -o NAME,SIZE,TYPE,MOUNTPOINT -n -p " + driveName;
-    std::string output = execTerminal(cmd.c_str());
+    std::string output = Terminalexec::execTerminal(cmd.c_str());
     std::istringstream iss(output);
     std::string line;
     bool found = false;
@@ -334,7 +441,7 @@ void analyDiskSpace() {
     } else {
         if (!mountpoint.empty() && mountpoint != "-") {
             std::string dfcmd = "df -h '" + mountpoint + "' | tail -1";
-            std::string dfout = execTerminal(dfcmd.c_str());
+            std::string dfout = Terminalexec::execTerminal(dfcmd.c_str());
             std::istringstream dfiss(dfout);
             std::string filesystem, size, used, avail, usep, mnt;
             dfiss >> filesystem >> size >> used >> avail >> usep >> mnt;
@@ -355,6 +462,7 @@ bool encryptDrive(const std::string&, bool) { return false; }
 bool resizeDrive(const std::string&, int) { return false; }
 bool checkDriveHealth(const std::string&) { return false; }
 
+//Format
 void formatDrive() {
     std::cout << "\nChoose an option for how to format:\n";
     std::cout << "1. Format drive\n";
@@ -383,7 +491,7 @@ void formatDrive() {
                 if (confirmationfd == "y" || confirmationfd == "Y" || confirmationfd == "yes" || confirmationfd == "Yes") {
                     std::cout << "Formatting drive: " << drives[driveNumber] << "...\n";
                     std::string cmd = "mkfs.ext4 " + drives[driveNumber];
-                    std::string result = execTerminal(cmd.c_str());
+                    std::string result = Terminalexec::execTerminal(cmd.c_str());
                     if (result.find("error") != std::string::npos) {
                         Logger::log("[ERROR] Failed to format drive: " + drives[driveNumber]);
                         std::cout << "[Error] Failed to format drive: " << drives[driveNumber] << "\n";
@@ -478,6 +586,7 @@ void formatDrive() {
     }
 }
 
+// checkDriveHealth
 int checkDriveHealth() {
     std::vector<std::string> drives;
     listDrives(drives);
@@ -505,6 +614,7 @@ int checkDriveHealth() {
    return 1;
 }
 
+// resizeDrive
 void resizeDrive() {
     std::vector<std::string> drives;
     listDrives(drives);
@@ -535,6 +645,50 @@ void resizeDrive() {
     }
 }
 
+// encryption
+void saveEncryptionInfo(const EncryptionInfo& info) {
+    std::ofstream file(KEY_STORAGE_PATH, std::ios::app | std::ios::binary);
+    if (!file) {
+        std::cerr << "[Error] Cannot open key storage file\n";
+        Logger::log("[ERROR] Cannot open key storage file: " + KEY_STORAGE_PATH + " -> saveEncryptionInfo()");
+        return;
+    }
+    
+    char driveName[256] = {0};
+    strncpy(driveName, info.driveName.c_str(), 255);
+    file.write(driveName, sizeof(driveName));
+    file.write((char*)info.key, sizeof(info.key));
+    file.write((char*)info.iv, sizeof(info.iv));
+    file.close();
+}
+
+bool loadEncryptionInfo(const std::string& driveName, EncryptionInfo& info) {
+    std::ifstream file(KEY_STORAGE_PATH, std::ios::binary);
+    if (!file) {
+        std::cerr << "[Error] Cannot open key storage file\n";
+        Logger::log("[ERROR] Cannot open key storage file: " + KEY_STORAGE_PATH + " -> loadEncryptionInfo()");
+        return false;
+    }
+    
+    char storedDriveName[256];
+    while (file.read(storedDriveName, sizeof(storedDriveName))) {
+        file.read((char*)info.key, sizeof(info.key));
+        file.read((char*)info.iv, sizeof(info.iv));
+        
+        if (driveName == storedDriveName) {
+            info.driveName = driveName;
+            return true;
+        }
+    }
+    return false;
+}
+
+void generateKeyAndIV(unsigned char* key, unsigned char* iv) {
+    if (!RAND_bytes(key, 32) || !RAND_bytes(iv, 16)) {
+        throw std::runtime_error("[Error] Failed to generate random key/IV");
+        Logger::log("[ERROR] Failed to generate random key/IV for encryption -> generateKeyAndIV()");
+    }
+}
 
 void encryptDrive(const std::string& driveName) {
     EncryptionInfo info;
@@ -546,7 +700,7 @@ void encryptDrive(const std::string& driveName) {
        << "--key-file <(echo -n '" << std::string((char*)info.key, 32) << "') "
        << "open " << driveName << " encrypted_" << basename(driveName.c_str());
     Logger::log("[INFO] Encrypting drive: " + driveName);
-    std::string output = execTerminal(ss.str().c_str());
+    std::string output = Terminalexec::execTerminal(ss.str().c_str());
     if (output.find("Command failed") != std::string::npos) {
         std::cerr << "[Error] Encryption failed: " << output << "\n";
         Logger::log("[ERROR] Encryption failed for drive: " + driveName + " -> encryptDrive()");
@@ -571,7 +725,7 @@ void decryptDrive(const std::string& driveName) {
        << "--key-file <(echo -n '" << std::string((char*)info.key, 32) << "') "
        << "open " << driveName << " decrypted_" << basename(driveName.c_str());
     
-    std::string output = execTerminal(ss.str().c_str());
+    std::string output = Terminalexec::execTerminalv2(ss.str().c_str());
     if (output.find("Command failed") != std::string::npos) {
         std::cerr << "Decryption failed: " << output << "\n";
         Logger::log("[ERROR] Decryption failed " + output + " -> decryptDrive()");
@@ -582,7 +736,6 @@ void decryptDrive(const std::string& driveName) {
     Logger::log("[INFO] Drive decrypted successfully -> decryptDrive()");
 }
 
-// main
 void EnDecryptDrive() {
     std::vector<std::string> drives;
     listDrives(drives);
@@ -661,7 +814,7 @@ void EnDecryptDrive() {
            << "--key-file <(echo -n '" << std::string((char*)info.key, 32) << "') "
            << "open " << driveName << " " << deviceNameEncrypt;
         
-        std::string output = execTerminal(ss.str().c_str());
+        std::string output = Terminalexec::execTerminal(ss.str().c_str());
         if (output.find("Command failed") != std::string::npos) {
             std::cout << "[Error] Failed to encrypt the drive: " << output << "\n";
             Logger::log("[ERROR] failed to encrypt teh drive -> void EnDecrypt()");
@@ -716,7 +869,7 @@ void EnDecryptDrive() {
            << "--key-file <(echo -n '" << std::string((char*)info.key, 32) << "') "
            << "open " << driveName << " " << deviceNameDecrypt << "_decrypted";
         
-        std::string output = execTerminal(ss.str().c_str());
+        std::string output = Terminalexec::execTerminal(ss.str().c_str());
         if (output.find("Command failed") != std::string::npos) {
             std::cout << "[Error] Failed to decrypt the drive: " << output << "\n";
             Logger::log("[ERROR] failed to decrypt the drive -> void EnDecrypt()");
@@ -729,6 +882,19 @@ void EnDecryptDrive() {
     }
 } 
 
+// Overwrite drive data
+/*
+std::string execTerminal2ZeroDrive(const std::string &command) {
+    std::array<char, 128> buffer;
+    std::string result;
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(command.c_str(), "r"), pclose);
+    if (!pipe) return "";
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+        result += buffer.data();
+    }
+    return result;
+}
+*/
 
 void OverwriteDriveData() {
     std::vector<std::string> drives;
@@ -755,8 +921,8 @@ void OverwriteDriveData() {
         std::cin >> randomconfirmationkeyinput;
         if (std::string(randomconfirmationkeyinput) == std::string(randomconfirmationkey)) {
             std::cout << "Proceeding with Overwriting " << driveName << "...\n";
-            std::string devrandom = execTerminal2ZeroDrive("sudo dd if=/dev/urandom of=" + driveName + " bs=1M status=progress");
-            std::string devZero = execTerminal2ZeroDrive("sudo dd if=/dev/zero of=" + driveName + " bs=1M status=progress");
+            std::string devrandom = Terminalexec::execTerminalv2("sudo dd if=/dev/urandom of=" + driveName + " bs=1M status=progress");
+            std::string devZero = Terminalexec::execTerminalv2("sudo dd if=/dev/zero of=" + driveName + " bs=1M status=progress");
             if (devZero.empty() && devrandom.empty()) {
                 std::cout << "[Error] Failed to overwrite the drive\n";
             } else if (devZero.empty() || devrandom.empty()) {
@@ -772,6 +938,30 @@ void OverwriteDriveData() {
     }
 }
 
+// function8
+class function8 {
+private:
+
+
+
+public: 
+    static void func8() {
+        std::vector<std::string> drives;
+        listDrives(drives);
+        if (drives.empty()) {
+            std::cout << "No drives found!\n";
+            return;
+        }
+    }
+    
+};
+
+
+
+
+
+
+/*
 void function8() {
     std::vector<std::string> drives;
     listDrives(drives);
@@ -782,7 +972,7 @@ void function8() {
 
 
 }
-
+*/
 
 
 void Info() {
@@ -791,14 +981,14 @@ void Info() {
     std::cout << "Warning! You should know some basic things about drives so you dont loose any data\n";
     std::cout << "If you found any problems, visit my Github page and send an issue template\n";
     std::cout << "Basic info:\n";
-    std::cout << "Version: 0.8.88-07\n";
+    std::cout << "Version: 0.8.88-08\n";
     std::cout << "Github: https://github.com/Dogwalker-kryt/Drive-Manager-for-Linux\n";
     std::cout << "Author: Dogwalker-kryt\n";
     std::cout << "----------------------------\n";
 }
 
 int main() {
-    std::string clear = execTerminal("clear");
+    std::string clear = Terminalexec::execTerminal("clear");
     std::cout << clear;
     std::cout << "\nWelcome to Drive-Manager\n";
     std::cout << "------------- Menu -------------\n";

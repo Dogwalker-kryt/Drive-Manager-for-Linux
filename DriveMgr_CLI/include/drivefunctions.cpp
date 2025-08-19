@@ -1,3 +1,11 @@
+/*
+i deavied the need of use for this function becasue with thsi printciapal it compieing harder
+by hand, but also teh build_src.sh doesnt wrok correctly, so i redone everyhting
+if oyu want to try to compile this headrs,... mistery, go ahead
+*/
+
+
+/*
 #include "../include/drivefunctions.h"
 
 std::string execTerminal2ZeroDrive(const std::string &command) {
@@ -78,3 +86,4 @@ void Logger::log(const std::string& operation) {
         logFile << logMsg << std::endl;
     }
 }
+*/

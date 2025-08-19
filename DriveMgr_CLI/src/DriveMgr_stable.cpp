@@ -16,11 +16,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-// ! Warning this version is teh experimentl version of the prorgam,
-// This version has teh latest and newest functions, but my contain bugs and errors
-// Curretn version of this code is in the Info() function below
-// v0.8.88-08
-
 #include <iostream>
 #include <string>
 #include <cstdlib>

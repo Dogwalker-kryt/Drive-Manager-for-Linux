@@ -34,8 +34,9 @@ cd "$PROJECT_ROOT/DriveMgr_CLI/src" || exit 1
 g++ DriveMgr_experi.cpp -I.. -o DriveMgr_experi -lssl -lcrypto || exit 1
 g++ DriveMgr_stable.cpp -I.. -o DriveMgr_stable -lssl -lcrypto || exit 1
 
-cd "$PROJECT_ROOT/DriveMgr_GUI/src" || exit 1
-g++ DriveMgr_GUI.cpp -I.. -o DriveMgr_GUI -lssl -lcrypto $(pkg-config --cflags --libs gtk4) || exit 1
+cd "$PROJECT_ROOT/DriveMgr_GUI/build_src" || exit 1
+bash build.sh
+# g++ DriveMgr_GUI.cpp -I.. -o DriveMgr_GUI -lssl -lcrypto $(pkg-config --cflags --libs gtk4) || exit 1
 
 find . -type f -executable -exec mv {} "$PROJECT_ROOT/bin/" \;
 echo "Build completed successfully. Executables are located in ~/Drive-Manager-for-Linux/bin."

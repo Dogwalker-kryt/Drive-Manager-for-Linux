@@ -2,9 +2,9 @@
 
 A terminal-based drive management tool for Linux systems, written in C++. The goal of this project is to provide an easy-to-use interface for managing drives directly from the terminal, with plans for future GUI support.
 
-Current version in stable: 0.8.88-01 -> the updated headr files my currupt teh compilation process fo the stbale version!
+Current version in stable: 0.8.88-08
 
-Current version in experimental: 0.8.88-07
+Current version in experimental: 0.8.88-08
 
 always check if a new version has been released
 

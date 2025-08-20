@@ -115,7 +115,7 @@ in the other file outside the folder is the newest version (beta), this version 
 
 ## Requirements
 
-- Linux system (Debian-based distros tested)
+- Linux system (Debian-based distros)
 - C++17 or newer
 - Root privileges for most operations (Formatinn for example)
 - build-essetials, like openssl, g++, gtk-4.0
@@ -142,7 +142,7 @@ For full details of the license, see the [LICENSE](./LICENSE) file.
 
 **Known Bug/issues:**
 
-No current bug/issues found in the code
+No current known bug/issues found in the code
 
 **Disclaimer:**  
 This tool is under active development. Some features may not be fully implemented or stable. Use with caution, and always test on non-critical drives first!
@@ -151,8 +151,6 @@ This tool is under active development. Some features may not be fully implemente
 
 send me a mesage, dicussion, request,... for some ideas to improve my tool!
 
-## Current Development of functions
--DriveMgr_experi.cpp
-   - Logging
-   - function 8
--DriveMgr_GUI
+## Do you like my tool?
+
+if you like my tool, please give it a star

@@ -965,7 +965,7 @@ void MenuShitQuestionThatTookMeToLongToMakeForSomeThingSimple(bool& running) {
         running = false;
     } else {
         std::cout << "[Error] Wrong input\n";
-        running = true;  // Default to menu on error
+        running = true; 
     }
 }
 

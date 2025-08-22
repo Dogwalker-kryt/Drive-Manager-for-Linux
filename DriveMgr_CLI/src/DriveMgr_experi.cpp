@@ -19,7 +19,7 @@
 // ! Warning this version is teh experimentl version of the prorgam,
 // This version has teh latest and newest functions, but my contain bugs and errors
 // Curretn version of this code is in the Info() function below
-// v0.8.88-11
+// v0.8.88-13
 
 #include <iostream>
 #include <string>
@@ -66,20 +66,6 @@ public:
 };
 
 // Command executer
-/*
-std::string execTerminal(const char* cmd) {
-    std::array<char, 128> buffer;
-    std::string result;
-    auto deleter = [](FILE* f) { if (f) pclose(f); };
-    std::unique_ptr<FILE, decltype(deleter)> pipe(popen(cmd, "r"), deleter);
-    if (!pipe) throw std::runtime_error("popen() failed!");
-    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-        result += buffer.data();
-    }
-    return result;
-}
-*/
-// v2
 class Terminalexec {
 public:
     static std::string execTerminal(const char* cmd) {
@@ -101,6 +87,26 @@ public:
         if (!pipe) return "";
         while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
             result += buffer.data();
+        }
+        return result;
+    }
+    //v3
+    static std::string execTerminalv3(const std::string& cmd) {
+        std::array<char, 512> buffer;
+        std::string result;
+        FILE* pipe = popen(cmd.c_str(), "r");
+        if (!pipe) {
+            throw std::runtime_error("popen() failed");
+        }
+        while (fgets(buffer.data(), buffer.size(), pipe) != nullptr) {
+            result += buffer.data();
+        }
+        int returnCode = pclose(pipe);
+        if (returnCode != 0) {
+            return ""; 
+        }
+        while (!result.empty() && (result.back() == '\n' || result.back() == '\r')) {
+            result.pop_back();
         }
         return result;
     }
@@ -922,22 +928,105 @@ void OverwriteDriveData() {
     }
 }
 
-// function8
-class function8 {
+// medatareader
+class MetadataReader {
 private:
+    struct DriveMetadata {
+        std::string name;
+        std::string size;
+        std::string model;
+        std::string serial;
+        std::string type;
+        std::string mountpoint;
+        std::string vendor;
+        std::string fstype;
+        std::string uuid;
+    };
 
-
-
-public: 
-    static void func8() {
+    static DriveMetadata getMetadata(const std::string& drive) {
+        DriveMetadata metadata;
+        std::string cmd = "lsblk -J -o NAME,SIZE,MODEL,SERIAL,TYPE,MOUNTPOINT,VENDOR,FSTYPE,UUID -p " + drive;
+        std::string json = Terminalexec::execTerminalv3(cmd);
+        size_t deviceStart = json.find("{", json.find("["));
+        size_t childrenPos = json.find("\"children\"", deviceStart);
+        std::string deviceBlock = json.substr(deviceStart, childrenPos - deviceStart);
+        auto extractValue = [&](const std::string& key, const std::string& from) -> std::string {
+            std::regex pattern("\"" + key + "\"\\s*:\\s*(null|\"(.*?)\")");
+            std::smatch match;
+            if (std::regex_search(from, match, pattern)) {
+                if (match[1] == "null") {
+                    return "";
+                } else {
+                    return match[2].str();
+                }
+            }
+            return "";
+        };
+        metadata.name       = extractValue("name", deviceBlock);
+        metadata.size       = extractValue("size", deviceBlock);
+        metadata.model      = extractValue("model", deviceBlock);
+        metadata.serial     = extractValue("serial", deviceBlock);
+        metadata.type       = extractValue("type", deviceBlock);
+        metadata.mountpoint = extractValue("mountpoint", deviceBlock);
+        metadata.vendor     = extractValue("vendor", deviceBlock);
+        metadata.fstype     = extractValue("fstype", deviceBlock);
+        metadata.uuid       = extractValue("uuid", deviceBlock);
+        return metadata;
+    }
+    
+    static void displayMetadata(const DriveMetadata& metadata) {
+        std::cout << "\n-------- Drive Metadata --------\n";
+        std::cout << "Name:       " << metadata.name << "\n";
+        std::cout << "Size:       " << metadata.size << "\n";
+        std::cout << "Model:      " << (metadata.model.empty() ? "N/A" : metadata.model) << "\n";
+        std::cout << "Serial:     " << (metadata.serial.empty() ? "N/A" : metadata.serial) << "\n";
+        std::cout << "Type:       " << metadata.type << "\n";
+        std::cout << "Mountpoint: " << (metadata.mountpoint.empty() ? "Not mounted" : metadata.mountpoint) << "\n";
+        std::cout << "Vendor:     " << (metadata.vendor.empty() ? "N/A" : metadata.vendor) << "\n";
+        std::cout << "Filesystem: " << (metadata.fstype.empty() ? "N/A" : metadata.fstype) << "\n";
+        std::cout << "UUID:       " << (metadata.uuid.empty() ? "N/A" : metadata.uuid) << "\n";
+        if (metadata.type == "disk") {
+            std::cout << "\n-------- SMART Data --------\n";
+            std::string smartCmd = "smartctl -i " + metadata.name;
+            std::string smartOutput = Terminalexec::execTerminal(smartCmd.c_str());
+            if (!smartOutput.empty()) {
+                std::cout << smartOutput;
+            } else {
+                std::cout << "SMART data not available/intalled\n";
+            }
+        }
+        std::cout << "------------------------------\n";
+    }
+    
+public:
+    static void mainReader() {
         std::vector<std::string> drives;
         listDrives(drives);
         if (drives.empty()) {
-            std::cout << "No drives found!\n";
+            std::cout << "[Error] No drives found!\n";
+            Logger::log("[ERROR] No drives found -> MetadataReader::mainReader()");
             return;
         }
+
+        std::cout << "\nEnter number of the drive you want to see the metadata of: ";
+        int driveNum;
+        std::cin >> driveNum;
+
+        if (driveNum < 0 || driveNum >= (int)drives.size()) {
+            std::cout << "[Error] Invalid drive selection!\n";
+            Logger::log("[ERROR] Invalid drive selection in MetadataReader");
+            return;
+        }
+
+        try {
+            DriveMetadata metadata = getMetadata(drives[driveNum]);
+            displayMetadata(metadata);
+            //Logger::log("[INFO] Successfully read metadata for drive: " + drives[driveNum]);
+        } catch (const std::exception& e) {
+            std::cout << "[Error] Failed to read drive metadata: " << e.what() << "\n";
+            Logger::log("[ERROR] Failed to read drive metadata: " + std::string(e.what()));
+        }
     }
-    
 };
 
 
@@ -948,14 +1037,14 @@ void Info() {
     std::cout << "Warning! You should know some basic things about drives so you dont loose any data\n";
     std::cout << "If you found any problems, visit my Github page and send an issue template\n";
     std::cout << "Basic info:\n";
-    std::cout << "Version: 0.8.88-11\n";
+    std::cout << "Version: 0.8.88-13\n";
     std::cout << "Github: https://github.com/Dogwalker-kryt/Drive-Manager-for-Linux\n";
     std::cout << "Author: Dogwalker-kryt\n";
     std::cout << "----------------------------\n";
 }
 
 
-void MenuShitQuestionThatTookMeToLongToMakeForSomeThingSimple(bool& running) {   
+void MenuQues(bool& running) {   
     std::cout << "\nPress '1' for returning to the main menu, '2' to exit\n";
     int menuques;
     std::cin >> menuques;
@@ -983,6 +1072,7 @@ int main() {
         std::cout << "5. Check drive health\n";
         std::cout << "6. Analyze Disk Space\n";
         std::cout << "7. Overwrite Drive Data\n";
+        std::cout << "8. View Metadata of a Drive\n";
         std::cout << "9. View Info\n";
         std::cout << "0. Exit\n";
         std::cout << "--------------------------------\n";
@@ -1009,24 +1099,24 @@ int main() {
             }
             case 2:{
                 formatDrive();
-                MenuShitQuestionThatTookMeToLongToMakeForSomeThingSimple(running);
+                MenuQues(running);
                 continue;
             }
             case 3:
                 EnDecryptDrive();
-                MenuShitQuestionThatTookMeToLongToMakeForSomeThingSimple(running);
+                MenuQues(running);
                 continue;
             case 4:
                 resizeDrive();
-                MenuShitQuestionThatTookMeToLongToMakeForSomeThingSimple(running);
+                MenuQues(running);
                 continue;
             case 5:
                 checkDriveHealth();
-                MenuShitQuestionThatTookMeToLongToMakeForSomeThingSimple(running);
+                MenuQues(running);
                 continue;
             case 6:{
                 analyDiskSpace();
-                MenuShitQuestionThatTookMeToLongToMakeForSomeThingSimple(running);
+                MenuQues(running);
                 continue;
             }
             case 7:{
@@ -1043,13 +1133,13 @@ int main() {
                 break; 
             }
             case 8:{
-                std::cout << "This fuction is not implemented yet!\n";
-                MenuShitQuestionThatTookMeToLongToMakeForSomeThingSimple(running);
+                MetadataReader::mainReader();
+                MenuQues(running);
                 continue;
             }
             case 9:
                 Info();
-                MenuShitQuestionThatTookMeToLongToMakeForSomeThingSimple(running);
+                MenuQues(running);
                 continue;
             case 0:
                 running = false;

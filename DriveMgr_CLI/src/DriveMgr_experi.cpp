@@ -19,7 +19,7 @@
 // ! Warning this version is teh experimentl version of the prorgam,
 // This version has teh latest and newest functions, but my contain bugs and errors
 // Curretn version of this code is in the Info() function below
-// v0.8.88-13
+// v0.8.88-15
 
 #include <iostream>
 #include <string>
@@ -40,6 +40,8 @@
 #include <cstring>
 #include <fstream>
 #include "include/encryption.h"
+#include <regex>
+
 
 // general side functions
 // Logger
@@ -48,19 +50,19 @@ public:
     static void log(const std::string& operation) {
         auto now = std::chrono::system_clock::now();
         std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
-        
+
         char timeStr[100];
         std::strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", std::localtime(&currentTime));
-        
-        std::string logMsg = std::string("[") + timeStr + "] executed " + operation;
-        
-        std::cout << logMsg << std::endl;
 
-        std::string logPath = std::string(getenv("HOME")) + "/.var/log/DriveMgr/operations.log";
-        
+        std::string logMsg = std::string("[") + timeStr + "] executed " + operation;
+
+        std::string logPath = std::string(getenv("HOME")) + "/.var/app/DriveMgr/log.dat";
+
         std::ofstream logFile(logPath, std::ios::app);
         if (logFile) {
             logFile << logMsg << std::endl;
+        } else {
+            std::cerr << "[Error] Unable to open log file: " << logPath << " Reason: " << strerror(errno) << std::endl;
         }
     }
 };
@@ -110,8 +112,8 @@ public:
         }
         return result;
     }
-
 };
+
 
 
 // cehskfielsytem
@@ -954,14 +956,14 @@ private:
             std::regex pattern("\"" + key + "\"\\s*:\\s*(null|\"(.*?)\")");
             std::smatch match;
             if (std::regex_search(from, match, pattern)) {
-                if (match[1] == "null") {
+                if (match[1] == "null")
                     return "";
-                } else {
+                else
                     return match[2].str();
-                }
             }
             return "";
         };
+
         metadata.name       = extractValue("name", deviceBlock);
         metadata.size       = extractValue("size", deviceBlock);
         metadata.model      = extractValue("model", deviceBlock);
@@ -973,7 +975,7 @@ private:
         metadata.uuid       = extractValue("uuid", deviceBlock);
         return metadata;
     }
-    
+
     static void displayMetadata(const DriveMetadata& metadata) {
         std::cout << "\n-------- Drive Metadata --------\n";
         std::cout << "Name:       " << metadata.name << "\n";
@@ -985,6 +987,8 @@ private:
         std::cout << "Vendor:     " << (metadata.vendor.empty() ? "N/A" : metadata.vendor) << "\n";
         std::cout << "Filesystem: " << (metadata.fstype.empty() ? "N/A" : metadata.fstype) << "\n";
         std::cout << "UUID:       " << (metadata.uuid.empty() ? "N/A" : metadata.uuid) << "\n";
+
+        // SMART data
         if (metadata.type == "disk") {
             std::cout << "\n-------- SMART Data --------\n";
             std::string smartCmd = "smartctl -i " + metadata.name;
@@ -1007,27 +1011,176 @@ public:
             Logger::log("[ERROR] No drives found -> MetadataReader::mainReader()");
             return;
         }
-
         std::cout << "\nEnter number of the drive you want to see the metadata of: ";
         int driveNum;
         std::cin >> driveNum;
-
         if (driveNum < 0 || driveNum >= (int)drives.size()) {
             std::cout << "[Error] Invalid drive selection!\n";
             Logger::log("[ERROR] Invalid drive selection in MetadataReader");
             return;
         }
-
         try {
             DriveMetadata metadata = getMetadata(drives[driveNum]);
             displayMetadata(metadata);
-            //Logger::log("[INFO] Successfully read metadata for drive: " + drives[driveNum]);
+            Logger::log("[INFO] Successfully read metadata for drive: " + drives[driveNum]);
         } catch (const std::exception& e) {
             std::cout << "[Error] Failed to read drive metadata: " << e.what() << "\n";
             Logger::log("[ERROR] Failed to read drive metadata: " + std::string(e.what()));
         }
     }
 };
+
+
+class MountUtility {
+private:
+    static void BurnISOToStorageDevice() { //const std::string& isoPath, const std::string& drive
+        std::vector<std::string> drives;
+        listDrives(drives);
+        if (drives.empty()) {
+            std::cout << "[Error] No drives found\n";
+            return;
+        }
+        std::cout << "\nEnter the name of a drive to select for burning an iso/img:\n";
+        std::string DriveName;
+        std::cin >> DriveName;
+        std::cout << "Are you sure you want to select " << DriveName << " for this operation? (y/n)\n";
+        char confirmationburn;
+        std::cin >> confirmationburn;
+        if (confirmationburn != 'y' && confirmationburn != 'Y') {
+            std::cout << "[Info] Opeartion cancelled\n";
+            Logger::log("[INFO] Operation cancelled -> BurnISOToStorageDevice()");
+            return;
+        }
+        std::cout << "\nEnter the path to the iso/img file you want to burn on " << DriveName << ":\n";
+        std::string isoPath;
+        std::cin >> isoPath;
+        std::cout << "Are you sure you want to burn " << isoPath << " to " << DriveName << "? (y/n)\n";
+        char confrimationburn2;
+        std::cin >> confrimationburn2;
+        if (confrimationburn2 != 'y' && confrimationburn2 != 'Y') {
+            std::cout << "[Info] Operation cancelled\n";
+            Logger::log("[INFO] Operation cancelled -> BurnISOToSotorageDevice()");
+            return;
+        }
+        char randomconfirmationkey[] = {'a', 'A', 'b', 'B', 'c', 'C', 'd', 'D', 'e', 'E', 'f', 'F', 'g', 'G', 'h', 'H', 'i', 'I', 'j', 'J', 'k', 'K', 'l', 'L', 'm', 'M', 'n', 'N', 'o', 'O', 'p', 'P', 'q', 'Q', 'r', 'R', 's', 'S', 't', 'T', 'u', 'U', 'v', 'V', 'w', 'W', 'x', 'X', 'y', 'Y', 'z', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
+        for (int i = 0; i < 10; i++) {
+            int randomIndex = rand() % (sizeof(randomconfirmationkey) / sizeof(randomconfirmationkey[0]));
+            std::cout << randomconfirmationkey[randomIndex];
+        }
+        std::cout << "\nPlease enter the confirmationkey to preceed with the operation:\n";
+        std::cout << randomconfirmationkey << "\n";
+        char randomconfirmationkeyinput[10];
+        std::cin >> randomconfirmationkeyinput;
+        if (std::string(randomconfirmationkeyinput) != std::string(randomconfirmationkey)) {
+            std::cout << "[Error] Invalid confrimation of the Key or unexpected error\n";
+            Logger::log("[ERROR] Invalid confrimation of the Key or unexpected error -> OverwriteData");
+            return;
+        } else {
+            try {
+                std::cout << "Proceeding with burning " << isoPath << " to " << DriveName << "...\n";
+                std::string bruncmd = "sudo dd if=" + isoPath + " of=" + DriveName + " bs=4M status=progress && sync";
+                std::string brunoutput = Terminalexec::execTerminalv2(bruncmd.c_str());
+                if (brunoutput.find("error") != std::string::npos) {
+                    Logger::log("[ERROR] Failed to burn iso/img to drive: " + DriveName + " -> BurnISOToStorageDevice()"); 
+                    throw std::runtime_error("[Error] Faile to burn iso/img to drive: " + DriveName);
+                }
+                std::cout << "[Success] Successfully burned " << isoPath << " to " << DriveName << "\n";
+                Logger::log("[INFO] Successfully burned iso/img to drive: " + DriveName + " -> BurnISOToStorageDevice()");
+            } catch (const std::exception& e) {
+                std::cout << e.what() << "\n";
+            } 
+        }
+    }
+
+    static void MountDrive2() {
+        std::vector<std::string> drives;
+        listDrives(drives);
+        if (drives.empty()) {
+            std::cout << "[Error] No dirves found\n";
+            return;
+        }
+        std::cout << "\nEnter the number of a drive you want to mount:\n";
+        int drivemountnum;
+        std::cin >> drivemountnum;
+        if (drivemountnum < 0 || drivemountnum >= drives.size()) {
+            std::cout << "[Error] Invalid selection\n";
+            return;
+        }
+        std::string mountpoint = "sudo mount " + drives[drivemountnum] + " /mnt/" + basename(drives[drivemountnum].c_str());
+        std::string mountoutput = Terminalexec::execTerminalv2(mountpoint.c_str());
+        if (mountoutput.find("error") != std::string::npos) {
+            std::cout << "[Error] Failed to mount drive: " << mountoutput << "\n";
+            Logger::log("[ERROR] Failed to mount drive: " + drives[drivemountnum] + " -> MountDrive()");
+            return;
+        }
+    }
+
+    static void UnmountDrive2() {
+        std::vector<std::string> drives;
+        listDrives(drives);
+        if (drives.empty()) {
+            std::cout << "[Error] No drives found\n";
+            return;
+        }
+        std::cout << "\nEnter the number of a drive you want to unmount:\n";
+        int driveunmountnum;
+        std::cin >> driveunmountnum;
+        if (driveunmountnum < 0 || driveunmountnum >= drives.size()) {
+            std::cout << "[Error] Invalid selection\n";
+            return;
+        }
+        std::string unmountpoint = "sudo umount " + drives[driveunmountnum];
+        std::string unmountoutput = Terminalexec::execTerminalv2(unmountpoint.c_str());
+        if (unmountoutput.find("error") != std::string::npos) {
+            std::cout << "[Error] Failed to unmount drive: " << unmountoutput << "\n";
+            Logger::log("[ERROR] Failed to unmount drive: " + drives[driveunmountnum] + " -> UnmountDrive()");
+            return;
+        }
+    }
+
+
+    static int ExitReturn(bool& running) {
+        running = false;
+        return 0;   
+    }
+
+public:
+    static void mainMountUtil() {
+        enum MenuOptions {
+            Burniso = 1, MountDrive = 2, UnmountDrive = 3, Exit = 0
+        };
+
+        std::cout << "\n--------- Mount menu ---------\n";
+        std::cout << "1. Burn iso/img to storage device\n";
+        std::cout << "2. Mount storage device\n";
+        std::cout << "3. Unmount storage device\n";
+        std::cout << "0. Exit/Rreturn to main menu\n";
+        std::cout << "--------------------------------\n";
+        int menuinputmount;
+        std::cin >> menuinputmount;
+        switch (menuinputmount) {
+            case Burniso: {
+                BurnISOToStorageDevice();
+                break;
+            }
+            case MountDrive: {
+                MountDrive2();
+                break;
+            }
+            case UnmountDrive: {
+                UnmountDrive2();
+                break;
+            }
+            case Exit: {
+                return;
+            }
+            default:
+                std::cout << "[Error] Invalid selection\n";
+                return;
+        }
+    }
+};
+
 
 
 // main and Info
@@ -1037,12 +1190,11 @@ void Info() {
     std::cout << "Warning! You should know some basic things about drives so you dont loose any data\n";
     std::cout << "If you found any problems, visit my Github page and send an issue template\n";
     std::cout << "Basic info:\n";
-    std::cout << "Version: 0.8.88-13\n";
+    std::cout << "Version: 0.8.88-15\n";
     std::cout << "Github: https://github.com/Dogwalker-kryt/Drive-Manager-for-Linux\n";
     std::cout << "Author: Dogwalker-kryt\n";
     std::cout << "----------------------------\n";
 }
-
 
 void MenuQues(bool& running) {   
     std::cout << "\nPress '1' for returning to the main menu, '2' to exit\n";
@@ -1057,6 +1209,10 @@ void MenuQues(bool& running) {
         running = true; 
     }
 }
+enum MenuOptionsMain {
+    EXITPROGRAM = 0, LISTDRIVES = 1, FORMATDRIVE = 2, ENCRYPTDECRYPTDRIVE = 3, RESIZEDRIVE = 4, 
+    CHECKDRIVEHEALTH = 5, ANALYZEDISKSPACE = 6, OVERWRITEDRIVEDATA = 7, VIEWMETADATA = 8, VIEWINFO = 9, MOUNTUNMOUNT = 10
+};
 
 int main() {
     bool running = true;
@@ -1074,79 +1230,66 @@ int main() {
         std::cout << "7. Overwrite Drive Data\n";
         std::cout << "8. View Metadata of a Drive\n";
         std::cout << "9. View Info\n";
+        std::cout << "10. Mount/Unmount iso's, Drives,... (in development)\n";
         std::cout << "0. Exit\n";
         std::cout << "--------------------------------\n";
         int menuinput;
         std::cin >> menuinput;
-        switch (menuinput) {
-            case 1: {
+        switch (static_cast<MenuOptionsMain>(menuinput)) {
+            case LISTDRIVES: {
                 std::vector<std::string> drives;
                 listDrives(drives);
-                std::cout << "\nPress '1' for returning to the main menu, '2' for advnaced listing or '3' to exit\n";
+                std::cout << "\nPress '1' to return, '2' for advanced listing, or '3' to exit\n";
                 int menuques2;
                 std::cin >> menuques2;
-                if (menuques2 == 1) {
-                    continue;
-                } else if (menuques2 == 2) {
-                    listpartisions(drives);
-                } else if (menuques2 == 3) {
-                    running = false;
-                } else {
-                    std::cout << "[Error] Wrong input";
-                    return 1;
-                }
+                if (menuques2 == 1) continue;
+                else if (menuques2 == 2) listpartisions(drives);
+                else if (menuques2 == 3) running = false;
                 break;
             }
-            case 2:{
+            case FORMATDRIVE:
                 formatDrive();
                 MenuQues(running);
-                continue;
-            }
-            case 3:
+                break;
+            case ENCRYPTDECRYPTDRIVE:
                 EnDecryptDrive();
                 MenuQues(running);
-                continue;
-            case 4:
+                break;
+            case RESIZEDRIVE:
                 resizeDrive();
                 MenuQues(running);
-                continue;
-            case 5:
+                break;
+            case CHECKDRIVEHEALTH:
                 checkDriveHealth();
                 MenuQues(running);
-                continue;
-            case 6:{
+                break;
+            case ANALYZEDISKSPACE:
                 analyDiskSpace();
                 MenuQues(running);
-                continue;
-            }
-            case 7:{
-                std::cout << "[Warning] This funcion is Overwriting the hole data to Zeros\n"; 
-                std::cout << "if you dont know what you are doing then dont use this function for no data loss\n";
-                std::cout << "Do you want to proceed? (y/n)\n";
+                break;
+            case OVERWRITEDRIVEDATA:
+                std::cout << "[Warning] This function will overwrite the entire data to zeros. Proceed? (y/n)\n";
                 char zerodriveinput;
                 std::cin >> zerodriveinput;
-                if (zerodriveinput == 'y' || zerodriveinput == 'Y') {
-                    OverwriteDriveData();
-                } else {
-                    running = true;
-                }
-                break; 
-            }
-            case 8:{
+                if (zerodriveinput == 'y' || zerodriveinput == 'Y') OverwriteDriveData();
+                break;
+            case VIEWMETADATA:
                 MetadataReader::mainReader();
                 MenuQues(running);
-                continue;
-            }
-            case 9:
+                break;
+            case VIEWINFO:
                 Info();
                 MenuQues(running);
-                continue;
-            case 0:
+                break;
+            case MOUNTUNMOUNT:
+                MountUtility::mainMountUtil();
+                break;
+            case EXITPROGRAM:
                 running = false;
-                return 0;
+                break;
             default:
                 std::cout << "[Error] Invalid selection\n";
-                return 1;
+                break;
         }
     }
     return 0;

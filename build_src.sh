@@ -10,8 +10,8 @@ if ! openssl version > /dev/null 2>&1; then
     NEED_INSTALL=1
 fi
 
-if ! pkg-config --exists gtk4; then
-    echo "GTK4 is not installed"
+if ! pkg-config --exists libgtk-4-dev; then
+    echo "libgtk-4-dev is not installed"
     NEED_INSTALL=1
 fi
 
@@ -23,7 +23,7 @@ if [ "${NEED_INSTALL}" = "1" ]; then
         sudo apt update
         sudo apt install openssl
         sudo apt-get libssl
-        sudo apt install gtk-4.0
+        sudo apt install libgtk-4-dev
         sudo apt install g++
     fi
 fi

@@ -1,4 +1,4 @@
-# Drive Manager for Linux
+# Drive Management Utiliy for Linux
 
 A terminal-based drive management tool for Linux systems, written in C++. The goal of this project is to provide an easy-to-use interface for managing drives directly from the terminal, with plans for future GUI support.
 

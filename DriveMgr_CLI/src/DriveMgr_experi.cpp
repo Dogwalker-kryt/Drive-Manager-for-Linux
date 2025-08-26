@@ -19,12 +19,12 @@
 // ! Warning this version is teh experimentl version of the prorgam,
 // This version has teh latest and newest functions, but my contain bugs and errors
 // Curretn version of this code is in the Info() function below
-// v0.8.88-15
+// v0.8.88-17
 
 #include <iostream>
 #include <string>
 #include <cstdlib>
-#include "include/drivefunctions.h"
+#include "../include/drivefunctions.h"
 #include <cstdio>
 #include <sstream>
 #include <memory>
@@ -39,7 +39,7 @@
 #include <openssl/rand.h>
 #include <cstring>
 #include <fstream>
-#include "include/encryption.h"
+#include "../include/encryption.h"
 #include <regex>
 
 
@@ -55,9 +55,9 @@ public:
         std::strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", std::localtime(&currentTime));
 
         std::string logMsg = std::string("[") + timeStr + "] executed " + operation;
-
-        std::string logPath = std::string(getenv("HOME")) + "/.var/app/DriveMgr/log.dat";
-
+        
+        std::string logDir = std::string(getenv("HOME")) + "/.var/app/DriveMgr";
+        std::string logPath = logDir + "/log.dat";
         std::ofstream logFile(logPath, std::ios::app);
         if (logFile) {
             logFile << logMsg << std::endl;
@@ -605,17 +605,18 @@ int checkDriveHealth() {
         std::cout << "No drives found!\n";
         return 1;
     }
-    std::cout << "\nEnter drive number to check Health:\n";
-    int driveNumber_health;
-    std::cin >> driveNumber_health;
-    if (driveNumber_health < 0 || driveNumber_health >= (int) drives.size()) {
-        std::cout << "[Error] Invalid selection!\n";
-        return 1;
-    }
-    if (checkDriveHealth(drives[driveNumber_health])) {
-        std::cout << "Drive " << drives[driveNumber_health] << " is healthy.\n";
+    std::cout << "\nEnter drive name of a drive to check Health:\n";
+    std::string driveHealth_name;
+    std::cin >> driveHealth_name;
+    std::string cmd = "smartctl -H " + driveHealth_name + " 2>&1 | grep 'SMART overall-health'";
+    std::string output = Terminalexec::execTerminal(cmd.c_str());
+    if (output.find("PASSED") != std::string::npos) {
+        std::cout << "Drive " << driveHealth_name << " is healthy.\n";
+    } else if (output.find("FAILED") != std::string::npos){
+        std::cout << "Drive " << driveHealth_name << " has issues.\n";
     } else {
-        std::cout << "Drive " << drives[driveNumber_health] << " has issues.\n";
+        std::cout << "[Error] Unable to determine drive health. SMART may not be installed or unexpected error occurred\n";
+        
     }
    return 1;
 }
@@ -1190,7 +1191,7 @@ void Info() {
     std::cout << "Warning! You should know some basic things about drives so you dont loose any data\n";
     std::cout << "If you found any problems, visit my Github page and send an issue template\n";
     std::cout << "Basic info:\n";
-    std::cout << "Version: 0.8.88-15\n";
+    std::cout << "Version: 0.8.88-17\n";
     std::cout << "Github: https://github.com/Dogwalker-kryt/Drive-Manager-for-Linux\n";
     std::cout << "Author: Dogwalker-kryt\n";
     std::cout << "----------------------------\n";

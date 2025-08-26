@@ -11,6 +11,7 @@ always check if a new version has been released
 
 > **Warning**  
 > This tool is intended for users who understand the risks involved with formatting, encrypting, or otherwise modifying drives. Always back up your data and double-check your selections!
+> Also if there stnds somehting like 'enter drive name:' dont type thing in like '/dev/sda rm -rf' THIS WILL RESOLVE IN DATA LOSS
 
 ## Files
 in the current state of the repo, there are two folders: include (with all .h files) and src (with the source code files. All files to be needed are in the corosponding folders.

@@ -27,7 +27,9 @@ in the current state of the repo, there are two folders: include (with all .h fi
 |   ├─/include
 |   ├─/build_src
 |   └─/src
-└─/build_src.sh
+├─/build_src.sh
+├─/bin
+|   └─/Here are all finished build (executables)
 ```
 in the other file outside the folder is the newest version (beta), this version will not be bug free, but atleast compilable
 

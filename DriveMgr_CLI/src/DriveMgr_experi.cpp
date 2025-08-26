@@ -19,7 +19,7 @@
 // ! Warning this version is teh experimentl version of the prorgam,
 // This version has teh latest and newest functions, but my contain bugs and errors
 // Curretn version of this code is in the Info() function below
-// v0.8.88-17
+// v0.8.88-18
 
 #include <iostream>
 #include <string>
@@ -1182,6 +1182,103 @@ public:
     }
 };
 
+class ForensicAnalysis {
+private:
+    static void CreateDiskImage() {
+        std::vector<std::string> drives;
+        listDrives(drives);
+        if (drives.empty()) {
+            std::cout << "[Error] No drives found\n";
+            return;
+        }
+        std::cout << "\nEnter the name of a drive to create a disk image (e.g., /dev/sda):\n";
+        std::string drive;
+        std::cin >> drive;
+        bool driveFound = false;
+        for (const auto& d : drives) {
+            if (d == drive) {
+                driveFound = true;
+                break;
+            }
+        }
+        if (!driveFound) {
+            std::cout << "[Error] Drive " << drive << " not found!\n";
+            Logger::log("[ERROR] Drive " + drive + " not found -> CreateDiskImage()");
+            return;
+        }
+        std::cout << "Enter the path where the disk image should be saved (e.g., /path/to/image.img):\n";
+        std::string imagePath;
+        std::cin >> imagePath;
+        std::cout << "Are you sure you want to create a disk image of " << drive << " at " << imagePath << "? (y/n)\n";
+        char confirmationcreate;
+        std::cin >> confirmationcreate;
+        if (confirmationcreate != 'y' && confirmationcreate != 'Y') {
+            std::cout << "[Info] Operation cancelled\n";
+            Logger::log("[INFO] Operation cancelled -> CreateDiskImage()");
+            return;
+        }
+        std::string cmd = "sudo dd if=" + drive + " of=" + imagePath + " bs=4M status=progress && sync";
+        std::string output = Terminalexec::execTerminalv2(cmd.c_str());
+        if (output.find("error") != std::string::npos) {
+            std::cout << "[Error] Failed to create disk image: " << output << "\n";
+            Logger::log("[ERROR] Failed to create disk image for drive: " + drive + " -> CreateDiskImage()");
+            return;
+        }
+        std::cout << "[Success] Disk image created at " << imagePath << "\n";
+        Logger::log("[INFO] Disk image created successfully for drive: " + drive + " -> CreateDiskImage()");
+    }
+
+    static void ScanDrive() {
+        std::cout << "\n-------- Scan Drive for Recoverable Files ---------\n";
+        std::cout << "1. files recovery\n";
+        std::cout << "2. partition recovery\n";
+        std::cout << "3. system recovery\n";
+        std::cout << "-----------------------------------------------------\n";
+        std::cout << "In development...\n";
+
+    }
+public:
+    static int mainForensic(bool& running) {
+        enum ForensicMenuOptions {
+            Info = 1, CreateDisktImage = 2, ScanDrive = 3, Exit_Return = 0
+        };
+        std::cout << "\n-------- Forensic Analysis menu ---------\n";
+        std::cout << "1. Info of the Analysis tool\n";
+        std::cout << "2. Create a disk image of a drive\n";
+        std::cout << "3. Scan drive for recoverable files\n";
+        std::cout << "In development...\n";
+        std::cout << "0. Exit/Return to the main menu\n";
+        std::cout << "-------------------------------------------\n";
+        int forsensicmenuinput;
+        std::cin >> forsensicmenuinput;
+        switch (static_cast<ForensicMenuOptions>(forsensicmenuinput)) {
+            case Info:
+                std::cout << "\n[Info] This is a custom made forensic analysis tool for the Drive Manager\n";
+                std::cout << "Its not using actual forsensic tools, but still if its finished would be fully functional\n";
+                std::cout << "In development...\n";
+                break;
+            case CreateDisktImage:
+                CreateDiskImage();
+                break;
+            case ScanDrive:
+                std::cout << "[Info] In development...\n";
+                break;
+            case Exit_Return:
+                std::cout << "\nDo you want to return to the main menu or exit? (r/e)\n";
+                char exitreturninput;
+                std::cin >> exitreturninput;
+                if (exitreturninput == 'r' || exitreturninput == 'R') return;
+                else if (exitreturninput == 'e' || exitreturninput == 'E') {
+                    running = false;
+                    return 0;
+                }
+                return;
+            default:
+                std::cout << "[Error] Invalid selection\n";
+                return;
+        }
+    }
+};
 
 
 // main and Info
@@ -1191,7 +1288,7 @@ void Info() {
     std::cout << "Warning! You should know some basic things about drives so you dont loose any data\n";
     std::cout << "If you found any problems, visit my Github page and send an issue template\n";
     std::cout << "Basic info:\n";
-    std::cout << "Version: 0.8.88-17\n";
+    std::cout << "Version: 0.8.88-18\n";
     std::cout << "Github: https://github.com/Dogwalker-kryt/Drive-Manager-for-Linux\n";
     std::cout << "Author: Dogwalker-kryt\n";
     std::cout << "----------------------------\n";
@@ -1232,6 +1329,7 @@ int main() {
         std::cout << "8. View Metadata of a Drive\n";
         std::cout << "9. View Info\n";
         std::cout << "10. Mount/Unmount iso's, Drives,... (in development)\n";
+        std::cout << "11. Forensic analysis (in development)\n";
         std::cout << "0. Exit\n";
         std::cout << "--------------------------------\n";
         int menuinput;

@@ -15,6 +15,11 @@ if ! pkg-config --exists libgtk-4-dev; then
     NEED_INSTALL=1
 fi
 
+if ! smartctl --version > /dev/null 2>&1; then
+    echo "smart tools are not installed"
+    NEED_INSTALL=1
+fi
+
 if [ "${NEED_INSTALL}" = "1" ]; then
     echo "Some required packages are not installed."
     echo "Do you want to install the required packages? [y/n]"
@@ -25,6 +30,7 @@ if [ "${NEED_INSTALL}" = "1" ]; then
         sudo apt-get libssl
         sudo apt install libgtk-4-dev
         sudo apt install g++
+        sudo apt install smartmontools
     fi
 fi
 PROJECT_ROOT="$HOME/Drive-Manager-for-Linux"

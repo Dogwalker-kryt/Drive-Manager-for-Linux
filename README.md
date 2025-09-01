@@ -114,6 +114,8 @@ in the other file outside the folder is the newest version (beta), this version 
    ```
 
    Enter the number corresponding to the desired operation and follow the prompts.
+   
+**Note: this tool should be easy to use, but you should also know what you are doing**
 
 ## Example
 

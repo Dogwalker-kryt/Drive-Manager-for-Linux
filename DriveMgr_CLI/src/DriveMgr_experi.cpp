@@ -19,12 +19,12 @@
 // ! Warning this version is teh experimentl version of the prorgam,
 // This version has teh latest and newest functions, but my contain bugs and errors
 // Curretn version of this code is in the Info() function below
-// v0.8.88-18
+// v0.8.89-12
 
+// standar c++ libarys
 #include <iostream>
-#include <string>
 #include <cstdlib>
-#include "../include/drivefunctions.h"
+#include <regex>
 #include <cstdio>
 #include <sstream>
 #include <memory>
@@ -34,13 +34,20 @@
 #include <iomanip>
 #include <fstream>
 #include <filesystem>
+#include <cstring>
+#include <fstream>
+#include <regex>
+#include <sys/stat.h>
+#include <dirent.h>
+#include <unistd.h>
+// openssl
 #include <openssl/evp.h>
 #include <openssl/aes.h>
 #include <openssl/rand.h>
-#include <cstring>
-#include <fstream>
+#include <openssl/sha.h>
+// custom .h
+#include "../include/drivefunctions.h"
 #include "../include/encryption.h"
-#include <regex>
 
 
 // general side functions
@@ -1184,6 +1191,9 @@ public:
 
 class ForensicAnalysis {
 private:
+    static int exit() {
+        return 0;
+    }
     static void CreateDiskImage() {
         std::vector<std::string> drives;
         listDrives(drives);
@@ -1228,24 +1238,83 @@ private:
         Logger::log("[INFO] Disk image created successfully for drive: " + drive + " -> CreateDiskImage()");
     }
 
-    static void ScanDrive() {
-        std::cout << "\n-------- Scan Drive for Recoverable Files ---------\n";
+    // recoverymain + side functions
+    /*
+    static void recovery() {
+        std::cout << "\n-------- Recovery ---------\n";
         std::cout << "1. files recovery\n";
-        std::cout << "2. partition recovery\n";
+        //std::cout << "2. partition recovery\n";
         std::cout << "3. system recovery\n";
-        std::cout << "-----------------------------------------------------\n";
+        std::cout << "-----------------------------\n";
         std::cout << "In development...\n";
+        int scanDriverecover;
+        std::cin >> scanDriverecover;
+        switch (scanDriverecover) {
+            case 1:
+                filerecovery();
+                break;
+            //case 2:
+                //partitionrecovery();
+                //break;
+            case 3:
+                systemrecovery();
+                break;
+            default:
+                std::cout << "[Error] invalid input\n";       
+        }
+    }
+    // recovery sdie functions
+    static void filerecovery() {
+        std::vector<std::string> drives;
+        listDrives(drives);
+        if (drives.empty()) {
+            std::cout << "No dirves found\n";
+            return;
+        }
+        std::cout << "\nEnter the name of a drive you want to scan for recoverable files:\n";
+        std::string filerecoverydrivename;
+        std::cin >> filerecoverydrivename;
+    }
+    
+    static void partitionrecovery() {
+        std::vector<std::string> drives;
+        listDrives(drives);
+        if (drives.empty()) {
+            std::cout << "No drives found\n";
+            return;
+        }
+
+        std::cout << "in development\n";
+        std::cout << "\nEnter a name of a drive to try to recover partitions:\n";
+        std::string Forenpartitionrecov;
+        std::cin >> Forenpartitionrecov;
 
     }
+    
+    static void systemrecovery() {
+        std::vector<std::string> drives;
+        listDrives(drives);
+        if (drives.empty()) {
+            std::cout << "No drives found\n";
+            return;
+        }
+
+        std::cout << "in development\n";
+        std::cout << "\nEnter a name of a drive to try to recover the system on it:\n";
+        std::string Forensysrecov;
+        std::cin >> Forensysrecov;
+    }
+    */
+    // end of recovery
 public:
-    static int mainForensic(bool& running) {
+    static void mainForensic(bool& running) {
         enum ForensicMenuOptions {
             Info = 1, CreateDisktImage = 2, ScanDrive = 3, Exit_Return = 0
         };
         std::cout << "\n-------- Forensic Analysis menu ---------\n";
         std::cout << "1. Info of the Analysis tool\n";
         std::cout << "2. Create a disk image of a drive\n";
-        std::cout << "3. Scan drive for recoverable files\n";
+        //std::cout << "3. recover of system, files,..\n";
         std::cout << "In development...\n";
         std::cout << "0. Exit/Return to the main menu\n";
         std::cout << "-------------------------------------------\n";
@@ -1260,9 +1329,10 @@ public:
             case CreateDisktImage:
                 CreateDiskImage();
                 break;
-            case ScanDrive:
-                std::cout << "[Info] In development...\n";
-                break;
+            //case ScanDrive:
+                //recovery();
+                //break;
+
             case Exit_Return:
                 std::cout << "\nDo you want to return to the main menu or exit? (r/e)\n";
                 char exitreturninput;
@@ -1270,8 +1340,9 @@ public:
                 if (exitreturninput == 'r' || exitreturninput == 'R') return;
                 else if (exitreturninput == 'e' || exitreturninput == 'E') {
                     running = false;
-                    return 0;
+                    exit();
                 }
+                break;
                 return;
             default:
                 std::cout << "[Error] Invalid selection\n";
@@ -1281,6 +1352,86 @@ public:
 };
 
 
+
+class DSV {
+private:
+    static long getSize(const std::string &path) {
+        struct stat statbuf;
+        if (stat(path.c_str(), &statbuf) == 0) {
+            return statbuf.st_size;
+        }
+        return 0;
+    }
+    static void listFirstLayerFolders(const std::string &path) {
+        DIR *dp = opendir(path.c_str());
+        if (!dp) {
+            std::cerr << "Error opening directory: " << path << '\n';
+            return;
+        }
+
+        std::cout << "\n| " << std::setw(30) << std::left << "Name";
+        std::cout << " | " << std::setw(10) << "Size";
+        std::cout << " | Visualization\n";
+        std::cout << std::string(60, '-') << std::endl;
+
+        struct dirent *entry;
+        while ((entry = readdir(dp)) != nullptr) {
+            if (entry->d_type == DT_DIR) {
+                if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
+                    std::string fullPath = path + "/" + entry->d_name;
+                    long size = getSize(fullPath);
+                    std::cout << "| " << std::setw(30) << std::left << entry->d_name;
+                    std::cout << " | " << std::setw(10) << size / (1024 * 1024) << " MB |";
+                    std::cout << std::string(20, '█') << "\n";
+                }
+            }
+        }
+        closedir(dp);
+    }
+
+public:
+    static void DSVmain() {
+        std::vector<std::string> drives;
+        listDrives(drives);
+        if (drives.empty()) {
+            std::cout << "[Error] No drives found!\n";
+            return;
+        }
+
+        std::cout << "Select a number of a drive to visualize its contents: ";
+        int DSVdriveChoice;
+        std::cin >> DSVdriveChoice;
+        if (DSVdriveChoice < 0 || DSVdriveChoice >= drives.size()) {
+            std::cout << "Invalid selection.\n";
+            return;
+        }
+        std::string currentPath = "/"; 
+        listFirstLayerFolders(currentPath);
+        while (true) {
+            std::cout << "Enter folder to explore, '..' to go up, or 'exit' to quit: ";
+            std::string input;
+            std::cin >> input;
+
+            if (input == "exit") {
+                break;
+            } else if (input == "..") {
+                size_t pos = currentPath.find_last_of('/');
+                if (pos != std::string::npos) {
+                    currentPath = currentPath.substr(0, pos);
+                }
+            } else {
+                std::string nextPath = currentPath + input;
+                if (getSize(nextPath) > 0) {
+                    currentPath = nextPath;
+                    listFirstLayerFolders(currentPath);
+                } else {
+                    std::cout << "Directory does not exist or cannot be accessed.\n";
+                }
+            }
+        }
+    }
+};
+
 // main and Info
 void Info() {
     std::cout << "\n----------- Info -----------\n";
@@ -1288,7 +1439,7 @@ void Info() {
     std::cout << "Warning! You should know some basic things about drives so you dont loose any data\n";
     std::cout << "If you found any problems, visit my Github page and send an issue template\n";
     std::cout << "Basic info:\n";
-    std::cout << "Version: 0.8.88-18\n";
+    std::cout << "Version: 0.8.89-12\n";
     std::cout << "Github: https://github.com/Dogwalker-kryt/Drive-Manager-for-Linux\n";
     std::cout << "Author: Dogwalker-kryt\n";
     std::cout << "----------------------------\n";
@@ -1309,7 +1460,7 @@ void MenuQues(bool& running) {
 }
 enum MenuOptionsMain {
     EXITPROGRAM = 0, LISTDRIVES = 1, FORMATDRIVE = 2, ENCRYPTDECRYPTDRIVE = 3, RESIZEDRIVE = 4, 
-    CHECKDRIVEHEALTH = 5, ANALYZEDISKSPACE = 6, OVERWRITEDRIVEDATA = 7, VIEWMETADATA = 8, VIEWINFO = 9, MOUNTUNMOUNT = 10
+    CHECKDRIVEHEALTH = 5, ANALYZEDISKSPACE = 6, OVERWRITEDRIVEDATA = 7, VIEWMETADATA = 8, VIEWINFO = 9, MOUNTUNMOUNT = 10, FORENSIC = 11, DISKSPACEVIRTULIZER = 12
 };
 
 int main() {
@@ -1330,6 +1481,7 @@ int main() {
         std::cout << "9. View Info\n";
         std::cout << "10. Mount/Unmount iso's, Drives,... (in development)\n";
         std::cout << "11. Forensic analysis (in development)\n";
+        std::cout << "12. Diskspace Virtulizer (in development)\n";
         std::cout << "0. Exit\n";
         std::cout << "--------------------------------\n";
         int menuinput;
@@ -1382,7 +1534,15 @@ int main() {
                 break;
             case MOUNTUNMOUNT:
                 MountUtility::mainMountUtil();
+                MenuQues(running);
                 break;
+            case FORENSIC:
+                ForensicAnalysis::mainForensic(running);
+                break;
+            case DISKSPACEVIRTULIZER:
+                DSV::DSVmain();
+                MenuQues(running);
+                break; 
             case EXITPROGRAM:
                 running = false;
                 break;

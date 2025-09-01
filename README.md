@@ -4,7 +4,7 @@ A terminal-based drive management tool for Linux systems, written in C++. The go
 
 Current version in stable: 0.8.88-08
 
-Current version in experimental: 0.8.88-18
+Current version in experimental: 0.8.89-12
 
 always check if a new version has been released
 
@@ -48,6 +48,8 @@ in the other file outside the folder is the newest version (beta), this version 
 - **Overwrite the data on a drive**
 - **Active Logging**: for runtime debugging, histroy of waht things you done, if somthing brakes
 - **Metadata Reader**
+- **Forensic tools (still has bug/porblmes, but is in development)**
+- **Diskspace visulizer (still has bug/porblmes, but is in development)**
 - **More features coming soon! or aim to layz to add them in the Readme**
 
 ## Usage

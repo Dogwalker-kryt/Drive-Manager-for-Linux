@@ -77,8 +77,8 @@ in the other file outside the folder is the newest version (beta), this version 
    you need to also create following:
    - ~/.var/app/DriveMgr
    - ~/.var/app/DriveMgr/bin
-   - ~/.var/app/DriveMgr/log.txt
-   - ~/.var/app/DriveMgr/keys.savekey
+   - ~/.var/app/DriveMgr/log.dat
+   - ~/.var/app/DriveMgr/keys.bin
    - 
    **or do it the easier way**
      
@@ -128,7 +128,7 @@ in the other file outside the folder is the newest version (beta), this version 
 - Linux system (Debian-based distros)
 - C++17 or newer
 - Root privileges for most operations (Formatinn for example)
-- build-essetials, like openssl, g++, gtk-4.0
+- build-essetials, like openssl, g++, gtk-4.0 and S.M.A.R.T tools
 
 ## Roadmap
 

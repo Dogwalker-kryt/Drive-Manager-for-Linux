@@ -99,37 +99,117 @@ in the other file outside the folder is the newest version (beta), this version 
 5. **Follow the menu**  
    The program will present a menu:
    ```
-   Welcome to DriveMgr
-   ------------- Menu -------------
-   1. List drives
-   2. Format drive
-   3. Encrypt/Decrypt drive
-   4. Resize drive
-   5. Check drive health
-   6. Analyse Disk space
-   7. Overwrite Disk Data
-   8. Info
-   9. Exit
-   --------------------------------
+    Welcome to Drive-Manager
+    ------------- Menu -------------
+    1. List drives / Partition management
+    2. Format drive
+    3. Encrypt/Decrypt drive with AES-256
+    4. Resize drive
+    5. Check drive health
+    6. Analyze Disk Space
+    7. Overwrite Drive Data
+    8. View Metadata of a Drive
+    9. View Info
+    10. Mount/Unmount iso's, Drives,... (in development)
+    11. Forensic analysis (in development)
+    12. Diskspace Virtulizer (in development)
+    0. Exit
+    --------------------------------
    ```
+To use it enter the number of an function you want to use on some dangerious function like Overwriting the data are security fucntion like you must enter a generated key if you are really sure if you want to do that. 
 
-   Enter the number corresponding to the desired operation and follow the prompts.
-   
+## Simple guide how to use the Drive Manager
+
+
+### Step 1: Start the Program
+```sh
+sudo ./DriveMgr_experi_v0.8.89-12
+```
+Note: sudo is optional, because for some function the porgram doesnt need sudo access.
+
+
+### Step 2: Choose and Option
+```sh
+Welcome to Drive-Manager
+------------- Menu -------------
+1. List drives / Partition management
+2. Format drive
+3. Encrypt/Decrypt drive with AES-256
+4. Resize drive
+5. Check drive health
+6. Analyze Disk Space
+7. Overwrite Drive Data
+8. View Metadata of a Drive
+9. View Info
+10. Mount/Unmount iso's, Drives,... (in development)
+11. Forensic analysis (in development)
+12. Diskspace Virtulizer (in development)
+0. Exit
+--------------------------------
+```
+lets choose for example 'View Metadata of a Drive', for this enter the number on the side, in this case its ``` 8 ``` 
+
+
+## Step 3: Choose a Drive
+
+the number of Drives, size, name,... can vary from storage device to storage device
+```sh
+Listing connected drives...
+
+Connected Drives:
+#  Device            Size      Type      Mountpoint     FSType    Status
+------------------------------------------------------------------------------------------
+0  /dev/sda          1T        disk                               Unknown filesystem
+
+Enter number of the drive you want to see the metadata of: 
+```
+Now enter the number of the drive on the left side, in some fucntions the program will need the actual name of the drive so for example /dev/sda. Just read the prompt correctly.
+
+So we enterd ``` 0 ```.
+
+### Step 4: The Actions
+This step can vary form function to function, but everything you need to do and so are well writen in the program.
+
+Now we can see the progam read the Metadate of my Drive ``` /dev/sda ```
+```sh
+-------- Drive Metadata --------
+Name:       /dev/sda
+Size:       1T
+Model:      (The full drive model name)
+Serial:     (your_serialnumber_of_your_drive)
+Type:       disk
+Mountpoint: Not mounted
+Vendor:     (your_vendor_of_the_drive)     
+Filesystem: N/A (here the program couldnt read this part of the metadata)
+UUID:       N/A (here the program couldnt read this part of the metadata)
+
+-------- SMART Data --------
+(if you have smartmontools installed, here would be even more metadata)
+------------------------------
+[Error] Unable to open log file: ~/.var/app/DriveMgr/log.dat Reason: No such file or directory (here we see a error from some side function)
+
+Press '1' for returning to the main menu, '2' to exit
+
+```
+### Step 5: End/Return Phase
+When the action you choose is finished, you will be given this promt
+```sh
+Press '1' for returning to the main menu, '2' to exit
+```
+what it does speaks for it self.
+
+If you return to the menu the program will clear the terminal so it looks clean, but dont worry the program should log everything have done before.
+
+if you are in a function like Overwriting the Drive data and you dont want to do this action, just hit **Ctrl + c**, this will force to end the porgram
+  
 **Note: this tool should be easy to use, but you should also know what you are doing**
 
-## Example
-
-- **Listing Drives**  
-  Shows all connected drives with their device name, size, type, and mountpoint.
-
-- **Formatting a Drive**  
-  You can select a drive, optionally provide a label and filesystem type, and confirm before any irreversible actions are performed.
 
 ## Requirements
 
 - Linux system (Debian-based distros)
 - C++17 or newer
-- Root privileges for most operations (Formatinn for example)
+- Root privileges for most operations (Formating for example)
 - build-essetials, like openssl, g++, gtk-4.0 and S.M.A.R.T tools
 
 ## Roadmap

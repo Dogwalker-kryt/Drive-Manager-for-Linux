@@ -19,7 +19,7 @@
 // ! Warning this version is teh experimentl version of the prorgam,
 // This version has teh latest and newest functions, but my contain bugs and errors
 // Curretn version of this code is in the Info() function below
-// v0.8.89-12
+// v0.8.89-18
 
 // standar c++ libarys
 #include <iostream>
@@ -63,7 +63,7 @@ public:
 
         std::string logMsg = std::string("[") + timeStr + "] executed " + operation;
         
-        std::string logDir = std::string(getenv("HOME")) + "/.var/app/DriveMgr";
+        std::string logDir = std::string(getenv("HOME")) + "/" + ".var/app/DriveMgr";
         std::string logPath = logDir + "/log.dat";
         std::ofstream logFile(logPath, std::ios::app);
         if (logFile) {
@@ -789,21 +789,20 @@ void EnDecryptDrive() {
             return;
         }
 
+        srand(static_cast<unsigned int>(time(0))); 
         char randomconfirmationkey[] = {'a', 'A', 'b', 'B', 'c', 'C', 'd', 'D', 'e', 'E', 'f', 'F', 'g', 'G', 'h', 'H', 'i', 'I', 'j', 'J', 'k', 'K', 'l', 'L', 'm', 'M', 'n', 'N', 'o', 'O', 'p', 'P', 'q', 'Q', 'r', 'R', 's', 'S', 't', 'T', 'u', 'U', 'v', 'V', 'w', 'W', 'x', 'X', 'y', 'Y', 'z', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
         std::string displayKey;
         for (int i = 0; i < 10; i++) {
             int randomIndex = rand() % (sizeof(randomconfirmationkey) / sizeof(randomconfirmationkey[0]));
             displayKey += randomconfirmationkey[randomIndex];
         }
-
-        std::cout << "\n[Security] Confirmation key: " << displayKey;
-        std::cout << "\n[Input] Please enter the confirmation key to proceed:\n";
-        char userInput[11] = {0};
-        std::cin >> userInput;
-        
-        if (std::string(userInput) != displayKey) {
-            std::cout << "[Error] Invalid confirmation key\n";
-            Logger::log("[ERROR] Confirmation key invalid -> void EnDecrypt()");
+        std::cout << "\nPlease enter the confirmationkey to preceed with the operation:\n";
+        std::cout << displayKey << "\n";
+        std::string randomconfirmationkeyinput3;
+        std::cin >> randomconfirmationkeyinput3;
+        if (randomconfirmationkeyinput3 != displayKey) {
+            std::cout << "[Error] Invalid confrimation of the Key or unexpected error\n";
+            Logger::log("[ERROR] Invalid confrimation of the Key or unexpected error -> EnDecrypt");
             return;
         }
         
@@ -846,21 +845,20 @@ void EnDecryptDrive() {
             return;
         }
         
+        srand(static_cast<unsigned int>(time(0))); 
         char randomconfirmationkey[] = {'a', 'A', 'b', 'B', 'c', 'C', 'd', 'D', 'e', 'E', 'f', 'F', 'g', 'G', 'h', 'H', 'i', 'I', 'j', 'J', 'k', 'K', 'l', 'L', 'm', 'M', 'n', 'N', 'o', 'O', 'p', 'P', 'q', 'Q', 'r', 'R', 's', 'S', 't', 'T', 'u', 'U', 'v', 'V', 'w', 'W', 'x', 'X', 'y', 'Y', 'z', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
         std::string displayKey;
         for (int i = 0; i < 10; i++) {
             int randomIndex = rand() % (sizeof(randomconfirmationkey) / sizeof(randomconfirmationkey[0]));
             displayKey += randomconfirmationkey[randomIndex];
         }
-
-        std::cout << "\n[Security] Confirmation key: " << displayKey;
-        std::cout << "\n[Input] Please enter the confirmation key to proceed:\n";
-        
-        char userInput[11] = {0};
-        std::cin >> userInput;
-        if (std::string(userInput) != displayKey) {
-            std::cout << "[Error] Invalid confirmation key\n";
-            Logger::log("[ERROR] invalid confirmation key -> void Endecrypt()");
+        std::cout << "\nPlease enter the confirmationkey to preceed with the operation:\n";
+        std::cout << displayKey << "\n";
+        std::string randomconfirmationkeyinput2;
+        std::cin >> randomconfirmationkeyinput2;
+        if (randomconfirmationkeyinput2 != displayKey) {
+            std::cout << "[Error] Invalid confrimation of the Key or unexpected error\n";
+            Logger::log("[ERROR] Invalid confrimation of the Key or unexpected error -> EnDecryptDrive");
             return;
         }
         
@@ -886,6 +884,7 @@ void EnDecryptDrive() {
         if (output.find("Command failed") != std::string::npos) {
             std::cout << "[Error] Failed to decrypt the drive: " << output << "\n";
             Logger::log("[ERROR] failed to decrypt the drive -> void EnDecrypt()");
+            return;
         } else {
             std::cout << "[Success] Drive " << driveName << " has been decrypted\n";
         }
@@ -910,24 +909,28 @@ void OverwriteDriveData() {
     char confirmationzerodrive;
     std::cin >> confirmationzerodrive;
     if (confirmationzerodrive == 'y' || confirmationzerodrive == 'Y' ) {
+        srand(static_cast<unsigned int>(time(0))); 
         char randomconfirmationkey[] = {'a', 'A', 'b', 'B', 'c', 'C', 'd', 'D', 'e', 'E', 'f', 'F', 'g', 'G', 'h', 'H', 'i', 'I', 'j', 'J', 'k', 'K', 'l', 'L', 'm', 'M', 'n', 'N', 'o', 'O', 'p', 'P', 'q', 'Q', 'r', 'R', 's', 'S', 't', 'T', 'u', 'U', 'v', 'V', 'w', 'W', 'x', 'X', 'y', 'Y', 'z', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
+        std::string displayKey;
         for (int i = 0; i < 10; i++) {
             int randomIndex = rand() % (sizeof(randomconfirmationkey) / sizeof(randomconfirmationkey[0]));
-            std::cout << randomconfirmationkey[randomIndex];
+            displayKey += randomconfirmationkey[randomIndex];
         }
         std::cout << "\nPlease enter the confirmationkey to preceed with the operation:\n";
-        std::cout << randomconfirmationkey << "\n";
-        char randomconfirmationkeyinput[10];
+        std::cout << displayKey << "\n";
+        std::string randomconfirmationkeyinput;
         std::cin >> randomconfirmationkeyinput;
-        if (std::string(randomconfirmationkeyinput) != std::string(randomconfirmationkey)) {
+        if (randomconfirmationkeyinput != displayKey) {
             std::cout << "[Error] Invalid confrimation of the Key or unexpected error\n";
             Logger::log("[ERROR] Invalid confrimation of the Key or unexpected error -> OverwriteData");
+            return;
         }
         std::cout << "Proceeding with Overwriting " << driveName << "...\n";
         std::string devrandom = Terminalexec::execTerminalv2("sudo dd if=/dev/urandom of=" + driveName + " bs=1M status=progress");
         std::string devZero = Terminalexec::execTerminalv2("sudo dd if=/dev/zero of=" + driveName + " bs=1M status=progress");
         if (devZero.empty() && devrandom.empty()) {
             std::cout << "[Error] Failed to overwrite the drive\n";
+            return;
         } else if (devZero.empty() || devrandom.empty()) {
             std::cout << "[Warning] the drive was not completely overwriten, please check the drive and try again if necessary\n";
         } else {
@@ -1162,7 +1165,7 @@ public:
         std::cout << "1. Burn iso/img to storage device\n";
         std::cout << "2. Mount storage device\n";
         std::cout << "3. Unmount storage device\n";
-        std::cout << "0. Exit/Rreturn to main menu\n";
+        std::cout << "0. Rreturn to main menu\n";
         std::cout << "--------------------------------\n";
         int menuinputmount;
         std::cin >> menuinputmount;
@@ -1439,7 +1442,7 @@ void Info() {
     std::cout << "Warning! You should know some basic things about drives so you dont loose any data\n";
     std::cout << "If you found any problems, visit my Github page and send an issue template\n";
     std::cout << "Basic info:\n";
-    std::cout << "Version: 0.8.89-12\n";
+    std::cout << "Version: 0.8.89-18\n";
     std::cout << "Github: https://github.com/Dogwalker-kryt/Drive-Manager-for-Linux\n";
     std::cout << "Author: Dogwalker-kryt\n";
     std::cout << "----------------------------\n";

@@ -25,6 +25,8 @@ Please describe the tests that you ran to verify your changes.
 
 - [ ] Manual testing
 - [ ] Unit tests
+- [ ] Manual isolated testing
+- [ ] testing the finished build after integrating the change
 - [ ] Not tested
 
 ## Checklist

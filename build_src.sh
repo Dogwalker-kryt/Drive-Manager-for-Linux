@@ -61,8 +61,8 @@ else
     exit 1
 fi
 
-touch "$APP_DIR/log.txt"
-touch "$APP_DIR/keys.savekey"
+touch "$APP_DIR/log.dat"
+touch "$APP_DIR/keys.bin"
 echo "Log and keys files created in $APP_DIR"
 
 echo "Build and setup completed successfully!"

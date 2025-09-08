@@ -84,6 +84,10 @@ in the other file outside the folder is the newest version (beta), this version 
    ```sh
    g++ DriveMgr_stable.cpp -I.. -o DriveMgr -lssl -lcrypto 
    ```
+   or for GUI
+   ```sh
+   cargo build
+   ```
    you need to also create following:
    - ~/.var/app/DriveMgr
    - ~/.var/app/DriveMgr/bin
@@ -99,14 +103,16 @@ in the other file outside the folder is the newest version (beta), this version 
    bash build_src.sh
    ```
    
-4. **Run the program**  
+5. **Run the program**  
    You need to run as root to manage drives:
 
    ```sh
    sudo ./DriveMgr_(the version name, like satble, gui, experi)
    ```
-
-5. **Follow the menu**  
+   ```sh
+   cargo run
+   ```
+6. **Follow the menu**  
    The program will present a menu:
    ```
     Welcome to Drive-Manager

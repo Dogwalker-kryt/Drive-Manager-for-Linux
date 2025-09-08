@@ -2,15 +2,21 @@
 
 A terminal-based drive management tool for Linux systems, written in C++. The goal of this project is to provide an easy-to-use interface for managing drives directly from the terminal, with plans for future GUI support.
 
-CLI:
+## Version Control
+
+### CLI:
+
 Current version in stable: v0.8.88-08
 
 Current version in experimental: v0.8.89-18
 
-GUI:
+### GUI:
+
 Current Rust GUI: v0.0.1-alpha (This version is not uploaded  but will be soon if the general gui is finished!)
 
-always check if a new version has been released
+
+### Note:
+- always check if a new version has been released
 
 **What is currently in development?** 
 - Forensic tools

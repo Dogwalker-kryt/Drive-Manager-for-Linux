@@ -18,9 +18,6 @@ Current Rust GUI: v0.0.1-alpha
 - always check if a new version has been released
 - Help for the GUI verion is appreciated
 
-**What is currently in development?** 
-- Forensic tools
-- Diskspace Virsulation with nice graph and abiltiy to go deeper into diretirys on linux dirves
 
 > **Warning**  
 > This tool is intended for users who understand the risks involved with formatting, encrypting, or otherwise modifying drives. Always back up your data and double-check your selections!

@@ -1,0 +1,11 @@
+[package]
+name = "DriveMgr_Rust_GUI"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+egui = "0.22"
+eframe = "0.27"
+serde = { version = "1.0", feartures = ["derive"]}
+serde_json = "1.0"
+chrono = "0.4"

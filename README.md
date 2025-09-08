@@ -13,10 +13,10 @@ Current version in experimental: v0.8.89-18
 ### GUI:
 
 Current Rust GUI: v0.0.1-alpha 
-(Help for the GUI version is appreciated)
 
 ### Note:
 - always check if a new version has been released
+- Help for the GUI verion is appreciated
 
 **What is currently in development?** 
 - Forensic tools

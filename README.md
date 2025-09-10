@@ -222,17 +222,19 @@ if you are in a function like Overwriting the Drive data and you dont want to do
 ## Requirements
 
 - Linux system (Debian-based distros)
-- C++17 or newer
+- C++17 or newer CLI
 - Root privileges for most operations (Formating for example)
 - build-essetials, like openssl, g++, gtk-4.0 and S.M.A.R.T tools
+- rustc compiler for GUI
 
 ## Roadmap
 
 - [x] Implement encryption/decryption
 - [x] Implement resizing and health checking
-- [ ] Add a GUI version
+- [x] Add a GUI version (in development)
 
 The GUI version will be in development if the Terminal based version funktions as it should!
+
 ## License
 
 This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**.

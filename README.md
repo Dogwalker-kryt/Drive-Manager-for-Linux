@@ -106,6 +106,7 @@ in the other file outside the folder is the newest version (beta), this version 
    ```sh
    sudo ./DriveMgr_(the version name, like satble, gui, experi)
    ```
+   for GUI 
    ```sh
    cargo run
    ```

@@ -12,7 +12,7 @@ Current version in experimental: v0.8.89-18
 
 ### GUI:
 
-Current Rust GUI: v0.0.1-alpha 
+Current Rust GUI: v0.1.5-alpha (this version is not really funtional, but the list dirves works)
 
 ### Note:
 - always check if a new version has been released

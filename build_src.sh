@@ -2,6 +2,7 @@
 
 what_needs_to_be_installed=()
 
+# checks if the needed things are installed
 if ! rustc --version > /dev/null 2>&1; then
     echo "Rust compiler is not installed"
     NEED_INSTALL_RUST=1
@@ -22,7 +23,7 @@ if ! smartctl --version > /dev/null 2>&1; then
     NEED_INSTALL_SMARTTOOLS=1
 fi
 
-
+# checks if the value is 1, if its one then it will add it to a list 
 if [ "$NEED_INSTALL_RUST" = "1" ]; then
     what_needs_to_be_installed+=("Rust_compiler")
 fi
@@ -39,7 +40,7 @@ if [ "$NEED_INSTALL_SMARTTOOLS" = "1" ]; then
     what_needs_to_be_installed+=("Smarttools")
 fi
 
-
+# this will read teh list with the things to install, asks for installtion and installs everything
 if [ "${#what_needs_to_be_installed[@]}" -ne 0 ]; then
     echo "These are all required packages/tools that need to be installed:"
     echo "${what_needs_to_be_installed[@]}"
@@ -67,7 +68,7 @@ if [ "${#what_needs_to_be_installed[@]}" -ne 0 ]; then
     fi
 fi
 
-
+# the initial compiling/building process
 PROJECT_ROOT="$HOME/Drive-Manager-for-Linux"
 mkdir -p "$PROJECT_ROOT/bin"
 
@@ -117,7 +118,7 @@ touch "$APP_DIR/keys.bin"
 echo "Log and keys files created in $APP_DIR"
 echo "Build and setup completed successfully!"
 
-
+# ask if you wnt to uninstall all teh things the porgram instlled, it will  only uninstall these ones that were in the list
 echo "Do you want to uninstall everything the script installed? (y/n)"
 read -r uninstallques
 if [ "$uninstallques" = "y" ]; then

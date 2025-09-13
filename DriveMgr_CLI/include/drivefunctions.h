@@ -21,8 +21,13 @@
 #include <iomanip>
 #include <filesystem>
 #include <cstring>
-
-
+#include <sys/stat.h>
+#include <unistd.h>
+#include <pwd.h>
+#include <openssl/rand.h>
+#include <openssl/evp.h>
+#include <openssl/aes.h>
+/*
 class Logger {
 public:
     static void log(const std::string& operation) {
@@ -44,52 +49,20 @@ public:
         }
     }
 };
+*/
+class Logger {
+public:
+    static void log(const std::string& operation);
+};
 
 // Command executer
 class Terminalexec {
 public:
-    static std::string execTerminal(const char* cmd) {
-        std::array<char, 128> buffer;
-        std::string result;
-        auto deleter = [](FILE* f) { if (f) pclose(f); };
-        std::unique_ptr<FILE, decltype(deleter)> pipe(popen(cmd, "r"), deleter);
-        if (!pipe) throw std::runtime_error("popen() failed!");
-        while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-            result += buffer.data();
-        }
-        return result;
-    }
+    static std::string execTerminal(const char* cmd);
     //v2
-    static std::string execTerminalv2(const std::string &command) {
-        std::array<char, 128> buffer;
-        std::string result;
-        std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(command.c_str(), "r"), pclose);
-        if (!pipe) return "";
-        while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-            result += buffer.data();
-        }
-        return result;
-    }
+    static std::string execTerminalv2(const std::string &command);
     //v3
-    static std::string execTerminalv3(const std::string& cmd) {
-        std::array<char, 512> buffer;
-        std::string result;
-        FILE* pipe = popen(cmd.c_str(), "r");
-        if (!pipe) {
-            throw std::runtime_error("popen() failed");
-        }
-        while (fgets(buffer.data(), buffer.size(), pipe) != nullptr) {
-            result += buffer.data();
-        }
-        int returnCode = pclose(pipe);
-        if (returnCode != 0) {
-            return ""; 
-        }
-        while (!result.empty() && (result.back() == '\n' || result.back() == '\r')) {
-            result.pop_back();
-        }
-        return result;
-    }
+    static std::string execTerminalv3(const std::string& cmd);
 };
 
 struct DriveInfo {
@@ -103,5 +76,16 @@ struct DriveInfo {
     bool hasErrors;
 
 };
+
+// encryption
+const std::string KEY_STORAGE_PATH = std::string(getenv("HOME")) + "/.var/app/DriveMgr/key.bin";
+
+struct EncryptionInfo {
+    std::string driveName;
+    unsigned char key[32];  // 256-bit key
+    unsigned char iv[16];   // 128-bit IV for CBC mode
+};
+
+
 
 #endif 

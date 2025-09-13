@@ -8,7 +8,7 @@ A terminal-based drive management tool for Linux systems, written in C++. The go
 
 Current version in stable: v0.8.88-08
 
-Current version in experimental: v0.8.89-18
+Current version in experimental: v0.8.89-78
 
 ### GUI:
 

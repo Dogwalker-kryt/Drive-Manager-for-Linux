@@ -19,9 +19,9 @@
 // ! Warning this version is teh experimentl version of the prorgam,
 // This version has teh latest and newest functions, but my contain bugs and errors
 // Curretn version of this code is in the Info() function below
-// v0.8.89-18
+// v0.8.89-78
 
-// standar c++ libarys
+// standard c++ libarys, i think
 #include <iostream>
 #include <cstdlib>
 #include <regex>
@@ -50,80 +50,7 @@
 #include "../include/encryption.h"
 
 
-// general side functions
-// Logger
-class Logger {
-public:
-    static void log(const std::string& operation) {
-        auto now = std::chrono::system_clock::now();
-        std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
-
-        char timeStr[100];
-        std::strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", std::localtime(&currentTime));
-
-        std::string logMsg = std::string("[") + timeStr + "] executed " + operation;
-        
-        std::string logDir = std::string(getenv("HOME")) + "/" + ".var/app/DriveMgr";
-        std::string logPath = logDir + "/log.dat";
-        std::ofstream logFile(logPath, std::ios::app);
-        if (logFile) {
-            logFile << logMsg << std::endl;
-        } else {
-            std::cerr << "[Error] Unable to open log file: " << logPath << " Reason: " << strerror(errno) << std::endl;
-        }
-    }
-};
-
-// Command executer
-class Terminalexec {
-public:
-    static std::string execTerminal(const char* cmd) {
-        std::array<char, 128> buffer;
-        std::string result;
-        auto deleter = [](FILE* f) { if (f) pclose(f); };
-        std::unique_ptr<FILE, decltype(deleter)> pipe(popen(cmd, "r"), deleter);
-        if (!pipe) throw std::runtime_error("popen() failed!");
-        while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-            result += buffer.data();
-        }
-        return result;
-    }
-    //v2
-    static std::string execTerminalv2(const std::string &command) {
-        std::array<char, 128> buffer;
-        std::string result;
-        std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(command.c_str(), "r"), pclose);
-        if (!pipe) return "";
-        while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-            result += buffer.data();
-        }
-        return result;
-    }
-    //v3
-    static std::string execTerminalv3(const std::string& cmd) {
-        std::array<char, 512> buffer;
-        std::string result;
-        FILE* pipe = popen(cmd.c_str(), "r");
-        if (!pipe) {
-            throw std::runtime_error("popen() failed");
-        }
-        while (fgets(buffer.data(), buffer.size(), pipe) != nullptr) {
-            result += buffer.data();
-        }
-        int returnCode = pclose(pipe);
-        if (returnCode != 0) {
-            return ""; 
-        }
-        while (!result.empty() && (result.back() == '\n' || result.back() == '\r')) {
-            result.pop_back();
-        }
-        return result;
-    }
-};
-
-
-
-// cehskfielsytem
+// checksfielsytem
 std::string checkFilesystem(const std::string& device, const std::string& fstype) {
     if (fstype.empty()) return "Unknown filesystem";
     
@@ -155,7 +82,6 @@ std::string checkFilesystem(const std::string& device, const std::string& fstype
 // ListDrives
 void listDrives(std::vector<std::string>& drives) {
     drives.clear();
-    std::cout << "\nListing connected drives...\n";
     std::string lsblk = Terminalexec::execTerminal("lsblk -o NAME,SIZE,TYPE,MOUNTPOINT,FSTYPE -d -n -p");
     std::cout << "\nConnected Drives:\n";
     std::cout << std::left 
@@ -618,7 +544,8 @@ int checkDriveHealth() {
     std::string cmd = "smartctl -H " + driveHealth_name + " 2>&1 | grep 'SMART overall-health'";
     std::string output = Terminalexec::execTerminal(cmd.c_str());
     if (output.find("PASSED") != std::string::npos) {
-        std::cout << "Drive " << driveHealth_name << " is healthy.\n";
+        //std::cout << "Drive " << driveHealth_name << " is healthy.\n";
+        std::cout << output;
     } else if (output.find("FAILED") != std::string::npos){
         std::cout << "Drive " << driveHealth_name << " has issues.\n";
     } else {
@@ -630,6 +557,7 @@ int checkDriveHealth() {
 
 // resizeDrive
 void resizeDrive() {
+    std::cout << "\nResizing\n";
     std::vector<std::string> drives;
     listDrives(drives);
     if (drives.empty()) {
@@ -662,6 +590,21 @@ void resizeDrive() {
 // encryption
 class EnDecryptionUtils {
     public:
+        // static void saveEncryptionInfo(const EncryptionInfo& info) {
+        //     std::ofstream file(KEY_STORAGE_PATH, std::ios::app | std::ios::binary);
+        //     if (!file) {
+        //         std::cerr << "[Error] Cannot open key storage file\n";
+        //         Logger::log("[ERROR] Cannot open key storage file: " + KEY_STORAGE_PATH + " -> saveEncryptionInfo()");
+        //         return;
+        //     }
+
+        //     char driveName[256] = {0};
+        //     strncpy(driveName, info.driveName.c_str(), 255);
+        //     file.write(driveName, sizeof(driveName));
+        //     file.write((char*)info.key, sizeof(info.key));
+        //     file.write((char*)info.iv, sizeof(info.iv));
+        //     file.close();
+        // }
         static void saveEncryptionInfo(const EncryptionInfo& info) {
             std::ofstream file(KEY_STORAGE_PATH, std::ios::app | std::ios::binary);
             if (!file) {
@@ -670,13 +613,47 @@ class EnDecryptionUtils {
                 return;
             }
 
+            // Generate salt
+            auto salt = generateSalt();
+            // Obfuscate key and IV
+            auto obfKey = obfuscate(info.key, sizeof(info.key), salt.data(), salt.size());
+            auto obfIV = obfuscate(info.iv, sizeof(info.iv), salt.data(), salt.size());
+
+            // Write drive name (null-terminated)
             char driveName[256] = {0};
             strncpy(driveName, info.driveName.c_str(), 255);
             file.write(driveName, sizeof(driveName));
-            file.write((char*)info.key, sizeof(info.key));
-            file.write((char*)info.iv, sizeof(info.iv));
+            // Write salt length and salt
+            uint32_t saltLen = salt.size();
+            file.write(reinterpret_cast<const char*>(&saltLen), sizeof(saltLen));
+            file.write(reinterpret_cast<const char*>(salt.data()), salt.size());
+            // Write obfuscated key and IV
+            file.write(reinterpret_cast<const char*>(obfKey.data()), obfKey.size());
+            file.write(reinterpret_cast<const char*>(obfIV.data()), obfIV.size());
+
             file.close();
+            Logger::log("[INFO] Encryption info saved (salted and obfuscated) for: " + info.driveName);
         }
+
+
+        // static bool loadEncryptionInfo(const std::string& driveName, EncryptionInfo& info) {
+        //     std::ifstream file(KEY_STORAGE_PATH, std::ios::binary);
+        //     if (!file) {
+        //         std::cerr << "[Error] Cannot open key storage file\n";
+        //         Logger::log("[ERROR] Cannot open key storage file: " + KEY_STORAGE_PATH + " -> loadEncryptionInfo()");
+        //         return false;
+        //     }
+        //     char storedDriveName[256];
+        //     while (file.read(storedDriveName, sizeof(storedDriveName))) {
+        //         file.read((char*)info.key, sizeof(info.key));
+        //         file.read((char*)info.iv, sizeof(info.iv));
+        //         if (driveName == storedDriveName) {
+        //             info.driveName = driveName;
+        //             return true;
+        //         }
+        //     }
+        //     return false;
+        // }
 
         static bool loadEncryptionInfo(const std::string& driveName, EncryptionInfo& info) {
             std::ifstream file(KEY_STORAGE_PATH, std::ios::binary);
@@ -685,15 +662,34 @@ class EnDecryptionUtils {
                 Logger::log("[ERROR] Cannot open key storage file: " + KEY_STORAGE_PATH + " -> loadEncryptionInfo()");
                 return false;
             }
+
             char storedDriveName[256];
             while (file.read(storedDriveName, sizeof(storedDriveName))) {
-                file.read((char*)info.key, sizeof(info.key));
-                file.read((char*)info.iv, sizeof(info.iv));
+                // Read salt length and salt
+                uint32_t saltLen;
+                file.read(reinterpret_cast<char*>(&saltLen), sizeof(saltLen));
+                std::vector<unsigned char> salt(saltLen);
+                file.read(reinterpret_cast<char*>(salt.data()), saltLen);
+
+                // Read obfuscated key and IV
+                std::vector<unsigned char> obfKey(32);
+                std::vector<unsigned char> obfIV(16);
+                file.read(reinterpret_cast<char*>(obfKey.data()), 32);
+                file.read(reinterpret_cast<char*>(obfIV.data()), 16);
+
+                // Deobfuscate
+                auto key = deobfuscate(obfKey.data(), 32, salt.data(), saltLen);
+                auto iv = deobfuscate(obfIV.data(), 16, salt.data(), saltLen);
+
                 if (driveName == storedDriveName) {
+                    std::copy(key.begin(), key.end(), info.key);
+                    std::copy(iv.begin(), iv.end(), info.iv);
                     info.driveName = driveName;
+                    Logger::log("[INFO] Encryption info loaded and deobfuscated for: " + driveName);
                     return true;
                 }
             }
+            Logger::log("[ERROR] No encryption info found for: " + driveName);
             return false;
         }
 
@@ -746,10 +742,32 @@ class EnDecryptionUtils {
             Logger::log("[INFO] Drive decrypted successfully -> decryptDrive()");
         }
 
+        // salting
+        static std::vector<unsigned char> generateSalt(size_t length = 16) {
+            std::vector<unsigned char> salt(length);
+            if (!RAND_bytes(salt.data(), length)) {
+                throw std::runtime_error("[Error] Failed to genearte salt");
+                Logger::log("[ERROR] Failed to generate salt");
+            }
+        }
+
+        static std::vector<unsigned char> obfuscate(const unsigned char* data, size_t dataLen, const unsigned char* salt, size_t saltLen) {
+            std::vector<unsigned char> result(dataLen);
+            for (size_t i = 0; i < dataLen; ++i) {
+                result[i] = data[i] ^ salt[i % saltLen];
+            }
+            return result;
+        }
+
+        static std::vector<unsigned char> deobfuscate(const unsigned char* data, size_t dataLen, const unsigned char* salt, size_t saltLen) {
+            return obfuscate(data, dataLen, salt, saltLen);
+        }
+        
 };
 
 
 void EnDecryptDrive() {
+    std::cout << "\nEn- Decryption\n";
     std::vector<std::string> drives;
     listDrives(drives);
     if (drives.empty()) {
@@ -896,6 +914,7 @@ void EnDecryptDrive() {
 
 // Overwrite drive data
 void OverwriteDriveData() {
+    std::cout << "\nOverwriting Data\n";
     std::vector<std::string> drives;
     listDrives(drives);
     if (drives.empty()) {
@@ -926,18 +945,41 @@ void OverwriteDriveData() {
             return;
         }
         std::cout << "Proceeding with Overwriting " << driveName << "...\n";
+        /*
         std::string devrandom = Terminalexec::execTerminalv2("sudo dd if=/dev/urandom of=" + driveName + " bs=1M status=progress");
         std::string devZero = Terminalexec::execTerminalv2("sudo dd if=/dev/zero of=" + driveName + " bs=1M status=progress");
         if (devZero.empty() && devrandom.empty()) {
-            std::cout << "[Error] Failed to overwrite the drive\n";
+            throw std::runtime_error("[ERROR] Overwriting Failed!\n");
             return;
         } else if (devZero.empty() || devrandom.empty()) {
             std::cout << "[Warning] the drive was not completely overwriten, please check the drive and try again if necessary\n";
         } else {
             std::cout << driveName << "'s data has been overwriten successfully\n";
         }
+        */
+        try {
+            std::string devrandom = Terminalexec::execTerminalv2("sudo dd if=/dev/urandom of=" + driveName + " bs=1M status=progress");
+            std::string devZero = Terminalexec::execTerminalv2("sudo dd if=/dev/zero of=" + driveName + " bs=1M status=progress");
+            if (devZero.find("error") != std::string::npos && devrandom.find("error") != std::string::npos) {
+                Logger::log("[ERROR] failed to overwrite drive data\n");
+                throw std::runtime_error("[Error] Failed to Overwrite drive data");
+            } else if (devZero.find("error") != std::string::npos || devrandom.find("error") != std::string::npos) {
+                std::cout << "[Warning] failed to Overwrite, only one of two overwriting opeartions succeded\n"
+                          << "Try again";
+                Logger::log("[WARNING] failed to overwrite, only one overwriting operation succeded");
+                return;
+            } else {
+                std::cout << "Overwriting completed, all bytes on your drive: " << driveName << " is overwrting to 0\n";
+            }
+        }
+        catch(const std::exception& e) {
+            std::cerr << "[ERROR] " << e.what() << "\n";
+            Logger::log("[ERROR] Overwrite failed for drive: " + driveName + " Reason: " + e.what());
+        }
+        
     } else {
         std::cout << "[Info] Overwriting cancelled\n";
+        Logger::log("[INFO] Overwrting cancelled");
     }
 }
 
@@ -989,32 +1031,34 @@ private:
 
     static void displayMetadata(const DriveMetadata& metadata) {
         std::cout << "\n-------- Drive Metadata --------\n";
-        std::cout << "Name:       " << metadata.name << "\n";
-        std::cout << "Size:       " << metadata.size << "\n";
-        std::cout << "Model:      " << (metadata.model.empty() ? "N/A" : metadata.model) << "\n";
-        std::cout << "Serial:     " << (metadata.serial.empty() ? "N/A" : metadata.serial) << "\n";
-        std::cout << "Type:       " << metadata.type << "\n";
-        std::cout << "Mountpoint: " << (metadata.mountpoint.empty() ? "Not mounted" : metadata.mountpoint) << "\n";
-        std::cout << "Vendor:     " << (metadata.vendor.empty() ? "N/A" : metadata.vendor) << "\n";
-        std::cout << "Filesystem: " << (metadata.fstype.empty() ? "N/A" : metadata.fstype) << "\n";
-        std::cout << "UUID:       " << (metadata.uuid.empty() ? "N/A" : metadata.uuid) << "\n";
+        std::cout << "| Name:       " << metadata.name << "\n";
+        std::cout << "| Size:       " << metadata.size << "\n";
+        std::cout << "| Model:      " << (metadata.model.empty() ? "N/A" : metadata.model) << "\n";
+        std::cout << "| Serial:     " << (metadata.serial.empty() ? "N/A" : metadata.serial) << "\n";
+        std::cout << "| Type:       " << metadata.type << "\n";
+        std::cout << "| Mountpoint: " << (metadata.mountpoint.empty() ? "Not mounted" : metadata.mountpoint) << "\n";
+        std::cout << "| Vendor:     " << (metadata.vendor.empty() ? "N/A" : metadata.vendor) << "\n";
+        std::cout << "| Filesystem: " << (metadata.fstype.empty() ? "N/A" : metadata.fstype) << "\n";
+        std::cout << "| UUID:       " << (metadata.uuid.empty() ? "N/A" : metadata.uuid) << "\n";
 
         // SMART data
         if (metadata.type == "disk") {
-            std::cout << "\n-------- SMART Data --------\n";
-            std::string smartCmd = "smartctl -i " + metadata.name;
+            std::cout << "\n┌-─-─-─- SMART Data -─-─-─-─\n";
+            std::string smartCmd = "sudo smartctl -i " + metadata.name;
             std::string smartOutput = Terminalexec::execTerminal(smartCmd.c_str());
             if (!smartOutput.empty()) {
                 std::cout << smartOutput;
             } else {
                 std::cout << "SMART data not available/intalled\n";
             }
-        }
-        std::cout << "------------------------------\n";
+        }                                           
+        std::cout << "└─  - -─ --- ─ - -─-  - ──- ──- ───────────────────\n";
+                    
     }
     
 public:
     static void mainReader() {
+        std::cout << "\nMedata reader\n";
         std::vector<std::string> drives;
         listDrives(drives);
         if (drives.empty()) {
@@ -1045,6 +1089,7 @@ public:
 class MountUtility {
 private:
     static void BurnISOToStorageDevice() { //const std::string& isoPath, const std::string& drive
+        std::cout << "\nBurn Image to Drive\n";
         std::vector<std::string> drives;
         listDrives(drives);
         if (drives.empty()) {
@@ -1104,6 +1149,7 @@ private:
     }
 
     static void MountDrive2() {
+        std::cout << "\nMount Drive\n";
         std::vector<std::string> drives;
         listDrives(drives);
         if (drives.empty()) {
@@ -1127,6 +1173,7 @@ private:
     }
 
     static void UnmountDrive2() {
+        std::cout << "\nUnmount a Drive\n";
         std::vector<std::string> drives;
         listDrives(drives);
         if (drives.empty()) {
@@ -1198,6 +1245,7 @@ private:
         return 0;
     }
     static void CreateDiskImage() {
+        std::cout << "\n Create Disk Image\n";
         std::vector<std::string> drives;
         listDrives(drives);
         if (drives.empty()) {
@@ -1301,7 +1349,6 @@ private:
             std::cout << "No drives found\n";
             return;
         }
-
         std::cout << "in development\n";
         std::cout << "\nEnter a name of a drive to try to recover the system on it:\n";
         std::string Forensysrecov;
@@ -1385,7 +1432,7 @@ private:
                     long size = getSize(fullPath);
                     std::cout << "| " << std::setw(30) << std::left << entry->d_name;
                     std::cout << " | " << std::setw(10) << size / (1024 * 1024) << " MB |";
-                    std::cout << std::string(20, '█') << "\n";
+                    //std::cout << std::string(20, '') << "\n";
                 }
             }
         }
@@ -1396,6 +1443,7 @@ public:
     static void DSVmain() {
         std::vector<std::string> drives;
         listDrives(drives);
+        std::cout << "\nDisk space visulizer\n";
         if (drives.empty()) {
             std::cout << "[Error] No drives found!\n";
             return;
@@ -1437,15 +1485,15 @@ public:
 
 // main and Info
 void Info() {
-    std::cout << "\n----------- Info -----------\n";
-    std::cout << "Welcome to Drive Manager, this is a porgram for linux to view, operate,... your Drives in your system\n";
-    std::cout << "Warning! You should know some basic things about drives so you dont loose any data\n";
-    std::cout << "If you found any problems, visit my Github page and send an issue template\n";
-    std::cout << "Basic info:\n";
-    std::cout << "Version: 0.8.89-18\n";
-    std::cout << "Github: https://github.com/Dogwalker-kryt/Drive-Manager-for-Linux\n";
-    std::cout << "Author: Dogwalker-kryt\n";
-    std::cout << "----------------------------\n";
+    std::cout << "\n┌────────── Info ──────────\n";
+    std::cout << "| Welcome to Drive Manager, this is a program for linux to view, operate,... your Drives in your system\n";
+    std::cout << "| Warning! You should know some basic things about drives so you dont loose any data\n";
+    std::cout << "| If you find any problems/issues or have ideas, visit my Github page and send message\n";
+    std::cout << "| Other info:\n";
+    std::cout << "| Version: 0.8.89-78\n";
+    std::cout << "| Github: https://github.com/Dogwalker-kryt/Drive-Manager-for-Linux\n";
+    std::cout << "| Author: Dogwalker-kryt\n";
+    std::cout << "└───────────────────────────\n";
 }
 
 void MenuQues(bool& running) {   
@@ -1463,7 +1511,8 @@ void MenuQues(bool& running) {
 }
 enum MenuOptionsMain {
     EXITPROGRAM = 0, LISTDRIVES = 1, FORMATDRIVE = 2, ENCRYPTDECRYPTDRIVE = 3, RESIZEDRIVE = 4, 
-    CHECKDRIVEHEALTH = 5, ANALYZEDISKSPACE = 6, OVERWRITEDRIVEDATA = 7, VIEWMETADATA = 8, VIEWINFO = 9, MOUNTUNMOUNT = 10, FORENSIC = 11, DISKSPACEVIRTULIZER = 12
+    CHECKDRIVEHEALTH = 5, ANALYZEDISKSPACE = 6, OVERWRITEDRIVEDATA = 7, VIEWMETADATA = 8, VIEWINFO = 9,
+    MOUNTUNMOUNT = 10, FORENSIC = 11, DISKSPACEVIRTULIZER = 12
 };
 
 int main() {
@@ -1471,22 +1520,41 @@ int main() {
     while (running == true) {
         std::string clear = Terminalexec::execTerminal("clear");
         std::cout << clear;
-        std::cout << "\nWelcome to Drive-Manager\n";
-        std::cout << "------------- Menu -------------\n";
-        std::cout << "1. List drives\n";
-        std::cout << "2. Format drive\n";
-        std::cout << "3. Encrypt/Decrypt drive with AES-256\n";
-        std::cout << "4. Resize drive\n";
-        std::cout << "5. Check drive health\n";
-        std::cout << "6. Analyze Disk Space\n";
-        std::cout << "7. Overwrite Drive Data\n";
-        std::cout << "8. View Metadata of a Drive\n";
-        std::cout << "9. View Info\n";
-        std::cout << "10. Mount/Unmount iso's, Drives,... (in development)\n";
-        std::cout << "11. Forensic analysis (in development)\n";
-        std::cout << "12. Diskspace Virtulizer (in development)\n";
-        std::cout << "0. Exit\n";
-        std::cout << "--------------------------------\n";
+        // std::cout << "\nWelcome to Drive-Manager\n";
+        // std::cout << "------------- Menu -------------\n";
+        // std::cout << "1. List drives\n";
+        // std::cout << "2. Format drive\n";
+        // std::cout << "3. Encrypt/Decrypt drive with AES-256\n";
+        // std::cout << "4. Resize drive\n";
+        // std::cout << "5. Check drive health\n";
+        // std::cout << "6. Analyze Disk Space\n";
+        // std::cout << "7. Overwrite Drive Data\n";
+        // std::cout << "8. View Metadata of a Drive\n";
+        // std::cout << "9. View Info\n";
+        // std::cout << "10. Mount/Unmount iso's, Drives,... (in development)\n";
+        // std::cout << "11. Forensic analysis (in development)\n";
+        // std::cout << "12. Diskspace Visulizer (in development)\n";
+        // std::cout << "0. Exit\n";
+        // std::cout << "--------------------------------\n";
+        std::cout << "┌─────────────────────────────────────────────────┐\n";
+        std::cout << "│              DRIVE MANAGEMENT UTILITY           │\n";
+        std::cout << "├─────────────────────────────────────────────────┤\n";
+        std::cout << "│ 1.  List Drives                                 │\n";
+        std::cout << "│ 2.  Format Drive                                │\n";
+        std::cout << "│ 3.  Encrypt/Decrypt Drive (AES-256)             │\n";
+        std::cout << "│ 4.  Resize Drive                                │\n";
+        std::cout << "│ 5.  Check Drive Health                          │\n";
+        std::cout << "│ 6.  Analyze Disk Space                          │\n";
+        std::cout << "│ 7.  Overwrite Drive Data                        │\n";
+        std::cout << "│ 8.  View Drive Metadata                         │\n";
+        std::cout << "│ 9.  View Info                                   │\n";
+        std::cout << "│10.  Mount/Unmount (ISO/Drives)                  │\n";
+        std::cout << "│11.  Forensic Analysis (Beta)                    │\n";
+        std::cout << "│12.  Disk Space Visualizer (Beta)                │\n";
+        std::cout << "│13.                                              │\n";
+        std::cout << "│ 0.  Exit                                        │\n";
+        std::cout << "└─────────────────────────────────────────────────┘\n";
+        std::cout << "choose an option [0 - 12]:\n";
         int menuinput;
         std::cin >> menuinput;
         switch (static_cast<MenuOptionsMain>(menuinput)) {

@@ -146,22 +146,24 @@ Note: sudo is optional, because for some function the porgram doesnt need sudo a
 
 ### Step 2: Choose and Option
 ```sh
-Welcome to Drive-Manager
-------------- Menu -------------
-1. List drives / Partition management
-2. Format drive
-3. Encrypt/Decrypt drive with AES-256
-4. Resize drive
-5. Check drive health
-6. Analyze Disk Space
-7. Overwrite Drive Data
-8. View Metadata of a Drive
-9. View Info
-10. Mount/Unmount iso's, Drives,... (in development)
-11. Forensic analysis (in development)
-12. Diskspace Virtulizer (in development)
-0. Exit
---------------------------------
+    ┌─────────────────────────────────────────────────┐
+    │              DRIVE MANAGEMENT UTILITY           │
+    ├─────────────────────────────────────────────────┤
+    │ 1.  List Drives                                 │
+    │ 2.  Format Drive                                │
+    │ 3.  Encrypt/Decrypt Drive (AES-256)             │
+    │ 4.  Resize Drive                                │
+    │ 5.  Check Drive Health                          │
+    │ 6.  Analyze Disk Space                          │
+    │ 7.  Overwrite Drive Data                        │
+    │ 8.  View Drive Metadata                         │
+    │ 9.  View Info                                   │
+    │10.  Mount/Unmount (ISO/Drives)                  │
+    │11.  Forensic Analysis (Beta)                    |
+    │13.                                              │
+    │ 0.  Exit                                        │
+    └─────────────────────────────────────────────────┘
+    choose an option [0 - 12]:
 ```
 lets choose for example 'View Metadata of a Drive', for this enter the number on the side, in this case its ``` 8 ``` 
 

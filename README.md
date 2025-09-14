@@ -254,7 +254,7 @@ For full details of the license, see the [LICENSE](./LICENSE) file.
 
 **Known Bug/issues:**
 
-No current known bug/issues found in the code
+- Logger wont work if you are starting the program with sudo
 
 **Disclaimer:**  
 This tool is under active development. Some features may not be fully implemented or stable. Use with caution, and always test on non-critical drives first!

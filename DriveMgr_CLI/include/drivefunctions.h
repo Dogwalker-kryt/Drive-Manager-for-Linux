@@ -53,25 +53,46 @@ public:
 
 class Logger {
 public:
-    static void log(const std::string& operation) {
+        static void log(const std::string& operation) {
         auto now = std::chrono::system_clock::now();
         std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
-
         char timeStr[100];
         std::strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", std::localtime(&currentTime));
+        std::string logMsg = "[" + std::string(timeStr) + "] executed " + operation;
 
-        std::string logMsg = std::string("[") + timeStr + "] executed " + operation;
-        
-        std::string user = std::getenv("USER");
-        std::string logDir = "/home/" + user + "/.var/app/DriveMgr/";
+        const char* sudo_user = std::getenv("SUDO_USER");
+        const char* user_env = std::getenv("USER");
+        const char* username = sudo_user ? sudo_user : user_env;
+        if (!username) {
+            std::cerr << "[Logger Error] Could not determine username.\n";
+            return;
+        }
+        struct passwd* pw = getpwnam(username);
+        if (!pw) {
+            std::cerr << "[Logger Error] Failed to get home directory for user: " << username << "\n";
+            return;
+        }
+        std::string homeDir = pw->pw_dir;
+        std::string logDir = homeDir + "/.var/app/DriveMgr/";
+        struct stat st;
+        if (stat(logDir.c_str(), &st) != 0) {
+            if (mkdir(logDir.c_str(), 0755) != 0 && errno != EEXIST) {
+                std::cerr << "[Logger Error] Failed to create log directory: " << logDir
+                          << " Reason: " << strerror(errno) << "\n";
+                return;
+            }
+        }
+
         std::string logPath = logDir + "log.dat";
         std::ofstream logFile(logPath, std::ios::app);
         if (logFile) {
             logFile << logMsg << std::endl;
         } else {
-            std::cerr << "[Error] Unable to open log file: " << logPath << " Reason: " << strerror(errno) << std::endl;
-        } 
+            std::cerr << "[Logger Error] Unable to open log file: " << logPath
+                      << " Reason: " << strerror(errno) << "\n";
+        }
     }
+};
 };
 
 // Command executer

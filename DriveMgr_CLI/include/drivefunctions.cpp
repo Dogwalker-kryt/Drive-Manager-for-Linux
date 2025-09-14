@@ -1,3 +1,4 @@
+/*
 #include "drivefunctions.h"
 
 class Logger {
@@ -69,3 +70,4 @@ public:
         return result;
     }
 };
+*/

@@ -51,7 +51,7 @@ in the other file outside the folder is the newest version (beta), this version 
 - **Encrypt/Decrypt drives**: Secure your drives using encryption. _Warning: Losing your key means losing your data!_
 - **Resize drives**: Adjust the size of existing drives.
 - **Check drive health**: Basic S.M.A.R.T. health check of your drives.
-- **view Partitions adn manage them**:
+- **view Partitions and manage them**:
 - **Overwrite the data on a drive**
 - **Active Logging**: for runtime debugging, histroy of waht things you done, if somthing brakes
 - **Metadata Reader**

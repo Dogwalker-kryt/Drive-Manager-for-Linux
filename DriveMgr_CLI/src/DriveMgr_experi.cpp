@@ -19,7 +19,30 @@
 // ! Warning this version is teh experimentl version of the prorgam,
 // This version has teh latest and newest functions, but my contain bugs and errors
 // Curretn version of this code is in the Info() function below
-// v0.8.90
+// v0.8.98-94
+//
+//           .-----.
+//          /       \
+//         /         \
+//        |   o   o  |
+//        |     ∆    |
+//        \  \___/  /
+//         \       /
+//          \_____/
+//         /     \
+//        /       \
+//       /         \
+//      *-----------*
+//   ____
+//  /    \
+// | o  o |
+//  \    /
+//   |  |
+//  /    \
+// |      |
+// |      |
+//
+//
 
 // standard c++ libarys, i think
 #include <iostream>
@@ -37,14 +60,15 @@
 #include <cstring>
 #include <fstream>
 #include <regex>
-#include <sys/stat.h>
 #include <dirent.h>
-#include <unistd.h>
-#include <pwd.h>
-#include <sys/types.h>
 #include <map>
 #include <cstdint>
 #include <fcntl.h>
+// system
+#include <sys/stat.h>
+#include <unistd.h>
+#include <pwd.h>
+#include <sys/types.h>
 // openssl
 #include <openssl/evp.h>
 #include <openssl/aes.h>
@@ -62,7 +86,6 @@ void file_recovery_full(const std::string& drive, const std::string& signature_k
 // checksfielsytem
 std::string checkFilesystem(const std::string& device, const std::string& fstype) {
     if (fstype.empty()) return "Unknown filesystem";
-    
     std::string result;
     try {
         std::string cmd;
@@ -79,7 +102,6 @@ std::string checkFilesystem(const std::string& device, const std::string& fstype
     } catch (const std::exception& e) {
         return "Check failed: " + std::string(e.what());
     }
-    
     if (result.find("clean") != std::string::npos || result.find("no errors") != std::string::npos) {
         return "Clean";
     } else if (!result.empty()) {
@@ -1351,7 +1373,6 @@ private:
     //     {"html", {"html", {0x3C, 0x21, 0x44, 0x4F, 0x43, 0x54, 0x59, 0x50, 0x45}}},
     //     {"csv",  {"csv",  {0x49, 0x44, 0x33}}} //often ID3 if they contain metadata
     // };
-
     static void filerecovery() {
         std::vector<std::string> drives;
         listDrives(drives);
@@ -1629,10 +1650,62 @@ private:
             return;
         }
 
-        std::cout << "in development\n";
-        std::cout << "\nEnter a name of a drive to try to recover partitions:\n";
-        std::string Forenpartitionrecov;
-        std::cin >> Forenpartitionrecov;
+        std::cout << "\nEnter the name of the drive to analyse for partition recovery (e.g. /dev/sdb):\n";
+        std::string device;
+        std::cin >> device;
+
+        bool found = false;
+        for (const auto &d : drives) if (d == device) { found = true; break; }
+        if (!found) {
+            std::cout << "[Error] Drive '" << device << "' not found in detected drives. Aborting.\n";
+            return;
+        }
+
+        std::cout << "\n--- Partition table (parted) ---\n";
+        std::string parted_out = Terminalexec::execTerminalv2(("sudo parted -s " + device + " print").c_str());
+        std::cout << parted_out << "\n";
+
+        std::cout << "\n--- fdisk -l ---\n";
+        std::string fdisk_out = Terminalexec::execTerminalv2(("sudo fdisk -l " + device + " 2>/dev/null || true").c_str());
+        std::cout << fdisk_out << "\n";
+
+        // Offer to dump partition table using sfdisk (non-destructive)
+        std::cout << "Would you like to save a partition-table dump (recommended) to a file for possible restoration? (y/N): ";
+        char saveDump = 'n';
+        std::cin >> saveDump;
+        std::string dumpPath;
+        if (saveDump == 'y' || saveDump == 'Y') {
+            dumpPath = device;
+            // sanitize filename: replace '/' with '_'
+            for (auto &c : dumpPath) if (c == '/') c = '_';
+            dumpPath = "/tmp/" + dumpPath + "_sfdisk_dump.sfdisk";
+            std::string dump_cmd = "sudo sfdisk -d " + device + " > " + dumpPath + " 2>&1";
+            std::string dump_out = Terminalexec::execTerminalv2(dump_cmd.c_str());
+            // sfdisk -d writes to stdout redirected; if file was created, inform the user.
+            std::ifstream fcheck(dumpPath);
+            if (fcheck) {
+                std::cout << "Partition-table dump written to: " << dumpPath << "\n";
+                Logger::log("[INFO] Partition-table dump saved: " + dumpPath + " for device: " + device + " -> partitionrecovery()");
+            } else {
+                std::cout << "[Warning] Could not write partition-table dump. Output:\n" << dump_out << "\n";
+                Logger::log("[WARN] Failed to write partition-table dump for device: " + device + " -> partitionrecovery()");
+            }
+        }
+
+        std::cout << "\nNotes:\n";
+        std::cout << " - The tool printed the partition table above. If you see missing partitions, you can try recovery tools such as 'testdisk' or restore a saved sfdisk dump with 'sudo sfdisk " << device << " < " << (dumpPath.empty() ? "<dump-file>" : dumpPath) << "'.\n";
+        std::cout << " - 'testdisk' is interactive; run it manually if you want a guided recovery.\n";
+
+        // Check for testdisk availability and offer to run guidance only
+        std::string which_testdisk = Terminalexec::execTerminalv2("which testdisk 2>/dev/null || true");
+        if (!which_testdisk.empty()) {
+            std::cout << "\nDetected 'testdisk' on the system. This is an interactive tool that can help recover partitions.\n";
+            std::cout << "I will not run it automatically. To run it now, open a terminal and run: sudo testdisk " << device << "\n";
+        } else {
+            std::cout << "\n'testdisk' not found. You can install it (usually package 'testdisk') to perform interactive partition recovery.\n";
+        }
+
+        std::cout << "\nPartition recovery helper finished. Review outputs and saved dump before attempting destructive actions.\n";
 
     }
     
@@ -1643,10 +1716,70 @@ private:
             std::cout << "No drives found\n";
             return;
         }
-        std::cout << "in development\n";
-        std::cout << "\nEnter a name of a drive to try to recover the system on it:\n";
-        std::string Forensysrecov;
-        std::cin >> Forensysrecov;
+        std::cout << "\nSystem recovery helper\n";
+        std::cout << "Enter the name of the drive containing the system to inspect (e.g. /dev/sda):\n";
+        std::string device;
+        std::cin >> device;
+        bool found = false;
+        for (const auto &d : drives) if (d == device) { found = true; break; }
+        if (!found) {
+            std::cout << "[Error] Device not found in detected drives. Aborting.\n";
+            return;
+        }
+        std::cout << "\nListing partitions and filesystems for " << device << "\n";
+        std::string lsblk_cmd = "lsblk -o NAME,FSTYPE,SIZE,MOUNTPOINT,LABEL -p -n " + device;
+        std::string lsblk_out = Terminalexec::execTerminalv2(lsblk_cmd.c_str());
+        std::cout << lsblk_out << "\n";
+        std::cout << "\nProbing for possible boot partitions (EFI and Linux root candidates)...\n";
+        // Find an EFI partition (vfat with esp flag) and a Linux root (ext4/xfs/btrfs)
+        std::string blkid_cmd = "sudo blkid -o export " + device + "* 2>/dev/null || true";
+        std::string blkid_out = Terminalexec::execTerminalv2(blkid_cmd.c_str());
+        // Also show partition flags from parted
+        std::string parted_print = Terminalexec::execTerminalv2(("sudo parted -s " + device + " print").c_str());
+        std::cout << parted_print << "\n";
+
+        std::cout << "\nIf you want to attempt automatic repair of the bootloader, DriveMgr will prepare a script with suggested steps (it will not run it unless you explicitly allow execution).\n";
+        // Build a suggested script (dry-run by default)
+        std::string scriptPath = "/tmp/drive_mgr_repair_";
+        std::string sanitized = device;
+        for (auto &c : sanitized) if (c == '/') c = '_';
+        scriptPath += sanitized + ".sh";
+
+        std::ofstream script(scriptPath);
+        if (!script) {
+            std::cout << "[Error] Could not create helper script at " << scriptPath << "\n";
+            Logger::log("[ERROR] Could not create system recovery script: " + scriptPath + " -> systemrecovery()");
+            return;
+        }
+        script << "#!/bin/sh\n";
+        script << "# DriveMgr generated helper script: inspect and run manually or allow DriveMgr to run with explicit confirmation.\n";
+        script << "# Device: " << device << "\n";
+        script << "set -e\n";
+        script << "echo 'This script will attempt to mount root and reinstall grub. Inspect before running.'\n";
+        script << "# Example sequence (adapt to your partition layout):\n";
+        script << "# 1) Mount root partition: sudo mount /dev/sdXY /mnt\n";
+        script << "# 2) If EFI: sudo mount /dev/sdXZ /mnt/boot/efi\n";
+        script << "# 3) Bind system dirs: sudo mount --bind /dev /mnt/dev && sudo mount --bind /proc /mnt/proc && sudo mount --bind /sys /mnt/sys\n";
+        script << "# 4) chroot and reinstall grub: sudo chroot /mnt grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=ubuntu || sudo chroot /mnt grub-install /dev/sdX\n";
+        script << "# 5) update-grub inside chroot: sudo chroot /mnt update-grub\n";
+        script << "echo 'Script created for guidance only. Do not run without verifying paths.'\n";
+        script.close();
+        Terminalexec::execTerminalv2((std::string("chmod +x ") + scriptPath).c_str());
+        std::cout << "A helper script was created at: " << scriptPath << "\n";
+        std::cout << "Open and inspect it. If you want DriveMgr to attempt to run the helper script now, type the exact phrase 'I UNDERSTAND' (all caps) to confirm: ";
+        std::string confirmation;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        std::getline(std::cin, confirmation);
+        if (confirmation == "I UNDERSTAND") {
+            std::cout << "Running helper script (requires sudo). This is destructive if incorrect.\n";
+            Logger::log("[WARN] User allowed DriveMgr to run system recovery helper script: " + scriptPath + " -> systemrecovery()");
+            std::string runcmd = std::string("sudo sh ") + scriptPath;
+            std::string runout = Terminalexec::execTerminalv2(runcmd.c_str());
+            std::cout << runout << "\n";
+            std::cout << "Helper script finished. Inspect system state manually.\n";
+        } else {
+            std::cout << "Not running the helper script. Inspect and run manually if desired: sudo sh " << scriptPath << "\n";
+        }
     }
     //−·−
     // end of recovery
@@ -1658,9 +1791,9 @@ public:
         std::cout << "\n-------- Forensic Analysis menu ---------\n";
         std::cout << "1. Info of the Analysis tool\n";
         std::cout << "2. Create a disk image of a drive\n";
-        //std::cout << "3. recover of system, files,..\n";
+        std::cout << "3. recover of system, files,..\n";
         std::cout << "In development...\n";                                                                                                                                                                                                                                                                                                                                                                                                         
-        std::cout << "0. Exit/Return to the main menu\n";                                                                                                                                                                                                                                                                                                                                                                                                        
+        std::cout << "0. Exit/Return to the main menu\n";                                                                                                                                                                                                                                                                                                                                                                                               
         std::cout << "-------------------------------------------\n";
         int forsensicmenuinput;
         std::cin >> forsensicmenuinput;
@@ -1670,15 +1803,15 @@ public:
                 std::cout << "Its not using actual forsensic tools, but still if its finished would be fully functional\n";
                 std::cout << "In development...\n";
                 break;
-            case CreateDisktImage:
+            case CreateDisktImage: {
                 CreateDiskImage();
                 break;
-            //case ScanDrive: {
-                //recovery();
-                //break;
-            //}
-                                                                                                                                                                                                                                                                                                     
-            case Exit_Return:
+            }
+            case ScanDrive: {
+                recovery();
+                break;
+            }
+            case Exit_Return: {
                 std::cout << "\nDo you want to return to the main menu or exit? (r/e)\n";
                 char exitreturninput;
                 std::cin >> exitreturninput;
@@ -1689,9 +1822,11 @@ public:
                 }
                 break;
                 return;
-            default:
+            }
+            default: {
                 std::cout << "[Error] Invalid selection\n";
                 return;
+            }
         }
     }
 };
@@ -1815,7 +1950,7 @@ void Info() {
     std::cout << "| Warning! You should know some basic things about drives so you dont loose any data\n";
     std::cout << "| If you find any problems/issues or have ideas, visit my Github page and send message\n";
     std::cout << "| Other info:\n";
-    std::cout << "| Version: 0.8.90\n";
+    std::cout << "| Version: 0.8.98-94\n";
     std::cout << "| Github: https://github.com/Dogwalker-kryt/Drive-Manager-for-Linux\n";
     std::cout << "| Author: Dogwalker-kryt\n";
     std::cout << "└───────────────────────────\n";
@@ -1878,64 +2013,83 @@ int main() {
                 else if (menuques2 == 3) running = false;
                 break;
             }
-            case FORMATDRIVE:
+            case FORMATDRIVE: {
                 formatDrive();
                 MenuQues(running);
                 break;
-            case ENCRYPTDECRYPTDRIVE:
+            }
+            case ENCRYPTDECRYPTDRIVE: {
                 EnDecryptDrive();
                 MenuQues(running);
                 break;
-            case RESIZEDRIVE:
+            }
+            case RESIZEDRIVE: {
                 resizeDrive();
                 MenuQues(running);
                 break;
-            case CHECKDRIVEHEALTH:
+            }
+            case CHECKDRIVEHEALTH:{
                 checkDriveHealth();
                 MenuQues(running);
                 break;
-            case ANALYZEDISKSPACE:
+            }
+            case ANALYZEDISKSPACE: {
                 analyDiskSpace();
                 MenuQues(running);
                 break;
-            case OVERWRITEDRIVEDATA:
+            }
+            case OVERWRITEDRIVEDATA: {
                 std::cout << "[Warning] This function will overwrite the entire data to zeros. Proceed? (y/n)\n";
                 char zerodriveinput;
                 std::cin >> zerodriveinput;
                 if (zerodriveinput == 'y' || zerodriveinput == 'Y') OverwriteDriveData();
                 break;
-            case VIEWMETADATA:
+            }
+            case VIEWMETADATA: {
                 MetadataReader::mainReader();
                 MenuQues(running);
                 break;
-            case VIEWINFO:
+            }
+            case VIEWINFO: {
                 Info();
                 MenuQues(running);
                 break;
-            case FUNCTION999:
+            }
+            case FUNCTION999: {
                 break;
-            case MOUNTUNMOUNT:
+            }
+            case MOUNTUNMOUNT: {
                 MountUtility::mainMountUtil();
                 MenuQues(running);
                 break;
-            case FORENSIC:
+            }
+            case FORENSIC: {
                 ForensicAnalysis::mainForensic(running);
                 break;
-            case DISKSPACEVIRTULIZER:
+            }
+            case DISKSPACEVIRTULIZER: {
                 DSV::DSVmain();
                 MenuQues(running);
                 break; 
-            case EXITPROGRAM:
+            }
+            case EXITPROGRAM: {
                 running = false;
                 break;
-            case LOGVIEW:
+            }
+            case LOGVIEW: {
                 log_viewer();
                 MenuQues(running);
                 break;
-            default:
+            }
+            default: {
                 std::cout << "[Error] Invalid selection\n";
                 break;
+            }
         }
     }
     return 0;
 }
+
+
+
+

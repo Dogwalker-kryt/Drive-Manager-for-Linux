@@ -20,29 +20,7 @@
 // This version has teh latest and newest functions, but my contain bugs and errors
 // Curretn version of this code is in the Info() function below
 // v0.8.98-94
-//
-//           .-----.
-//          /       \
-//         /         \
-//        |   o   o  |
-//        |     ∆    |
-//        \  \___/  /
-//         \       /
-//          \_____/
-//         /     \
-//        /       \
-//       /         \
-//      *-----------*
-//   ____
-//  /    \
-// | o  o |
-//  \    /
-//   |  |
-//  /    \
-// |      |
-// |      |
-//
-//
+
 
 // standard c++ libarys, i think
 #include <iostream>

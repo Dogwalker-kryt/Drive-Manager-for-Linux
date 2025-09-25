@@ -90,16 +90,24 @@ in the other file outside the folder is the newest version (beta), this version 
    - ~/.var/app/DriveMgr/bin
    - ~/.var/app/DriveMgr/log.dat
    - ~/.var/app/DriveMgr/keys.bin
-   - 
+     
    **or do it the easier way**
      
-   2.2 **easier way!!! (Not sure if it works)**
+   2.2 **easier way)**
+   you can run the build_src.sh, this script will create all necessery files, compile the executable, install the nessecary build essentials if not installed (openssl, g++ and 	gtk-4.0), make the directory's it needs. so basicly it does everything for you
 
-   NOTE: if you have a other distro with a other package manager like dnf, pacman, etc. you might have to change the script a bit and get info if the essentals are avilable!
-   
-   you can run the build_src.sh, this script will create all necessery files, compile the executable, install the nessecary build essentials if not installed (openssl, g++ and gtk-4.0), make the directory's it needs. so basicly it does everything for you
+   Note: the build script can fail if that happens you should try making ervting your self. If there is any missmatch, please open an issue!
+
+	The build_src.sh, will ask some questions if this, if that and so. you can also run it with flags like 
+	```sh
+	--dry-run # this will only ask the question but doesnt actualy do anythig
+ 	--no-install # does not attempt to install missing packages
+ 	--targets=  # this will only build teh prefered type e.g. cli, gui
+ 	-h, --help # for help what wich opetion does like --dry-run
+ 	```
+
    ```sh
-   bash build_src.sh
+   bash build_src.sh [option if wanted]
    ```
    
 5. **Run the program**  

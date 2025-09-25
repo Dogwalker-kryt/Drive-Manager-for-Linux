@@ -1,143 +1,168 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
+IFS=$'\n\t'
 
-what_needs_to_be_installed=()
+# Drive Manager build helper
+# Repo: https://github.com/Dogwalker-kryt/Drive-Manager-for-Linux
 
-# checks if the needed things are installed
-if ! rustc --version > /dev/null 2>&1; then
-    echo "Rust compiler is not installed"
-    NEED_INSTALL_RUST=1
-fi
+# Project root is the directory containing this script
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$ROOT_DIR"
+BUILD_DIR="$PROJECT_ROOT/bin"
+LOCAL_BIN="$HOME/.local/bin"
 
-if ! g++ --version > /dev/null 2>&1; then
-    echo "g++ is not installed"
-    NEED_INSTALL_CPP=1
-fi
+# Defaults
+DRY_RUN=0
+DO_INSTALL=1
+TARGETS=(cli gui)
 
-if ! openssl version > /dev/null 2>&1; then
-    echo "openssl is not installed"
-    NEED_INSTALL_OPENSSL=1
-fi
+usage(){
+    cat <<USAGE
+Usage: $(basename "$0") [options]
+Options:
+  --dry-run        Print commands instead of running them
+  --no-install     Do not attempt to install missing packages
+  --targets=LIST   Comma-separated targets: cli,gui (default: cli,gui)
+  -h, --help       Show this help
+USAGE
+}
 
-if ! smartctl --version > /dev/null 2>&1; then
-    echo "smart tools are not installed"
-    NEED_INSTALL_SMARTTOOLS=1
-fi
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --dry-run) DRY_RUN=1; shift;;
+        --no-install) DO_INSTALL=0; shift;;
+        --targets=*) IFS=',' read -r -a TARGETS <<< "${1#*=}"; shift;;
+        -h|--help) usage; exit 0;;
+        *) echo "Unknown arg: $1"; usage; exit 1;;
+    esac
+done
 
-# checks if the value is 1, if its one then it will add it to a list 
-if [ "$NEED_INSTALL_RUST" = "1" ]; then
-    what_needs_to_be_installed+=("Rust_compiler")
-fi
-
-if [ "$NEED_INSTALL_CPP" = "1" ]; then
-    what_needs_to_be_installed+=("g++_compiler")
-fi
-
-if [ "$NEED_INSTALL_OPENSSL" = "1" ]; then
-    what_needs_to_be_installed+=("Openssl")
-fi
-
-if [ "$NEED_INSTALL_SMARTTOOLS" = "1" ]; then
-    what_needs_to_be_installed+=("Smarttools")
-fi
-
-# this will read teh list with the things to install, asks for installtion and installs everything
-if [ "${#what_needs_to_be_installed[@]}" -ne 0 ]; then
-    echo "These are all required packages/tools that need to be installed:"
-    echo "${what_needs_to_be_installed[@]}"
-    echo "Do you want to install them? (y/n)"
-    read -r install_choice
-    if [ "$install_choice" = "y" ]; then
-        for item in "${what_needs_to_be_installed[@]}"; do
-            case "$item" in
-                "Rust_compiler")
-                    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-                    source "$HOME/.cargo/env"
-                    ;;
-                "g++_compiler")
-                    sudo apt update
-                    sudo apt install -y g++
-                    ;;
-                "Openssl")
-                    sudo apt install -y openssl libssl-dev
-                    ;;
-                "Smarttools")
-                    sudo apt install -y smartmontools
-                    ;;
-            esac
-        done
-    fi
-fi
-
-# the initial compiling/building process
-PROJECT_ROOT="$HOME/Drive-Manager-for-Linux"
-mkdir -p "$PROJECT_ROOT/bin"
-
-cd "$PROJECT_ROOT/DriveMgr_CLI/src" || exit 1
-g++ DriveMgr_experi.cpp -I.. -o DriveMgr_experi -lssl -lcrypto || exit 1
-g++ DriveMgr_stable.cpp -I.. -o DriveMgr_stable -lssl -lcrypto || exit 1
-
-cd "$PROJECT_ROOT/DriveMgr_GUI" || exit 1
-if command -v cargo > /dev/null 2>&1; then
-    echo "Building Rust GUI using cargo..."
-    cargo build --release || {
-        echo "Error: Failed to build Rust GUI"
-        exit 1
-    }
-    RUST_GUI_BINARY="$PROJECT_ROOT/DriveMgr_GUI/target/release/drive_mgr_gui"
-    if [ -f "$RUST_GUI_BINARY" ]; then
-        cp "$RUST_GUI_BINARY" "$PROJECT_ROOT/bin/"
-        echo "Rust GUI binary copied to bin/"
+run_cmd(){
+    if [ "$DRY_RUN" -eq 1 ]; then
+        echo "+ $*"
     else
-        echo "Error: Rust GUI binary not found!"
-        exit 1
+        eval "$@"
     fi
-else
-    echo "Error: cargo is not installed. Skipping Rust GUI build."
+}
+
+detect_pkg_manager() {
+    if command -v apt-get >/dev/null 2>&1; then
+        echo "apt"
+    elif command -v dnf >/dev/null 2>&1; then
+        echo "dnf"
+    elif command -v pacman >/dev/null 2>&1; then
+        echo "pacman"
+    elif command -v zypper >/dev/null 2>&1; then
+        echo "zypper"
+    else
+        echo "unknown"
+    fi
+}
+
+ensure_dir(){ local d="$1"; [ -d "$d" ] || run_cmd mkdir -p "$d"; }
+check_cmd(){ command -v "$1" >/dev/null 2>&1; }
+warn(){ echo "[WARN] $*" >&2; }
+info(){ echo "[INFO] $*"; }
+err(){ echo "[ERROR] $*" >&2; }
+
+PKG_MANAGER="$(detect_pkg_manager)"
+info "Detected package manager: $PKG_MANAGER"
+
+missing=()
+check_and_add(){ local cmd="$1" pkg="$2"; check_cmd "$cmd" || missing+=("$pkg"); }
+check_and_add g++ g++
+check_and_add rustc rustc
+check_and_add cargo cargo
+check_and_add openssl openssl
+check_and_add smartctl smartmontools
+
+if [ "${#missing[@]}" -ne 0 ]; then
+    echo "Missing: ${missing[*]}"
+    if [ "$DO_INSTALL" -eq 1 ]; then
+        read -r -p "Attempt to install them (requires sudo)? [y/N] " choice
+        if [ "${choice,,}" = "y" ]; then
+            case "$PKG_MANAGER" in
+                apt) run_cmd sudo apt update; run_cmd sudo apt install -y ${missing[*]} ;;
+                dnf) run_cmd sudo dnf install -y ${missing[*]} ;;
+                pacman) run_cmd sudo pacman -Sy --noconfirm ${missing[*]} ;;
+                zypper) run_cmd sudo zypper install -y ${missing[*]} ;;
+                *) err "Pkg manager unknown. Please install: ${missing[*]}"; exit 1 ;;
+            esac
+        else
+            warn "Skipping installation of dependencies"
+        fi
+    else
+        warn "--no-install given; skipping dependency installs"
+    fi
 fi
 
-cd "$PROJECT_ROOT/DriveMgr_GUI/build_src" 2>/dev/null && bash build.sh
+ensure_dir "$BUILD_DIR"
 
-find "$PROJECT_ROOT" -type f -executable -path "$PROJECT_ROOT/DriveMgr_GUI/build_src/*" -exec mv {} "$PROJECT_ROOT/bin/" \;
-echo "Build completed. Binaries moved to ~/Drive-Manager-for-Linux/bin"
+build_cli(){
+    if [ ! -d "$PROJECT_ROOT/DriveMgr_CLI/src" ]; then warn "CLI source missing"; return; fi
+    pushd "$PROJECT_ROOT/DriveMgr_CLI/src" >/dev/null
+    for src in *.cpp; do
+        [ -f "$src" ] || continue
+        out="${src%.cpp}"
+        info "g++ -std=c++17 -O2 -I.. $src -o $BUILD_DIR/$out -lssl -lcrypto"
+        run_cmd g++ -std=c++17 -O2 -I.. "$src" -o "$BUILD_DIR/$out" -lssl -lcrypto || { err "compile failed: $src"; popd >/dev/null; exit 1; }
+    done
+    popd >/dev/null
+}
 
+build_gui(){
+    if ! check_cmd cargo || [ ! -d "$PROJECT_ROOT/DriveMgr_GUI" ]; then warn "Skipping Rust GUI"; return; fi
+    pushd "$PROJECT_ROOT/DriveMgr_GUI" >/dev/null
+    info "cargo build --release"
+    run_cmd cargo build --release || { err "cargo build failed"; popd >/dev/null; exit 1; }
+    for b in target/release/*; do
+        [ -x "$b" ] && [ -f "$b" ] && run_cmd cp "$b" "$BUILD_DIR/" || true
+    done
+    popd >/dev/null
+}
+
+for t in "${TARGETS[@]}"; do
+    case "$t" in
+        cli) build_cli ;;
+        gui) build_gui ;;
+        *) warn "Unknown target: $t" ;;
+    esac
+done
+
+info "Installing launcher to $LOCAL_BIN"
+ensure_dir "$LOCAL_BIN"
+LAUNCHER="$LOCAL_BIN/dmgrctl"
+LAUNCHER_CONTENT='#!/usr/bin/env bash
+DIR="${HOME}/.var/app/DriveMgr/bin"
+if [ -d "$DIR" ]; then
+  cd "$DIR"
+  if [ -x ./DriveMgr_stable ]; then
+    sudo ./DriveMgr_stable
+  elif [ -x ./DriveMgr_experi ]; then
+    sudo ./DriveMgr_experi
+  else
+    echo "No DriveMgr binary found in $DIR"
+  fi
+  cd - >/dev/null
+else
+  echo "DriveMgr not installed in $DIR"
+fi'
+
+if [ "$DRY_RUN" -eq 1 ]; then
+    echo "+ create launcher $LAUNCHER"
+    echo "$LAUNCHER_CONTENT"
+else
+    printf "%s\n" "$LAUNCHER_CONTENT" > "$LAUNCHER"
+    chmod +x "$LAUNCHER"
+fi
 
 APP_DIR="$HOME/.var/app/DriveMgr"
-mkdir -p "$APP_DIR/bin"
-if [ -d "$PROJECT_ROOT/bin" ] && [ "$(ls -A "$PROJECT_ROOT/bin")" ]; then
-    cp "$PROJECT_ROOT/bin"/* "$APP_DIR/bin/" || {
-        echo "Error: Failed to copy executables"
-        exit 1
-    }
-    echo "Executables copied to $APP_DIR/bin/"
-else
-    echo "Error: No executables found in $PROJECT_ROOT/bin"
-    exit 1
+ensure_dir "$APP_DIR/bin"
+if [ -d "$BUILD_DIR" ]; then
+    run_cmd cp -u "$BUILD_DIR"/* "$APP_DIR/bin/" 2>/dev/null || warn "No built executables to copy"
 fi
-touch "$APP_DIR/log.dat"
-touch "$APP_DIR/keys.bin"
-echo "Log and keys files created in $APP_DIR"
-echo "Build and setup completed successfully!"
 
-# ask if you wnt to uninstall all teh things the porgram instlled, it will  only uninstall these ones that were in the list
-echo "Do you want to uninstall everything the script installed? (y/n)"
-read -r uninstallques
-if [ "$uninstallques" = "y" ]; then
-    for item in "${what_needs_to_be_installed[@]}"; do
-        case "$item" in
-            "Rust_compiler")
-                rustup self uninstall -y
-                ;;
-            "g++_compiler")
-                sudo apt remove -y g++
-                ;;
-            "Openssl")
-                sudo apt remove -y openssl libssl-dev
-                ;;
-            "Smarttools")
-                sudo apt remove -y smartmontools
-                ;;
-        esac
-    done
-    echo "Uninstallation completed."
-fi
+run_cmd touch "$APP_DIR/log.dat" "$APP_DIR/keys.bin"
+info "Done. Binaries: $BUILD_DIR, App dir: $APP_DIR/bin, launcher: $LAUNCHER"
+
 exit 0

@@ -6,7 +6,7 @@ A terminal-based drive management tool for Linux systems, written in C++. The go
 
 ### CLI:
 
-Current version in stable: v0.8.88-08
+Current version in stable: v0.8.88-08 (the stable version is almost useless, because the experimental is not that experimental)
 
 Current version in experimental: v0.8.99-30
 

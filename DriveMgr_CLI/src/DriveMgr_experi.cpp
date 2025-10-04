@@ -104,9 +104,10 @@ bool askForConfirmation(const std::string &prompt) {
     std::cout << prompt << "(y/n)\n";
     char confirm;
     std::cin >> confirm;
-    if (confirm != 'Y' || confirm != 'y') {
+    if (confirm != 'Y' && confirm != 'y') {
         std::cout << "[INFO] Operation cancelled\n";
         Logger::log("[INFO] Operation cancelled");
+        return false;
     }
     return true;
 }

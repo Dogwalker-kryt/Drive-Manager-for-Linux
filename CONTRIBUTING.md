@@ -45,8 +45,36 @@ To contribute code:
 ## Coding Style (C++)
 
 - Use **4 spaces or 1 tab** for indentation (just stay consistent)
-- Use **clear, descriptive names** for variables and functions
-- Comment your code **only when necessary** — keep comments helpful and to the point
-- Use C++ 17 or later
-- Try to write self explaining code
-- Try to write readable code, so no nesting and such
+- Use **clear, descriptive names** for variables and functions (e.g if for a new funtion then write: newfunction_input_cmd)
+- Comment your code **only when necessary** — keep comments helpful and to the point, dont over use then (e.g. 10line of comments for a single line of code)
+- Use C++ 17 or later 
+- Try to write self explaining, readable code
+  this is good:
+  ```cpp
+   if (devZero.find("error") != std::string::npos && devrandom.find("error") != std::string::npos) {
+                Logger::log("[ERROR] failed to overwrite drive data\n");
+                throw std::runtime_error("[Error] Failed to Overwrite drive data");
+
+  }
+  ```
+
+  this is bad:
+  ```cpp
+   #define X if
+   #define N std::string::npos
+   #define Z Logger::log
+   #define R std::runtime_error
+   #define Q throw
+   
+   X((devZero.find("\x65\x72\x72\x6f\x72")!=N) && (devrandom.find("\x65\x72\x72\x6f\x72")!=N)){
+   Z("\x5b\x45\x52\x52\x4f\x52\x5d\x20\x66\x61\x69\x6c\x65\x64\x20\x74\x6f\x20\x6f\x76\x65\x72\x77\x72\x69\x74\x65\x20\x64\x72\x69\x76\x65\x20\x64\x61\x74\x61\x0a");
+   Q R("\x5b\x45\x72\x72\x6f\x72\x5d\x20\x46\x61\x69\x6c\x65\x64\x20\x74\x6f\x20\x4f\x76\x65\x72\x77\x72\x69\x74\x65\x20\x64\x72\x69\x76\x65\x20\x64\x61\x74\x61");
+   }
+  ```
+
+But, if there is no other way to write somthing, then its ok
+
+other things to avoid:
+- nesting (multiple if statments in one)
+- to much global variables that dont have an clear owner
+- to much raw pointers

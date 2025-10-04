@@ -114,10 +114,37 @@ bool askForConfirmation(const std::string &prompt) {
 
 std::string getAndValidateDriveName(const std::string& prompt) {
     ListDrives();
+
+    if (g_last_drives.empty()) {
+        std::cerr << "[Error] No drives available to select!\n";
+        Logger::log("[ERROR] No drives available to select");
+        return "";
+    }
+
     std::cout << "\n" << prompt << ":\n";
     std::string driveName;
     std::cin >> driveName; 
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); 
     
+    if (driveName.empty()) {
+        std::cerr << "[Error] Drive name cannot be empty!\n";
+        Logger::log("[ERROR] drive name cannot be empty\n");
+        return "";
+    }
+
+    if (driveName.find_first_of("--'&|<>;\"") != std::string::npos) {
+        std::cerr << "[Error] Invalid characters in drive name!\n";
+        Logger::log("[ERROR] Invalid characters in drive name\n");
+        return "";  
+    }
+
+
+    if (driveName.find("/dev/") != 0) {
+        std::cerr << "[Error] Invalid drive name or no drives available!\n";
+        Logger::log("[ERROR] Invalid drive name or no drives available");
+        return "";
+    }
+
     bool drive_found = false;
     for (const auto& drive : g_last_drives) {
         // match either full device path (/dev/sda) or the basename (sda)

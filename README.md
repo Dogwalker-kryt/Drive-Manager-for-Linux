@@ -282,7 +282,7 @@ For full details of the license, see the [LICENSE](./LICENSE) file.
 
 **Known Bug/issues:**
 
-no
+datalog.dat logfile mystery ([more details](https://github.com/Dogwalker-kryt/Drive-Manager-for-Linux/issues/5))
 
 **Disclaimer:**  
 This tool is under active development. Some features may not be fully implemented or stable. Use with caution, and always test on non-critical drives first!

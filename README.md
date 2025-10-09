@@ -24,6 +24,11 @@ Current version in experimental: v0.8.99-35
 
 Current Rust GUI: v0.1.5-alpha (this version is not really funtional, but the list dirves works)
 Current C++ GUI: v0.1.1-alpha 
+Note: GUI version will be not updated as often as the CLI and TUI will be
+
+### TUI:
+
+TUI version is in development and will be released when its first fuctional and stable
 
 ### Note:
 - always check if a new version has been released

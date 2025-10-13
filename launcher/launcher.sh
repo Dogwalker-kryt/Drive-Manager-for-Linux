@@ -126,15 +126,6 @@ case "$COMPILE_MODE_UPPER" in
 esac
 
 exit 0
-#!/usr/bin/env bash
-# read the config file
-config_path="~/.local/share/DriveMgr/data/config.conf"
-if [ -f "$config_path" ]; then
-    # shellcheck source=/dev/null
-    source "$config_path"
-else
-    echo "[Error] Config file not found at $config_path"
-    exit 1
-fi
+
 
 

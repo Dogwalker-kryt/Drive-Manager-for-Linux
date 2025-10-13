@@ -39,6 +39,14 @@ TUI version is in development and will be released when its first fuctional and 
 > This tool is intended for users who understand the risks involved with formatting, encrypting, or otherwise modifying drives. Always back up your data and double-check your selections!
 > Also if there stnds somehting like 'enter drive name:' dont type thing in like '/dev/sda rm -rf' THIS WILL RESOLVE IN DATA LOSS
 
+## Currently worked on:
+
+- new program directory from .var to .local
+- config file and general main executable
+-  TUI, CLI
+-  The Log file issue
+
+
 ## Files
 in the current state of the repo, there are two folders: include (with all .h files) and src (with the source code files. All files to be needed are in the corosponding folders.
 ```

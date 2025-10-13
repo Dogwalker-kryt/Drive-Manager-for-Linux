@@ -45,7 +45,7 @@ TUI version is in development and will be released when its first fuctional and 
 - config file and general main executable
 -  TUI, CLI
 -  The Log file issue
-
+- new command wrapper
 
 ## Files
 in the current state of the repo, there are two folders: include (with all .h files) and src (with the source code files. All files to be needed are in the corosponding folders.

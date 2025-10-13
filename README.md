@@ -42,7 +42,7 @@ TUI version is in development and will be released when its first fuctional and 
 ## Currently worked on:
 
 - new program directory from .var to .local
-- config file and launcher
+- config file and launcher (the new complete file system, launcher, config and everhting round it will be released one by one after everything works and so)
 -  TUI, CLI
 -  The Log file issue
 - new command wrapper

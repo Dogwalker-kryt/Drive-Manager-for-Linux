@@ -7,9 +7,13 @@ IFS=$'\n\t'
 
 # Project root is the directory containing this script
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$ROOT_DIR"
+PROJECT_ROOT="$(cd "$ROOT_DIR/.." && pwd)"
 BUILD_DIR="$PROJECT_ROOT/bin"
 LOCAL_BIN="$HOME/.local/bin"
+
+# Application install paths under XDG-style local share
+APP_DATA_DIR="$HOME/.local/share/DriveMgr/data"
+APP_BIN_DIR="$HOME/.local/share/DriveMgr/bin"
 
 # Defaults
 DRY_RUN=0
@@ -129,11 +133,11 @@ for t in "${TARGETS[@]}"; do
     esac
 done
 
-info "Installing launcher to $LOCAL_BIN"
-ensure_dir "$LOCAL_BIN"
-LAUNCHER="$LOCAL_BIN/dmgrctl"
+    info "Installing launcher to $LOCAL_BIN"
+    ensure_dir "$LOCAL_BIN"
+    LAUNCHER="$LOCAL_BIN/dmgrctl"
 LAUNCHER_CONTENT='#!/usr/bin/env bash
-DIR="${HOME}/.var/app/DriveMgr/bin"
+DIR="${HOME}/.local/share/DriveMgr/bin/bin"
 if [ -d "$DIR" ]; then
   cd "$DIR"
   if [ -x ./DriveMgr_stable ]; then
@@ -148,6 +152,7 @@ else
   echo "DriveMgr not installed in $DIR"
 fi'
 
+
 if [ "$DRY_RUN" -eq 1 ]; then
     echo "+ create launcher $LAUNCHER"
     echo "$LAUNCHER_CONTENT"
@@ -156,13 +161,55 @@ else
     chmod +x "$LAUNCHER"
 fi
 
-APP_DIR="$HOME/.var/app/DriveMgr"
-ensure_dir "$APP_DIR/bin"
+ensure_dir "$APP_DATA_DIR"
+ensure_dir "$APP_BIN_DIR"
+
+# Ensure common subdirectories exist (nested structure: bin/bin, bin/src, bin/main)
+ensure_dir "$APP_BIN_DIR/bin"
+ensure_dir "$APP_BIN_DIR/bin/main"
+ensure_dir "$APP_BIN_DIR/bin/src"
+
+# Ensure local bin exists and set permissions
+ensure_dir "$LOCAL_BIN"
+run_cmd chmod 755 "$LOCAL_BIN" || warn "Failed to chmod $LOCAL_BIN"
+
+# Set secure permissions for app dirs
+run_cmd chmod 700 "$APP_DATA_DIR" || warn "Failed to chmod $APP_DATA_DIR"
+run_cmd chmod 755 "$APP_BIN_DIR" || warn "Failed to chmod $APP_BIN_DIR"
+
 if [ -d "$BUILD_DIR" ]; then
-    run_cmd cp -u "$BUILD_DIR"/* "$APP_DIR/bin/" 2>/dev/null || warn "No built executables to copy"
+    # Copy built executables to application nested bin dir
+    run_cmd cp -u "$BUILD_DIR"/* "$APP_BIN_DIR/bin/" 2>/dev/null || warn "No built executables to copy"
+    # Ensure copied files are executable
+    for f in "$APP_BIN_DIR/bin"/*; do
+        [ -f "$f" ] || continue
+        run_cmd chmod +x "$f" || true
+    done
 fi
 
-run_cmd touch "$APP_DIR/log.dat" "$APP_DIR/keys.bin"
-info "Done. Binaries: $BUILD_DIR, App dir: $APP_DIR/bin, launcher: $LAUNCHER"
+# If config file missing, create a sensible default
+DEFAULT_CONFIG="$APP_DATA_DIR/config.conf"
+if [ ! -f "$DEFAULT_CONFIG" ]; then
+    info "Creating default config at $DEFAULT_CONFIG"
+    if [ "$DRY_RUN" -eq 1 ]; then
+        echo "+ create $DEFAULT_CONFIG"
+    else
+        cat > "$DEFAULT_CONFIG" <<EOF
+# DriveMgr default config
+UI_mode=CLI
+compile_mode=StatBin
+root_mode=false
+EOF
+        chmod 600 "$DEFAULT_CONFIG" || warn "Failed to chmod $DEFAULT_CONFIG"
+    fi
+fi
+
+# Create data files and apply secure permissions
+run_cmd touch "$APP_DATA_DIR/log.dat" || warn "Failed to touch log.dat"
+run_cmd touch "$APP_DATA_DIR/keys.bin" || warn "Failed to touch keys.bin"
+run_cmd chmod 600 "$APP_DATA_DIR/keys.bin" || warn "Failed to chmod keys.bin"
+run_cmd chmod 644 "$APP_DATA_DIR/log.dat" || warn "Failed to chmod log.dat"
+
+info "Done. Binaries: $APP_BIN_DIR, App data: $APP_DATA_DIR, launcher: $LAUNCHER"
 
 exit 0

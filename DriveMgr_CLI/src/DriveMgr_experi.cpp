@@ -1944,7 +1944,7 @@ void log_viewer() {
     }
 
     std::string homeDir = pw->pw_dir;
-    std::string path = homeDir + "/.var/app/DriveMgr/log.dat";
+    std::string path = homeDir + "/.local/share/DriveMgr/data/log.dat";
     std::ifstream file(path);
     if (!file) {
         Logger::log("[ERROR] Unable to read log file at " + path);

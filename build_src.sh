@@ -138,18 +138,23 @@ done
     LAUNCHER="$LOCAL_BIN/dmgrctl"
 LAUNCHER_CONTENT='#!/usr/bin/env bash
 DIR="${HOME}/.local/share/DriveMgr/bin/bin"
+MAIN_DIR="$DIR/main"
+LAUNCHER_SCRIPT="$MAIN_DIR/launcher.sh"
+if [ -f "$LAUNCHER_SCRIPT" ]; then
+    exec "$LAUNCHER_SCRIPT" "$@"
+fi
 if [ -d "$DIR" ]; then
-  cd "$DIR"
-  if [ -x ./DriveMgr_stable ]; then
-    sudo ./DriveMgr_stable
-  elif [ -x ./DriveMgr_experi ]; then
-    sudo ./DriveMgr_experi
-  else
-    echo "No DriveMgr binary found in $DIR"
-  fi
-  cd - >/dev/null
+    cd "$DIR"
+    if [ -x ./DriveMgr_stable ]; then
+        sudo ./DriveMgr_stable "$@"
+    elif [ -x ./DriveMgr_experi ]; then
+        sudo ./DriveMgr_experi "$@"
+    else
+        echo "No DriveMgr binary found in $DIR"
+    fi
+    cd - >/dev/null
 else
-  echo "DriveMgr not installed in $DIR"
+    echo "DriveMgr not installed in $DIR"
 fi'
 
 
@@ -185,6 +190,24 @@ if [ -d "$BUILD_DIR" ]; then
         [ -f "$f" ] || continue
         run_cmd chmod +x "$f" || true
     done
+fi
+
+# If the repository contains a launcher.sh at project root, install it into the main folder
+if [ -f "$PROJECT_ROOT/launcher.sh" ]; then
+    info "Installing repository launcher.sh to $APP_BIN_DIR/bin/main/launcher.sh"
+    run_cmd cp "$PROJECT_ROOT/launcher.sh" "$APP_BIN_DIR/bin/main/launcher.sh"
+    run_cmd chmod +x "$APP_BIN_DIR/bin/main/launcher.sh"
+fi
+
+# Also copy CLI source and include files into the installed src folder so JIT can use them
+if [ -d "$PROJECT_ROOT/DriveMgr_CLI/src" ]; then
+    info "Copying CLI source files to $APP_BIN_DIR/bin/src"
+    run_cmd cp -u "$PROJECT_ROOT/DriveMgr_CLI/src/"*.cpp "$APP_BIN_DIR/bin/src/" 2>/dev/null || true
+fi
+if [ -d "$PROJECT_ROOT/DriveMgr_CLI/include" ]; then
+    info "Copying CLI include files to $APP_BIN_DIR/bin/src/include"
+    ensure_dir "$APP_BIN_DIR/bin/src/include"
+    run_cmd cp -u "$PROJECT_ROOT/DriveMgr_CLI/include/"* "$APP_BIN_DIR/bin/src/include/" 2>/dev/null || true
 fi
 
 # If config file missing, create a sensible default

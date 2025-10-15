@@ -28,7 +28,7 @@ Note: GUI version will be not updated as often as the CLI and TUI will be
 
 ### TUI:
 
-TUI version is in development and will be released when its first fuctional and stable
+TUI my not work or work, i dont know it doesnt work always on my pc
 
 ### Note:
 - always check if a new version has been released

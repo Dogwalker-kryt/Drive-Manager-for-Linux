@@ -193,9 +193,9 @@ if [ -d "$BUILD_DIR" ]; then
 fi
 
 # If the repository contains a launcher.sh at project root, install it into the main folder
-if [ -f "$PROJECT_ROOT/launcher.sh" ]; then
-    info "Installing repository launcher.sh to $APP_BIN_DIR/bin/main/launcher.sh"
-    run_cmd cp "$PROJECT_ROOT/launcher.sh" "$APP_BIN_DIR/bin/main/launcher.sh"
+if [ -f "$PROJECT_ROOT/launcher/launcher.sh" ]; then
+    info "move launcher.sh to $APP_BIN_DIR/bin/main/launcher.sh"
+    run_cmd cp "$PROJECT_ROOT/launcher/launcher.sh" "$APP_BIN_DIR/bin/main/launcher.sh"
     run_cmd chmod +x "$APP_BIN_DIR/bin/main/launcher.sh"
 fi
 

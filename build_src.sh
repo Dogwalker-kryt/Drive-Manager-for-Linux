@@ -11,9 +11,12 @@ PROJECT_ROOT="$(cd "$ROOT_DIR/.." && pwd)"
 BUILD_DIR="$PROJECT_ROOT/bin"
 LOCAL_BIN="$HOME/.local/bin"
 
-# Application install paths under XDG-style local share
-APP_DATA_DIR="$HOME/.local/share/DriveMgr/data"
-APP_BIN_DIR="$HOME/.local/share/DriveMgr/bin"
+# Application install paths
+APP_ROOT="$HOME/.local/share/DriveMgr"
+APP_BIN_DIR="$APP_ROOT/bin"
+APP_LAUNCHER_DIR="$APP_ROOT/launcher"
+APP_SRC_DIR="$APP_ROOT/src"
+APP_DATA_DIR="$APP_ROOT/data"
 
 # Defaults
 DRY_RUN=0
@@ -133,28 +136,28 @@ for t in "${TARGETS[@]}"; do
     esac
 done
 
-    info "Installing launcher to $LOCAL_BIN"
-    ensure_dir "$LOCAL_BIN"
-    LAUNCHER="$LOCAL_BIN/dmgrctl"
+info "Installing launcher to $LOCAL_BIN"
+ensure_dir "$LOCAL_BIN"
+LAUNCHER="$LOCAL_BIN/dmgrctl"
 LAUNCHER_CONTENT='#!/usr/bin/env bash
-DIR="${HOME}/.local/share/DriveMgr/bin/bin"
-MAIN_DIR="$DIR/main"
-LAUNCHER_SCRIPT="$MAIN_DIR/launcher.sh"
+APP_BIN_DIR="$HOME/.local/share/DriveMgr/bin"
+APP_LAUNCHER_DIR="$HOME/.local/share/DriveMgr/launcher"
+LAUNCHER_SCRIPT="$APP_LAUNCHER_DIR/launcher.sh"
 if [ -f "$LAUNCHER_SCRIPT" ]; then
     exec "$LAUNCHER_SCRIPT" "$@"
 fi
-if [ -d "$DIR" ]; then
-    cd "$DIR"
+if [ -d "$APP_BIN_DIR" ]; then
+    cd "$APP_BIN_DIR"
     if [ -x ./DriveMgr_stable ]; then
         sudo ./DriveMgr_stable "$@"
     elif [ -x ./DriveMgr_experi ]; then
         sudo ./DriveMgr_experi "$@"
     else
-        echo "No DriveMgr binary found in $DIR"
+        echo "No DriveMgr binary found in $APP_BIN_DIR"
     fi
     cd - >/dev/null
 else
-    echo "DriveMgr not installed in $DIR"
+    echo "DriveMgr not installed in $APP_BIN_DIR"
 fi'
 
 
@@ -166,13 +169,13 @@ else
     chmod +x "$LAUNCHER"
 fi
 
-ensure_dir "$APP_DATA_DIR"
-ensure_dir "$APP_BIN_DIR"
 
-# Ensure common subdirectories exist (nested structure: bin/bin, bin/src, bin/main)
-ensure_dir "$APP_BIN_DIR/bin"
-ensure_dir "$APP_BIN_DIR/bin/main"
-ensure_dir "$APP_BIN_DIR/bin/src"
+# Ensure application directories for layout B
+ensure_dir "$APP_ROOT"
+ensure_dir "$APP_BIN_DIR"
+ensure_dir "$APP_LAUNCHER_DIR"
+ensure_dir "$APP_SRC_DIR"
+ensure_dir "$APP_DATA_DIR"
 
 # Ensure local bin exists and set permissions
 ensure_dir "$LOCAL_BIN"
@@ -181,33 +184,34 @@ run_cmd chmod 755 "$LOCAL_BIN" || warn "Failed to chmod $LOCAL_BIN"
 # Set secure permissions for app dirs
 run_cmd chmod 700 "$APP_DATA_DIR" || warn "Failed to chmod $APP_DATA_DIR"
 run_cmd chmod 755 "$APP_BIN_DIR" || warn "Failed to chmod $APP_BIN_DIR"
+run_cmd chmod 755 "$APP_LAUNCHER_DIR" || warn "Failed to chmod $APP_LAUNCHER_DIR"
 
 if [ -d "$BUILD_DIR" ]; then
-    # Copy built executables to application nested bin dir
-    run_cmd cp -u "$BUILD_DIR"/* "$APP_BIN_DIR/bin/" 2>/dev/null || warn "No built executables to copy"
+    # Copy built executables to application bin dir
+    run_cmd cp -u "$BUILD_DIR"/* "$APP_BIN_DIR/" 2>/dev/null || warn "No built executables to copy"
     # Ensure copied files are executable
-    for f in "$APP_BIN_DIR/bin"/*; do
+    for f in "$APP_BIN_DIR"/*; do
         [ -f "$f" ] || continue
         run_cmd chmod +x "$f" || true
     done
 fi
 
-# If the repository contains a launcher.sh at project root, install it into the main folder
-if [ -f "$PROJECT_ROOT/launcher/launcher.sh" ]; then
-    info "move launcher.sh to $APP_BIN_DIR/bin/main/launcher.sh"
-    run_cmd cp "$PROJECT_ROOT/launcher/launcher.sh" "$APP_BIN_DIR/bin/main/launcher.sh"
-    run_cmd chmod +x "$APP_BIN_DIR/bin/main/launcher.sh"
+# If the repository contains a launcher.sh at project root, install it into the launcher folder
+if [ -f "$PROJECT_ROOT/launcher.sh" ]; then
+    info "Installing repository launcher.sh to $APP_LAUNCHER_DIR/launcher.sh"
+    run_cmd cp "$PROJECT_ROOT/launcher.sh" "$APP_LAUNCHER_DIR/launcher.sh"
+    run_cmd chmod +x "$APP_LAUNCHER_DIR/launcher.sh"
 fi
 
 # Also copy CLI source and include files into the installed src folder so JIT can use them
 if [ -d "$PROJECT_ROOT/DriveMgr_CLI/src" ]; then
-    info "Copying CLI source files to $APP_BIN_DIR/bin/src"
-    run_cmd cp -u "$PROJECT_ROOT/DriveMgr_CLI/src/"*.cpp "$APP_BIN_DIR/bin/src/" 2>/dev/null || true
+    info "Copying CLI source files to $APP_SRC_DIR"
+    run_cmd cp -u "$PROJECT_ROOT/DriveMgr_CLI/src/"*.cpp "$APP_SRC_DIR/" 2>/dev/null || true
 fi
 if [ -d "$PROJECT_ROOT/DriveMgr_CLI/include" ]; then
-    info "Copying CLI include files to $APP_BIN_DIR/bin/src/include"
-    ensure_dir "$APP_BIN_DIR/bin/src/include"
-    run_cmd cp -u "$PROJECT_ROOT/DriveMgr_CLI/include/"* "$APP_BIN_DIR/bin/src/include/" 2>/dev/null || true
+    info "Copying CLI include files to $APP_SRC_DIR/include"
+    ensure_dir "$APP_SRC_DIR/include"
+    run_cmd cp -u "$PROJECT_ROOT/DriveMgr_CLI/include/"* "$APP_SRC_DIR/include/" 2>/dev/null || true
 fi
 
 # If config file missing, create a sensible default

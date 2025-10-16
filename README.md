@@ -110,10 +110,15 @@ in the other file outside the folder is the newest version (beta), this version 
    cargo build
    ```
    you need to also create following:
-   - ~/.var/app/DriveMgr
-   - ~/.var/app/DriveMgr/bin
-   - ~/.var/app/DriveMgr/log.dat
-   - ~/.var/app/DriveMgr/keys.bin
+   - ~/.local/share/DriveMgr
+   - ~/.local/share/DriveMgr/bin
+   - ~/.local/share/DriveMgr/bin/bin
+   - ~/.local/share/DriveMgr/bin/main
+   - ~/.local/share/DriveMgr/bin/src
+   - ~/.local/share/DriveMgr/data
+   - ~/.local/share/DriveMgr/data/log.dat
+   - ~/.local/share/DriveMgr/data/keys.bin
+   - ~/.local/share/DriveMgr/data/config.conf
      
    **or do it the easier way**
      

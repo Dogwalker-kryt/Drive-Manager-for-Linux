@@ -19,18 +19,8 @@
 // ! Warning this version is the experimental version of the program,
 // This version has the latest and newest functions, but may contain bugs and errors
 // Current version of this code is in the Info() function below
-// v0.8.99-69-experimental
-//
-/*
-TODO:
-    - 
-    -
-    -
-    -
-    -
-    -
+// v0.8.99-70-experimental
 
-*/
 // standard C++ libraries, I think
 #include <iostream>
 #include <cstdlib>
@@ -254,7 +244,8 @@ void listDrives(std::vector<std::string>& drives) {
         }
     }
     if (drives.empty()) {
-        std::cout << "No drives found!\n";
+        std::cerr << RED << "No drives found!\n" << RESET;
+        return;
     }
 }
 
@@ -264,7 +255,7 @@ void ListDrives() {
     listDrives(drives);
 
     if (drives.empty()) {
-        std::cerr << "No drives found!\n";
+        std::cerr << RED << "No drives found!\n" << RESET;
         Logger::log("[ERROR] No Drives found!");
         return;
     }
@@ -346,7 +337,7 @@ void listpartisions(std::vector<std::string>& drive) {
     }
 
     if (partitions.empty()) {
-        std::cout << "No partitions found on this drive.\n";
+        std::cout << RED << "[INFO] No partitions found on this drive.\n" << RESET;
         return;
     }
 
@@ -556,10 +547,10 @@ void formatDrive() {
                     std::string result = Terminalexec::execTerminal(cmd.c_str());
                     if (result.find("error") != std::string::npos) {
                         Logger::log("[ERROR] Failed to format drive: " + driveName);
-                        std::cout << "[Error] Failed to format drive: " << driveName << "\n";
+                        std::cerr << RED << "[Error] Failed to format drive: " << driveName << RESET << "\n";
                     } else {
                         Logger::log("[INFO] Drive formatted successfully: " + driveName);
-                        std::cout << "Drive formatted successfully: " << driveName << "\n";
+                        std::cout << GREEN << "Drive formatted successfully: " << driveName << RESET << "\n";
                     }
                 } else {
                     Logger::log("[INFO] Format operation cancelled by user");
@@ -577,7 +568,7 @@ void formatDrive() {
                 std::cin >> label;
                 std::cout << "Formatting drive with label: " << label << "\n";
                 if (label.empty()) {
-                    std::cout << "[Error] label cannot be empty!\n";
+                    std::cerr << RED << "[Error] label cannot be empty!\n" << RESET;
                     Logger::log("[ERROR] label cannot be empty");
                     return;
                 }
@@ -586,7 +577,7 @@ void formatDrive() {
                 char confirmationfd;
                 std::cin >> confirmationfd;
                 if (confirmationfd != 'y' && confirmationfd != 'Y') {
-                    std::cout << "[Info] Formating canclled!\n";
+                    std::cout << BOLD << "[Info] Formating canclled!\n" << RESET; 
                     Logger::log("[INFO] formatting cancelled");
                     break;
                 }
@@ -621,16 +612,19 @@ void formatDrive() {
 
                 std::string execTerminal(("mkfs." + fsType + " -L " + label + " " + driveName.c_str()));
                 if (execTerminal.find("error") != std::string::npos) {
-                    std::cout << "[Error] Failed to format drive: " << driveName << "\n";
+                    std::cerr << RED << "[Error] Failed to format drive: " << driveName << RESET << "\n";
                     Logger::log("[ERROR] Failed to format drive: " + driveName);
+                    return;
                 } else {
                     std::cout << "Drive formatted successfully with label: " << label << " and filesystem type: " << fsType << "\n";
                     Logger::log("[INFO] Drive formatted successfully with label: " + label + " and filesystem type: " + fsType + " -> formatDrive()");
+                    return;
                 }
             }
             break;
         default:
-            std::cout << "[Error] Invalid option selected.\n";
+            std::cerr << RED << "[Error] Invalid option selected.\n" << RESET;
+            return;
     }
 }
 
@@ -716,7 +710,7 @@ class EnDecryptionUtils {
         static bool loadEncryptionInfo(const std::string& driveName, EncryptionInfo& info) {
             std::ifstream file(KEY_STORAGE_PATH, std::ios::binary);
             if (!file) {
-                std::cerr << "[Error] Cannot open key storage file\n";
+                std::cerr << RED << "[Error] Cannot open key storage file\n" << RESET;
                 Logger::log("[ERROR] Cannot open key storage file: " + KEY_STORAGE_PATH + " -> loadEncryptionInfo()");
                 return false;
             }
@@ -770,7 +764,7 @@ class EnDecryptionUtils {
             {
                 std::ofstream kf(tmpKeyFile, std::ios::binary | std::ios::trunc);
                 if (!kf) {
-                    std::cerr << "[Error] Unable to create temporary key file\n";
+                    std::cerr << RED << "[Error] Unable to create temporary key file\n" << RESET;
                     Logger::log("[ERROR] Unable to create temporary key file -> encryptDrive()");
                     return;
                 }
@@ -788,7 +782,7 @@ class EnDecryptionUtils {
             unlink(tmpKeyFile.c_str());
 
             if (output.find("Command failed") != std::string::npos || output.empty()) {
-                std::cerr << "[Error] Encryption failed: " << output << "\n";
+                std::cerr << RED << "[Error] Encryption failed: " << output << RESET << "\n";
                 Logger::log("[ERROR] Encryption failed for drive: " + driveName + " -> encryptDrive()");
                 return;
             }
@@ -799,7 +793,7 @@ class EnDecryptionUtils {
         static void decryptDrive(const std::string& driveName) {
             EncryptionInfo info;
             if (!loadEncryptionInfo(driveName, info)) {
-                std::cerr << "[Error] No encryption key found for " << driveName << "\n";
+                std::cerr << RED << "[Error] No encryption key found for " << driveName << RESET << "\n";
                 Logger::log("[ERROR] No encryption key found for " + driveName + " -> decryptDrive()");
                 return;
             }
@@ -810,7 +804,7 @@ class EnDecryptionUtils {
             {
                 std::ofstream kf(tmpKeyFile, std::ios::binary | std::ios::trunc);
                 if (!kf) {
-                    std::cerr << "[Error] Unable to create temporary key file\n";
+                    std::cerr << RED << "[Error] Unable to create temporary key file\n" << RESET;
                     Logger::log("[ERROR] Unable to create temporary key file -> decryptDrive()");
                     return;
                 }
@@ -828,11 +822,11 @@ class EnDecryptionUtils {
             unlink(tmpKeyFile.c_str());
 
             if (output.find("Command failed") != std::string::npos || output.empty()) {
-                std::cerr << "Decryption failed: " << output << "\n";
+                std::cerr << RED << "Decryption failed: " << output << RESET << "\n";
                 Logger::log("[ERROR] Decryption failed " + output + " -> decryptDrive()");
                 return;
             }
-            std::cout << "Drive decrypted successfully.\n";
+            std::cout << GREEN << "Drive decrypted successfully.\n" << RESET;
             Logger::log("[INFO] Drive decrypted successfully -> decryptDrive()");
         }
 
@@ -865,7 +859,7 @@ private:
     static void encrypting() {
         std::string driveName = getAndValidateDriveName("Enter the NAME of a drive to encrypt:\n");
 
-        std::cout << "[Warning] Are you sure you want to encrypt " << driveName << "? (y/n)\n";
+        std::cout << YELLOW << "[Warning] Are you sure you want to encrypt " << driveName << "? (y/n)\n" << RESET;
         char endecrypt_confirm;
         std::cin >> endecrypt_confirm;
         if (endecrypt_confirm != 'y' && endecrypt_confirm != 'Y') {
@@ -881,17 +875,17 @@ private:
         std::string random_confirmationkey_input3;
         std::cin >> random_confirmationkey_input3;
         if (random_confirmationkey_input3 != Key) {
-            std::cout << "[Error] Invalid confirmation of the Key or unexpected error\n";
+            std::cerr << RED << "[Error] Invalid confirmation of the Key or unexpected error\n" << RESET;
             Logger::log("[ERROR] Invalid confirmation of the Key or unexpected error -> EnDecrypt");
             return;
         }
         
-        std::cout << "[Process] Proceeding with encryption of " << driveName << "...\n";
+        std::cout << BOLD << "[Process] Proceeding with encryption of " << driveName << "...\n" << RESET;
         EncryptionInfo info;
         info.driveName = driveName;
         
         if (!RAND_bytes(info.key, 32) || !RAND_bytes(info.iv, 16)) {
-            std::cout << "[Error] Failed to generate encryption key\n";
+            std::cerr << RED << "[Error] Failed to generate encryption key\n" << RESET;
             Logger::log("[ERROR] Failed to generate encryption key -> void EnDecrypt()");
             return;
         }
@@ -908,12 +902,13 @@ private:
         
         std::string output = Terminalexec::execTerminal(ss.str().c_str());
         if (output.find("Command failed") != std::string::npos) {
-            std::cout << "[Error] Failed to encrypt the drive: " << output << "\n";
+            std::cerr << RED << "[Error] Failed to encrypt the drive: " << output << RESET << "\n";
             Logger::log("[ERROR] failed to encrypt the drive -> void EnDecrypt()");
         } else {
-            std::cout << "[Success] Drive " << driveName << " has been encrypted as " << device_Name_Encrypt << "\n";
+            std::cout << GREEN << "[Success] Drive " << driveName << " has been encrypted as " << device_Name_Encrypt << RESET << "\n";
             std::cout << "[Info] The decryption key is stored in " << KEY_STORAGE_PATH << "\n";
             Logger::log("[INFO] Key saved -> void EnDecrypt()");
+            return;
         }
     }
 
@@ -936,7 +931,7 @@ private:
         std::string random_confirmationkey_input2;
         std::cin >> random_confirmationkey_input2;
         if (random_confirmationkey_input2 != Key) {
-            std::cout << "[Error] Invalid confirmation of the Key or unexpected error\n";
+            std::cerr << RED << "[Error] Invalid confirmation of the Key or unexpected error\n" << RESET;
             Logger::log("[ERROR] Invalid confirmation of the Key or unexpected error -> EnDecryptDrive");
             return;
         }
@@ -945,7 +940,7 @@ private:
         
         EncryptionInfo info;
         if (!EnDecryptionUtils::loadEncryptionInfo(driveName, info)) {
-            std::cout << "[Error] No encryption key found for " << driveName << "\n";
+            std::cerr << RED << "[Error] No encryption key found for " << driveName << RESET << "\n";
             Logger::log("[ERROR] No encryption key found -> void EnDecrypt()");
             return;
         }
@@ -961,11 +956,12 @@ private:
         
         std::string output = Terminalexec::execTerminal(ss.str().c_str());
         if (output.find("Command failed") != std::string::npos) {
-            std::cout << "[Error] Failed to decrypt the drive: " << output << "\n";
+            std::cerr << RED << "[Error] Failed to decrypt the drive: " << output << RESET << "\n";
             Logger::log("[ERROR] failed to decrypt the drive -> void EnDecrypt()");
             return;
         } else {
-            std::cout << "[Success] Drive " << driveName << " has been decrypted\n";
+            std::cout << GREEN << "[Success] Drive " << driveName << " has been decrypted\n" << RESET;
+            return;
         }
 
     }
@@ -981,7 +977,8 @@ public:
         } else if (DeEncryption_main_input == 'd') {
             DeEncrypting::decrypting();
         } else {
-            std::cerr << "[ERROR] Wrong input or unexpected error occurred\n";
+            std::cerr << RED << "[ERROR] Wrong input or unexpected error occurred\n" << RESET;
+            return;
         }
     }
 };
@@ -1004,7 +1001,7 @@ void OverwriteDriveData() {
             std::string random_confirmation_key_input;
             std::cin >> random_confirmation_key_input;
             if (random_confirmation_key_input != Key) {
-                std::cout << "[Error] Invalid confirmation of the Key or unexpected error\n";
+                std::cerr << RED << "[Error] Invalid confirmation of the Key or unexpected error\n" << RESET;
                 Logger::log("[ERROR] Invalid confirmation of the Key or unexpected error -> OverwriteData");
                 return;
             }
@@ -1017,6 +1014,7 @@ void OverwriteDriveData() {
                 
                 if (devZero.find("error") != std::string::npos && devrandom.find("error") != std::string::npos) {
                     Logger::log("[ERROR] failed to overwrite drive data\n");
+                    std::cerr << RED;
                     throw std::runtime_error("[Error] Failed to Overwrite drive data");
 
                 } else if (devZero.find("error") != std::string::npos || devrandom.find("error") != std::string::npos) {
@@ -1034,7 +1032,7 @@ void OverwriteDriveData() {
                     return;
 
                 } else {
-                    std::cout << "Overwriting completed, all bytes on your drive: " << driveName << " is overwrting to 0\n";
+                    std::cout << GREEN << "Overwriting completed, all bytes on your drive: " << driveName << " is overwrting to 0\n" << RESET;
                     return;
                 }
             }
@@ -1671,12 +1669,6 @@ private:
     }
     
     static void systemrecovery() {
-        // ListDrives();
-        // std::cout << "\nSystem recovery helper\n";
-        // std::cout << "Enter the name of the drive containing the system to inspect (e.g. /dev/sda):\n";
-        // std::string device;
-        // std::cin >> device;
-        // checkDriveName(device);
         std::string device = getAndValidateDriveName("Enter the name of the drive containing the system to inspect (e.g. /dev/sda):");
 
         std::cout << "\nListing partitions and filesystems for " << device << "\n";
@@ -1832,11 +1824,6 @@ private:
 
 public:
     static void DSVmain() {
-        // ListDrives();
-        // std::cout << "Select a name of a drive to visualize its contents: ";
-        // std::string driveName;
-        // std::cin >> driveName;
-        // checkDriveName(driveName);
         std::string driveName = getAndValidateDriveName("Enter the name of a drive to visualize its contents");
 
         std::string currentPath = "/"; 
@@ -1932,14 +1919,14 @@ void log_viewer() {
     const char* username = sudo_user ? sudo_user : user_env;
 
     if (!username) {
-        std::cerr << "[Error] Could not determine username.\n";
+        std::cerr << RED << "[Error] Could not determine username.\n" << RESET;
         return;
     }
 
     struct passwd* pw = getpwnam(username);
 
     if (!pw) {
-        std::cerr << "[Error] Could not get home directory for user: " << username << "\n";
+        std::cerr << RED << "[Error] Could not get home directory for user: " << username << RESET << "\n";
         return;
     }
 
@@ -1948,7 +1935,7 @@ void log_viewer() {
     std::ifstream file(path);
     if (!file) {
         Logger::log("[ERROR] Unable to read log file at " + path);
-        std::cerr << "[Error] Unable to read log file at path: " << path << "\n";
+        std::cerr << RED << "[Error] Unable to read log file at path: " << path << RESET << "\n";
         return;
     }
 
@@ -1969,6 +1956,7 @@ void Info() {
     std::cout << "│ Version: 0.8.99-69-experimental\n";
     std::cout << "│ Github: https://github.com/Dogwalker-kryt/Drive-Manager-for-Linux\n";
     std::cout << "│ Author: Dogwalker-kryt\n";
+    std::cout << "│ Easte egg counter: 2\n";
     std::cout << "└───────────────────────────\n";
 }
                                                                                                                                                                                                                                                                                                                                             std::string code = "xfetrojk";
@@ -2000,7 +1988,7 @@ void checkRoot() {
 
 void checkRootMetadata() {
     if (!isRoot()) {
-        std::cerr << "[WARNING] Running without root may limit functionality. For full access, please run with 'sudo'.\n";
+        std::cerr << YELLOW << "[WARNING] Running without root may limit functionality. For full access, please run with 'sudo'.\n" << RESET;
         Logger::log("[WARNING] Running without root privileges -> checkRootMetadata()");
     }
 }
@@ -2019,21 +2007,21 @@ int main() {
         std::cout << "┌─────────────────────────────────────────────────┐\n";
         std::cout << "│              DRIVE MANAGEMENT UTILITY           │\n";
         std::cout << "├─────────────────────────────────────────────────┤\n";
-        std::cout << "│ 1.  List Drives                                 │\n";
+        std::cout << "│ 1.-> List Drives                                │\n";
         std::cout << "│ 2.  Format Drive                                │\n";
-        std::cout << "│ 3.  Encrypt/Decrypt Drive (AES-256)             │\n";
+        std::cout << "│ 3.-> Encrypt/Decrypt Drive (AES-256)            │\n";
         std::cout << "│ 4.  Resize Drive                                │\n";
-        std::cout << "│ 5.  Check Drive Health                          │\n";
+        std::cout << "│ 5.-> Check Drive Health                         │\n";
         std::cout << "│ 6.  Analyze Disk Space                          │\n";
-        std::cout << "│ 7.  Overwrite Drive Data                        │\n";
+        std::cout << "│ 7.-> Overwrite Drive Data                       │\n";
         std::cout << "│ 8.  View Drive Metadata                         │\n";
-        std::cout << "│ 9.  View Info/help                              │\n";
+        std::cout << "│ 9.-> View Info/help                             │\n";
         std::cout << "│10.  Mount/Unmount/restore (ISO/Drives/USB)      │\n";
-        std::cout << "│11.  Forensic Analysis (Beta)                    │\n";
+        std::cout << "│11.-> Forensic Analysis (Beta)                   │\n";
         std::cout << "│12.  Disk Space Visualizer (Beta)                │\n";
-        std::cout << "│13.  Log viewer                                  │\n";
+        std::cout << "│13.-> Log viewer                                 │\n";
         std::cout << "│14.  Clone a Drive                               │\n";
-        std::cout << "│ 0.  Exit                                        │\n";
+        std::cout << "│ 0. Exit                                         │\n";
         std::cout << "└─────────────────────────────────────────────────┘\n";
         std::cout << "choose an option [0 - 12]:\n";
         int menuinput;
@@ -2143,7 +2131,7 @@ int main() {
                 break;
             }
             default: {
-                std::cout << "[Error] Invalid selection\n";
+                std::cerr << RED << "[Error] Invalid selection\n" << RESET;
                 break;
             }
         }

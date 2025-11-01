@@ -45,7 +45,7 @@ TUI my not work or work, i dont know it doesnt work always on my pc
 - config file and launcher (the new complete file system, launcher, config and everhting round it will be released one by one after everything works and so)
 -  TUI, CLI
 -  The Log file issue
-- new command wrapper
+- dry run mode in cli version
 
 ## Files
 in the current state of the repo, there are two folders: include (with all .h files) and src (with the source code files. All files to be needed are in the corosponding folders.

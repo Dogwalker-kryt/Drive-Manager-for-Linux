@@ -82,7 +82,7 @@ in the current state of the repo, there are two folders: include (with all .h fi
 - **Diskspace visulizer (still has bug/porblmes, but is in development)**
 - **Log viewer**
 - **Analyze Diskspace**: the Diskspace visulizer is more kind of graph, but this is not
-- **More features coming soon! or aim to layz to add them in the Readme**
+- **More features coming soon! or i am to layz to add them in the Readme**
 
 ## Usage
 1. **download the project**

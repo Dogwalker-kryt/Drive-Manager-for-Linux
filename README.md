@@ -65,7 +65,6 @@ in the current state of the repo, there are two folders: include (with all .h fi
 ├─/bin
 |   └─/Here are all finished builds (executables)
 ```
-in the other file outside the folder is the newest version (beta), this version will not be bug free, but atleast compilable
 
 
 ## Features
@@ -81,6 +80,8 @@ in the other file outside the folder is the newest version (beta), this version 
 - **Metadata Reader**
 - **Forensic tools (still has bug/porblmes, but is in development)**
 - **Diskspace visulizer (still has bug/porblmes, but is in development)**
+- **Log viewer**
+- **Analyze Diskspace**: the Diskspace visulizer is more kind of graph, but this is not
 - **More features coming soon! or aim to layz to add them in the Readme**
 
 ## Usage

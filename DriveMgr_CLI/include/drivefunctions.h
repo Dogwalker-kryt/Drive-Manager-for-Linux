@@ -57,7 +57,7 @@ public:
             auto now = std::chrono::system_clock::now();
             std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
             char timeStr[100];
-            std::strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", std::localtime(&currentTime));
+            std::strftime(timeStr, sizeof(timeStr), "%d-%m-%Y %H:%M", std::localtime(&currentTime));
             std::string logMsg = "[" + std::string(timeStr) + "] executed " + operation;
     
             const char* sudo_user = std::getenv("SUDO_USER");

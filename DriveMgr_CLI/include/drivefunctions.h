@@ -27,29 +27,6 @@
 #include <openssl/rand.h>
 #include <openssl/evp.h>
 #include <openssl/aes.h>
-/*
-class Logger {
-public:
-    static void log(const std::string& operation) {
-        auto now = std::chrono::system_clock::now();
-        std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
-
-        char timeStr[100];
-        std::strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", std::localtime(&currentTime));
-
-        std::string logMsg = std::string("[") + timeStr + "] executed " + operation;
-        
-        std::string logDir = std::string(getenv("HOME")) + "/" + ".var/app/DriveMgr";
-        std::string logPath = logDir + "/log.dat";
-        std::ofstream logFile(logPath, std::ios::app);
-        if (logFile) {
-            logFile << logMsg << std::endl;
-        } else {
-            std::cerr << "[Error] Unable to open log file: " << logPath << " Reason: " << strerror(errno) << std::endl;
-        }
-    }
-};
-*/
 
 class Logger {
 public:

@@ -20,20 +20,21 @@ Current version in stable: v0.8.88-08 (the stable version is almost useless, bec
 
 Current version in experimental: v0.8.99-70
 
-### GUI:
+Note: next update, CLI version will get flags (e.g. --version) and a quick access system and a TUI menu 
+
+### GUI (NOT GETTING UPDTED):
 
 Current Rust GUI: v0.1.5-alpha (this version is not really funtional, but the list dirves works)
 Current C++ GUI: v0.1.1-alpha 
 Note: GUI version will be not updated as often as the CLI and TUI will be
 
-### TUI:
+### TUI (IN WORK):
 
 TUI my not work or work, i dont know it doesnt work always on my pc
 
 ### Note:
 - always check if a new version has been released
 - Help for the GUI verion is appreciated
-
 
 > **Warning**  
 > This tool is intended for users who understand the risks involved with formatting, encrypting, or otherwise modifying drives. Always back up your data and double-check your selections!

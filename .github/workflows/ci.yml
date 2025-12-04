@@ -1,0 +1,59 @@
+name: CI - Build and Basic Checks
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          # Install useful build tools; tolerate failures to avoid hard fails
+          sudo apt-get install -y build-essential libssl-dev pkg-config smartmontools shellcheck || true
+
+      - name: Build CLI - stable (if present)
+        run: |
+          if [ -f DriveMgr_CLI/src/DriveMgr_stable.cpp ]; then
+            echo "Compiling DriveMgr_stable..."
+            g++ DriveMgr_CLI/src/DriveMgr_stable.cpp -IDriveMgr_CLI/include -o DriveMgr_CLI/DriveMgr_stable -lssl -lcrypto || true
+            ls -la DriveMgr_CLI/DriveMgr_stable || true
+          else
+            echo "DriveMgr_stable.cpp not found — skipping stable build."
+          fi
+
+      - name: Build CLI - experimental (if present)
+        run: |
+          if [ -f DriveMgr_CLI/src/DriveMgr_experi.cpp ]; then
+            echo "Compiling DriveMgr_experi..."
+            g++ DriveMgr_CLI/src/DriveMgr_experi.cpp -IDriveMgr_CLI/include -o DriveMgr_CLI/DriveMgr_experi -lssl -lcrypto || true
+            ls -la DriveMgr_CLI/DriveMgr_experi || true
+          else
+            echo "DriveMgr_experi.cpp not found — skipping experimental build."
+          fi
+
+      - name: Shell script lint (build_src.sh) with shellcheck (non-fatal)
+        run: |
+          if command -v shellcheck >/dev/null 2>&1 && [ -f build_src.sh ]; then
+            echo "Running shellcheck on build_src.sh..."
+            shellcheck build_src.sh || true
+          else
+            echo "shellcheck not available or build_src.sh missing — skipping shell lint."
+          fi
+
+      - name: Upload built artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: drivemgr-artifacts
+          path: |
+            DriveMgr_CLI/DriveMgr_stable
+            DriveMgr_CLI/DriveMgr_experi

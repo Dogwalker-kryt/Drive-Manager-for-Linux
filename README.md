@@ -230,7 +230,7 @@ Distributed under the [GPL-3.0 License](./LICENSE).
 
 ## Known Issues
 
-See the known bugs, e.g., [datalog.dat logfile mystery](https://github.com/Dogwalker-kryt/Drive-Manager-for-Linux/issues/5).
+See the known bugs, e.g., [datalog.dat logfile mystery](https://github.com/Dogwalker-kryt/Drive-Manager-for-Linux/issues/5). (Not Bugging anymore, because of moving the Application location from .var to .local
 
 **Disclaimer:** This tool is in active development. Features may not always be stable. Use at your own risk—always test on non-critical systems!
 

@@ -3,7 +3,6 @@
 #define DRIVEFUNCTIONS_H
 
 #include <iostream>
-#include <string>
 #include <vector>
 #include <chrono>
 #include <ctime>
@@ -27,95 +26,95 @@
 #include <openssl/rand.h>
 #include <openssl/evp.h>
 #include <openssl/aes.h>
+#include <limits.h>
+#include <map>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <fcntl.h>
+#include <cerrno>
+#include <sys/select.h>
+#include <sys/time.h>
+#include "command_exec.h"
+
+#define RESET2   "\033[0m"
+#define RED2     "\033[31m"
+#define GREEN2   "\033[32m"
+#define YELLOW2  "\033[33m"
+#define BLUE2    "\033[34m"
+#define MAGENTA2 "\033[35m"
+#define CYAN2    "\033[36m"
+#define BOLD2    "\033[1m"
 
 class Logger {
 public:
-        static void log(const std::string& operation) {
-            auto now = std::chrono::system_clock::now();
-            std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
-            char timeStr[100];
-            std::strftime(timeStr, sizeof(timeStr), "%d-%m-%Y %H:%M", std::localtime(&currentTime));
-            std::string logMsg = "[" + std::string(timeStr) + "] executed " + operation;
-    
-            const char* sudo_user = std::getenv("SUDO_USER");
-            const char* user_env = std::getenv("USER");
-            const char* username = sudo_user ? sudo_user : user_env;
-            if (!username) {
-                std::cerr << "[Logger Error] Could not determine username.\n";
-                return;
-            }
-            struct passwd* pw = getpwnam(username);
-            if (!pw) {
-                std::cerr << "[Logger Error] Failed to get home directory for user: " << username << "\n";
-                return;
-            }
-            std::string homeDir = pw->pw_dir;
-            std::string logDir = homeDir + "/.var/app/DriveMgr/";
-            struct stat st;
-            if (stat(logDir.c_str(), &st) != 0) {
-                if (mkdir(logDir.c_str(), 0755) != 0 && errno != EEXIST) {
-                    std::cerr << "[Logger Error] Failed to create log directory: " << logDir
-                              << " Reason: " << strerror(errno) << "\n";
-                    return;
-                }
-            }
-    
-            std::string logPath = logDir + "log.dat";
-            std::ofstream logFile(logPath, std::ios::app);
-            if (logFile) {
-                logFile << logMsg << std::endl;
-            } else {
-                std::cerr << "[Logger Error] Unable to open log file: " << logPath
+    static void log(const std::string& operation) {
+        auto now = std::chrono::system_clock::now();
+        std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
+        char timeStr[100];
+        std::strftime(timeStr, sizeof(timeStr), "%d-%m-%Y %H:%M", std::localtime(&currentTime));
+        //"%d-%m-%Y %M:%H" // new
+        //"%Y-%m-%d %H:%M:%S" // old
+        std::string logMsg = "[" + std::string(timeStr) + "] executed " + operation;
+
+        const char* sudo_user = std::getenv("SUDO_USER");
+        const char* user_env = std::getenv("USER");
+        const char* username = sudo_user ? sudo_user : user_env;
+        
+        if (!username) {
+            std::cerr << "[Logger Error] Could not determine username.\n";
+            return;
+        }
+
+        struct passwd* pw = getpwnam(username);
+        if (!pw) {
+            std::cerr << "[Logger Error] Failed to get home directory for user: " << username << "\n";
+            return;
+        }
+
+        std::string homeDir = pw->pw_dir;
+        std::string logDir = homeDir + "/.local/share/DriveMgr/data/";
+        struct stat st;
+        if (stat(logDir.c_str(), &st) != 0) {
+            if (mkdir(logDir.c_str(), 0755) != 0 && errno != EEXIST) {
+                std::cerr << RED2 << "[Logger Error] Failed to create log directory: " << logDir 
                           << " Reason: " << strerror(errno) << "\n";
+                return;
+            }
+        }
+
+        std::string logPath = logDir + "log.dat";
+        std::ofstream logFile(logPath, std::ios::app);
+        if (logFile) {
+            logFile << logMsg << std::endl;
+        } else {
+            std::cerr << RED2 << "[Logger Error] Unable to open log file: " << logPath
+                      << " Reason: " << strerror(errno) << RESET2 <<"\n";
         }
     }
 };
-};
+
+
 
 // Command executer
+
 class Terminalexec {
 public:
     static std::string execTerminal(const char* cmd) {
-        std::array<char, 128> buffer;
-        std::string result;
-        auto deleter = [](FILE* f) { if (f) pclose(f); };
-        std::unique_ptr<FILE, decltype(deleter)> pipe(popen(cmd, "r"), deleter);
-        if (!pipe) throw std::runtime_error("popen() failed!");
-        while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-            result += buffer.data();
-        }
-        return result;
+        ExecResult r = run_command(std::string(cmd));
+        return r.stdout_str;
     }
     //v2
     static std::string execTerminalv2(const std::string &command) {
-        std::array<char, 128> buffer;
-        std::string result;
-        std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(command.c_str(), "r"), pclose);
-        if (!pipe) return "";
-        while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-            result += buffer.data();
-        }
-        return result;
+        ExecResult r = run_command(command);
+        return r.stdout_str;
     }
     //v3
     static std::string execTerminalv3(const std::string& cmd) {
-        std::array<char, 512> buffer;
-        std::string result;
-        FILE* pipe = popen(cmd.c_str(), "r");
-        if (!pipe) {
-            throw std::runtime_error("popen() failed");
-        }
-        while (fgets(buffer.data(), buffer.size(), pipe) != nullptr) {
-            result += buffer.data();
-        }
-        int returnCode = pclose(pipe);
-        if (returnCode != 0) {
-            return ""; 
-        }
-        while (!result.empty() && (result.back() == '\n' || result.back() == '\r')) {
-            result.pop_back();
-        }
-        return result;
+        ExecResult r = run_command(cmd);
+        if (r.exit_code != 0) return "";
+        // Trim trailing newlines
+        while (!r.stdout_str.empty() && (r.stdout_str.back() == '\n' || r.stdout_str.back() == '\r')) r.stdout_str.pop_back();
+        return r.stdout_str;
     }
 };
 
@@ -128,16 +127,6 @@ struct DriveInfo {
     std::string fstype;
     bool isEncrypted;
     bool hasErrors;
-
-};
-
-// encryption
-const std::string KEY_STORAGE_PATH = std::string(getenv("HOME")) + "/.var/app/DriveMgr/key.bin";
-
-struct EncryptionInfo {
-    std::string driveName;
-    unsigned char key[32];  // 256-bit key
-    unsigned char iv[16];   // 128-bit IV for CBC mode
 };
 
 //recovery
@@ -167,5 +156,15 @@ static std::map<std::string, file_signature> signatures ={
 };
 
 
+
+
+// encryption
+const std::string KEY_STORAGE_PATH = std::string(getenv("HOME")) + "/.local/share/DriveMgr/data/key.bin";
+
+struct EncryptionInfo {
+    std::string driveName;
+    unsigned char key[32];  // 256-bit key
+    unsigned char iv[16];   // 128-bit IV for CBC mode
+};
 
 #endif 

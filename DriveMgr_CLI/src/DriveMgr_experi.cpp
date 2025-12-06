@@ -19,7 +19,7 @@
 // ! Warning this version is the experimental version of the program,
 // This version has the latest and newest functions, but may contain bugs and errors
 // Current version of this code is in the Info() function below
-// v0.9.01-71-experimental
+// v0.9.02-74-experimental
 
 // standard C++ libraries, I think
 #include <iostream>
@@ -58,6 +58,30 @@
 #include "../include/drivefunctions.h"
 
 static bool g_dry_run = false;
+static bool g_no_color = false;
+
+namespace Color {
+    inline std::string reset()   { return g_no_color ? std::string() : "\033[0m"; }
+    inline std::string red()     { return g_no_color ? std::string() : "\033[31m"; }
+    inline std::string green()   { return g_no_color ? std::string() : "\033[32m"; }
+    inline std::string yellow()  { return g_no_color ? std::string() : "\033[33m"; }
+    inline std::string blue()    { return g_no_color ? std::string() : "\033[34m"; }
+    inline std::string magenta() { return g_no_color ? std::string() : "\033[35m"; }
+    inline std::string cyan()    { return g_no_color ? std::string() : "\033[36m"; }
+    inline std::string bold()    { return g_no_color ? std::string() : "\033[1m"; }
+    inline std::string inverse() { return g_no_color ? std::string() : "\033[7m"; }
+}
+
+#define RESET   Color::reset()
+#define RED     Color::red()
+#define GREEN   Color::green()
+#define YELLOW  Color::yellow()
+#define BLUE    Color::blue()
+#define MAGENTA Color::magenta()
+#define CYAN    Color::cyan()
+#define BOLD    Color::bold()
+#define INVERSE Color::inverse()
+
 
 // Wrapper helpers so the program can be run in a non-destructive "dry-run" mode
 static std::string runTerminal(const std::string &cmd) {
@@ -89,16 +113,29 @@ static std::string runTerminalV3(const std::string &cmd) {
 
 
 
-//helping/side funtion
+// helping/side function
 
-#define RESET   "\033[0m"
-#define RED     "\033[31m"
-#define GREEN   "\033[32m"
-#define YELLOW  "\033[33m"
-#define BLUE    "\033[34m"
-#define MAGENTA "\033[35m"
-#define CYAN    "\033[36m"
-#define BOLD    "\033[1m"
+// namespace Color {
+//     inline std::string reset()   { return g_no_color ? std::string() : "\033[0m"; }
+//     inline std::string red()     { return g_no_color ? std::string() : "\033[31m"; }
+//     inline std::string green()   { return g_no_color ? std::string() : "\033[32m"; }
+//     inline std::string yellow()  { return g_no_color ? std::string() : "\033[33m"; }
+//     inline std::string blue()    { return g_no_color ? std::string() : "\033[34m"; }
+//     inline std::string magenta() { return g_no_color ? std::string() : "\033[35m"; }
+//     inline std::string cyan()    { return g_no_color ? std::string() : "\033[36m"; }
+//     inline std::string bold()    { return g_no_color ? std::string() : "\033[1m"; }
+//     inline std::string inverse() { return g_no_color ? std::string() : "\033[7m"; }
+// }
+
+// #define RESET   Color::reset()
+// #define RED     Color::red()
+// #define GREEN   Color::green()
+// #define YELLOW  Color::yellow()
+// #define BLUE    Color::blue()
+// #define MAGENTA Color::magenta()
+// #define CYAN    Color::cyan()
+// #define BOLD    Color::bold()
+// #define INVERSE Color::inverse()
 
 static std::vector<std::string> g_last_drives;
 
@@ -234,7 +271,7 @@ std::string checkFilesystem(const std::string& device, const std::string& fstype
 void listDrives(std::vector<std::string>& drives) {
     drives.clear();
     std::string lsblk = runTerminal("lsblk -o NAME,SIZE,TYPE,MOUNTPOINT,FSTYPE -d -n -p");
-    std::cout << "\nAvilable Drives:\n";
+    std::cout << "\nAvailable Drives:\n";
     std::cout << std::left 
               << std::setw(3) << "#" 
               << std::setw(18) << "Device" 
@@ -610,8 +647,8 @@ void formatDrive() {
                 char confirmationfd;
                 std::cin >> confirmationfd;
                 if (confirmationfd != 'y' && confirmationfd != 'Y') {
-                    std::cout << BOLD << "[Info] Formating canclled!\n" << RESET; 
-                    Logger::log("[INFO] formatting cancelled");
+                    std::cout << BOLD << "[Info] Formatting cancelled!\n" << RESET; 
+                    Logger::log("[INFO] Format operation cancelled by user");
                     break;
                 }
 
@@ -622,7 +659,7 @@ void formatDrive() {
                     Logger::log("[ERROR] Failed to format drive: " + driveName);
                 } else {
                     std::cout << "[INFO] Drive formatted successfully with label: " << label << "\n";
-                    Logger::log("[INFO] Drive formatted successfully with label: " + label + " -> foramtDrvie()");
+                    Logger::log("[INFO] Drive formatted successfully with label: " + label + " -> formatDrive()");
                 }
             }
             break;
@@ -639,8 +676,8 @@ void formatDrive() {
                 char confirmation_fd3;
                 std::cin >> confirmation_fd3;
                 if (confirmation_fd3 != 'y' && confirmation_fd3 != 'Y') {
-                    std::cout << "[Info] Formating cancelled!\n";
-                    Logger::log("[INFO] Format operation cancelle by user -> formatDrive()");
+                    std::cout << "[Info] Formatting cancelled!\n";
+                    Logger::log("[INFO] Format operation cancelled by user -> formatDrive()");
                     return;
                 }
 
@@ -955,7 +992,7 @@ private:
         std::cin >> decryptconfirm;
         if (decryptconfirm != 'y' && decryptconfirm != 'Y') {
             std::cout << "[Info] Decryption cancelled.\n";
-            Logger::log("[INFO] Ddecryption cancelled -> void EnDecrypt()");
+            Logger::log("[INFO] Decryption cancelled -> void EnDecrypt()");
             return;
         }
         
@@ -1053,7 +1090,7 @@ void OverwriteDriveData() {
                     throw std::runtime_error("[Error] Failed to Overwrite drive data");
 
                 } else if (devZero.find("error") != std::string::npos || devrandom.find("error") != std::string::npos) {
-                    std::cout << YELLOW <<"[Warning] failed to Overwrite, only one of two overwriting opeartions succeeded\n"
+                    std::cout << YELLOW <<"[Warning] Failed to overwrite: only one of two overwriting operations succeeded\n"
                             << "Try again" << RESET;
                     Logger::log("[WARNING] failed to overwrite, only one overwriting operation succeeded");
                     return;
@@ -1067,7 +1104,7 @@ void OverwriteDriveData() {
                     return;
 
                 } else {
-                    std::cout << GREEN << "Overwriting completed, all bytes on your drive: " << driveName << " is overwrting to 0\n" << RESET;
+                    std::cout << GREEN << "Overwriting completed, all bytes on your drive: " << driveName << " were overwritten to 0\n" << RESET;
                     return;
                 }
             }
@@ -1077,11 +1114,11 @@ void OverwriteDriveData() {
             }
         } else {
             std::cout << YELLOW << "[Info] Overwriting cancelled\n" << RESET;
-            Logger::log("[INFO] Overwrting cancelled");
+            Logger::log("[INFO] Overwriting cancelled");
         }
     } catch(const std::exception& e) {
-        std::cerr << RED << "[ERROR] Failed to initalize Overwriting function: " << e.what() << RESET << "\n";
-        Logger::log("[ERROR] Failed to initialize Overwriting fucntion: " + std::string(e.what()));
+        std::cerr << RED << "[ERROR] Failed to initialize Overwriting function: " << e.what() << RESET << "\n";
+        Logger::log("[ERROR] Failed to initialize Overwriting function: " + std::string(e.what()));
         return;
     }
 }
@@ -1168,7 +1205,7 @@ public:
         // std::cin >> driveName;
         // checkDriveName(driveName);
         try{
-            std::string driveName = getAndValidateDriveName("Enter Drive name for reding metadata");
+            std::string driveName = getAndValidateDriveName("Enter Drive name for reading metadata");
 
             try {
                 DriveMetadata metadata = getMetadata(driveName);
@@ -1197,7 +1234,7 @@ private:
             char confirmation_burn;
             std::cin >> confirmation_burn;
             if (confirmation_burn != 'y' && confirmation_burn != 'Y') {
-                std::cout << "[Info] Opeartion cancelled\n";
+                std::cout << "[Info] Operation cancelled\n";
                 Logger::log("[INFO] Operation cancelled -> BurnISOToStorageDevice()");
                 return;
             }
@@ -1210,7 +1247,7 @@ private:
             std::cin >> confirmation_burn2;
             if (confirmation_burn2 != 'y' && confirmation_burn2 != 'Y') {
                 std::cout << "[Info] Operation cancelled\n";
-                Logger::log("[INFO] Operation cancelled -> BurnISOToSotorageDevice()");
+                Logger::log("[INFO] Operation cancelled -> BurnISOToStorageDevice()");
                 return;
             }
 
@@ -1235,7 +1272,7 @@ private:
                     std::string brunoutput = runTerminalV2(bruncmd);
                     if (brunoutput.find("error") != std::string::npos) {
                         Logger::log("[ERROR] Failed to burn iso/img to drive: " + driveName + " -> BurnISOToStorageDevice()"); 
-                        throw std::runtime_error("[Error] Faile to burn iso/img to drive: " + driveName);
+                        throw std::runtime_error("[Error] Failed to burn iso/img to drive: " + driveName);
                     }
 
                     std::cout << "[Success] Successfully burned " << isoPath << " to " << driveName << "\n";
@@ -1281,8 +1318,8 @@ private:
                 return;
             }
         } catch (const std::exception& e) {
-            std::cerr << RED << "[ERROR] Failed to initalize disk unmounting: " << e.what() << "\n";
-            Logger::log("[ERROR] Failed to initalize disk unmounting: " + std::string(e.what()));
+            std::cerr << RED << "[ERROR] Failed to initialize disk unmounting: " << e.what() << "\n";
+            Logger::log("[ERROR] Failed to initialize disk unmounting: " + std::string(e.what()));
             return; 
         }
     }
@@ -1985,14 +2022,13 @@ void log_viewer() {
 // main and Info
 void Info() {
     std::cout << "\n┌────────── Info ──────────\n";
-    std::cout << "│ Welcome to Drive Manager, this is a program for linux to view, operate,... your Storage devices in your system\n"; 
-    std::cout << "│ Warning! You should know some basic things about drives so you dont loose any data\n";
-    std::cout << "│ If you find any problems/issues or have ideas, visit my Github page and send message\n";
+    std::cout << "│ Welcome to Drive Manager — a program for Linux to view and operate your storage devices.\n"; 
+    std::cout << "│ Warning! You should know the basics about drives so you don't lose any data.\n";
+    std::cout << "│ If you find problems or have ideas, visit the GitHub page and open an issue.\n";
     std::cout << "│ Other info:\n";
-    std::cout << "│ Version: 0.9.01-71-experimental\n";
+    std::cout << "│ Version: 0.9.02-74-experimental\n";
     std::cout << "│ Github: https://github.com/Dogwalker-kryt/Drive-Manager-for-Linux\n";
     std::cout << "│ Author: Dogwalker-kryt\n";
-    std::cout << "│ Easte egg counter: 2\n";
     std::cout << "└───────────────────────────\n";
 }
 
@@ -2002,8 +2038,10 @@ static void printUsage(const char* progname) {
     std::cout << "  --version, -v     Print program version and exit\n";
     std::cout << "  --help, -h        Show this help and exit\n";
     std::cout << "  -n, --dry-run     Do not perform destructive operations\n";
+    std::cout << "  -C, --no-color     Disable colors (may affect the main menu)\n";
+    std::cout << "  --operation-name   Goes directly to a specific operation without menu\n";
 }
-                                                                                                                                                                                                                                                                                                                                            std::string code = "xfetrojk";
+
 void MenuQues(bool& running) {   
     std::cout << "\nPress '1' for returning to the main menu, '2' to exit\n";
     int menuques;
@@ -2101,12 +2139,16 @@ int main(int argc, char* argv[]) {
             g_dry_run = true;
             continue;
         }
+        if (a == "--no-color" || a == "--no_color" || a == "-C") {
+            g_no_color = true;
+            continue;
+        }
         if (a == "--help" || a == "-h") {
             printUsage(argv[0]);
             return 0;
         }
         if (a == "--version" || a == "-v") {
-            std::cout << "DriveMgr CLI version: 0.8.99-71-experimental\n";
+            std::cout << "DriveMgr CLI version: 0.9.02-74-experimental\n";
             return 0;
         }
         if (a == "--logs") {
@@ -2226,9 +2268,9 @@ int main(int argc, char* argv[]) {
                 std::string innerStr = inner.str();
 
                 // Apply inverse only to inner content
-                if ((int)i == selected) std::cout << "\033[7m";
+                if ((int)i == selected) std::cout << INVERSE;
                 std::cout << innerStr;
-                if ((int)i == selected) std::cout << "\033[0m";
+                if ((int)i == selected) std::cout << RESET;
 
                 // Print right border and newline
                 std::cout << " │\n";
@@ -2320,16 +2362,6 @@ int main(int argc, char* argv[]) {
             case VIEWINFO: {
                 Info();
                 MenuQues(running);
-                break;
-            }
-            case FUNCTION999: {
-                std::string nothing;
-                std::cin >> nothing;
-                if (nothing == code) {
-                    break;
-                } else {
-                    std::cout << "[ERROR] Invalid input\n";
-                }
                 break;
             }
             case MOUNTUNMOUNT: {

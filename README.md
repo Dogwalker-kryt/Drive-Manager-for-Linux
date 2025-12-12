@@ -22,7 +22,7 @@ A terminal-based drive management tool for Linux (Debian-based), written primari
 - Stable: `v0.8.88-08`  
   _(Stable version is functional but serves mostly as a safe baseline — the experimental version is recommended for more features)_
   
-- Experimental: `v0.8.99-71`  
+- Experimental: `v0.8.99-74`  
   _(New CLI flags like `--version` will be available soon, plus quick access system and a TUI menu)_
 
 **GUI (Not Regularly Updated):**

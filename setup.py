@@ -128,7 +128,7 @@ def install_Dmgr():
         ("launcher/launcher.sh", "bin/launcher"),
         ("CODE_OF_CONDUCT.md", "other"),
         ("README.md", "other"),
-        ("LICENSE.md", "other"),
+        ("LICENSE", "other"),
         ("SECURITY.md", "other"),
         ("CONTRIBUTING.md", "other"),
         (".github", "other"),

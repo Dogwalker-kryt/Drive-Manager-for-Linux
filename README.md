@@ -99,11 +99,10 @@ config.conf        - Example config
 
 ### Requirements
 
-- Linux (Debian-based)
+- Linux
 - C++17 compiler (e.g., g++)
 - OpenSSL dev libraries
 - build-essential, smartmontools
-- Rust and GTK-4.0 (for GUI)
 
 _The Requirements are only for when you manualy build the Application from scratch. If you use the build script, it will automaticly check and get the Required things_
 
@@ -116,20 +115,14 @@ cd Drive-Manager-for-Linux
 
 ### Build Options
 
-#### Option 1: Automated Build
+#### Option 1: Automated Build (if you have python3 installed)
 
 ```sh
-bash build_src.sh
+./setup.py
 ```
 
 _Defaults: creates necessary folders, builds the binary, and prompts for installation of missing packages._
 
-Example flags:  
-- `--dry-run` (simulate only)
-- `--no-install` (don't install dependencies)
-- `--targets=cli,gui` (build certain versions)
-- `-h, --help` (help details)
-- or use the quick access system, by `--wanted-operation`
 
 #### Option 2: Manual Compile
 
@@ -146,6 +139,9 @@ If required, create these directories by hand:
 
 ```sh
 mkdir -p ~/.local/share/DriveMgr/bin
+mkdir -p ~/.local/share/DriveMgr/bin/bin
+mkdir -p ~/.local/share/DriveMgr/bin/launcher
+mkdir -p ~/.local/share/DriveMgr/bin/other_src
 mkdir -p ~/.local/share/DriveMgr/data
 touch ~/.local/share/DriveMgr/data/log.dat
 touch ~/.local/share/DriveMgr/data/keys.bin
@@ -160,6 +156,8 @@ Start by running the program (root required for some features):
 
 ```sh
 sudo ./DriveMgr         # or through the launcher
+or
+sudo ./DriveMgr --operation-name  		# for quick acsess to operations
 ```
 
 When started, you'll see a menu, for example:

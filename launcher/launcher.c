@@ -159,9 +159,9 @@ int main() {
     }
 
     if (ok) {
-        printf("UI Mode: %s\n", cfg.UI_mode);
-        printf("Compile Mode: %s\n", cfg.compile_mode);
-        printf("Root Mode: %s\n", cfg.root_mode ? "true" : "false");
+        // printf("UI Mode: %s\n", cfg.UI_mode);
+        // printf("Compile Mode: %s\n", cfg.compile_mode);
+        // printf("Root Mode: %s\n", cfg.root_mode ? "true" : "false");
 
         if (home) {
             launch_program(&cfg, home);

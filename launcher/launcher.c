@@ -171,6 +171,6 @@ int main() {
     } else {
         printf("Failed to read config file.\n");
     }
-
+    system("cd - && clear");
     return 0;
 }

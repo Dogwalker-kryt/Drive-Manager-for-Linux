@@ -118,7 +118,7 @@ cd Drive-Manager-for-Linux
 #### Option 1: Automated Build (if you have python3 installed)
 
 ```sh
-./setup.py
+sudo python3 setup.py 	# why sudo will show in the next update
 ```
 
 _Defaults: creates necessary folders, builds the binary, and prompts for installation of missing packages._

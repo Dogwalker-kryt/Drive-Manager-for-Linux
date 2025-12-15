@@ -118,15 +118,22 @@ cd Drive-Manager-for-Linux
 #### Option 1: Automated Build (if you have python3 installed)
 
 ```sh
-sudo python3 setup.py 	# why sudo will show in the next update
+python3 setup.py 	
 ```
 
 _Defaults: creates necessary folders, builds the binary, and prompts for installation of missing packages._
 
+##### Only if you want to have a command shortcut
+After this you can run the command_creation.py
+This will create in `/usr/local/bin` a script that will can be called in the terminal to start the Program
 
+```
+sudo python3 command_creation.py
+```
 #### Option 2: Manual Compile
 
 ```sh
+
 g++ DriveMgr_CLI/src/DriveMgr_experi.cpp -Iinclude -o DriveMgr -lssl -lcrypto
 ```
 For the GUI version:

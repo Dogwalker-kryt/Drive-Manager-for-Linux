@@ -52,11 +52,7 @@ A terminal-based drive management tool for Linux (Debian-based), written primari
 
 ## Currently in Development
 
-- Moving program data from `.var` to `.local`
-- Config file and launcher overhaul
 - TUI and CLI enhancements
-- Log file reliability
-- Adding "dry run" mode to CLI
 
 See [issues](https://github.com/Dogwalker-kryt/Drive-Manager-for-Linux/issues) and [projects](https://github.com/Dogwalker-kryt/Drive-Manager-for-Linux/projects) for more.
 

@@ -23,7 +23,7 @@ A terminal-based drive management tool for Linux (Debian-based), written primari
   _(Stable version is functional but serves mostly as a safe baseline — the experimental version is recommended for more features)_
   
 - Experimental: `v0.8.99-74`  
-  _(New CLI flags like `--version` will be available soon, plus quick access system and a TUI menu)_
+  _(New CLI flags like `--version` are available, plus quick access system and a TUI menu)_
 
 **GUI (Not Regularly Updated):**
 
@@ -87,7 +87,7 @@ config.conf        - Example config
 - Forensic tools (experimental)
 - Disk space visualization (experimental)
 - Log viewer
-- More in development
+- More in development or im too lazy to add them here
 
 ---
 
@@ -105,8 +105,8 @@ _The Requirements are only for when you manualy build the Application from scrat
 ### Clone the Repository
 
 ```sh
-git clone https://github.com/Dogwalker-kryt/Drive-Manager-for-Linux
-cd Drive-Manager-for-Linux
+git clone https://github.com/Dogwalker-kryt/Drive-Manager-Linux
+cd Drive-Manager-Linux
 ```
 
 ### Build Options
@@ -161,6 +161,8 @@ Start by running the program (root required for some features):
 sudo ./DriveMgr         # or through the launcher
 or
 sudo ./DriveMgr --operation-name  		# for quick acsess to operations
+or
+dmgr	# through command form the commandcreation
 ```
 
 When started, you'll see a menu, for example:
@@ -190,7 +192,7 @@ For dangerous actions, an extra key (e.g., generated security key) is required a
    ```
 2. **Select an operation:**
    - E.g., View drive metadata: select `8`
-3. **Choose a drive by its listed number**
+3. **Choose a drive by its Name**
 4. **Follow prompts to complete your selected operation**
 
 Menu numbers and feature sets may vary between releases.
@@ -206,12 +208,10 @@ Menu numbers and feature sets may vary between releases.
 ---
 
 ## Roadmap
-
-- [x] Encryption/decryption support
-- [x] Partition/health checks
-- [x] Experimental GUI/TUI modes
+_What will be in future_
+- [ ] Experimental GUI/TUI modes
 - [ ] Forensics and better diskspace visualization
-- [ ] Polishing dry run mode, CLI flags, refactoring
+- [x] Polishing dry run mode, CLI flags, refactoring
 
 ---
 

@@ -92,7 +92,7 @@ config.conf        - Example config
 ---
 
 ## Installation
-
+_If during the installation somthing unexpected happens, you can ask for help by opening an issue or a discussion_
 ### Requirements
 
 - Linux

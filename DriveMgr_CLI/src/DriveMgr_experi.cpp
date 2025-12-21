@@ -2132,7 +2132,9 @@ public:
     } 
 };
 
+
 int main(int argc, char* argv[]) {
+    std::cout << "\033[?1049h";
     for (int i = 1; i < argc; ++i) {
         std::string a(argv[i]);
         if (a == "--dry-run" || a == "-n") {
@@ -2402,5 +2404,6 @@ int main(int argc, char* argv[]) {
             }
         }
     }
+    std::cout << "\033[?1049l";
     return 0;
 }

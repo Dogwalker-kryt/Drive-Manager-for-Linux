@@ -1985,6 +1985,65 @@ class Clone {
         }
 };
 
+void config_editor() {
+    const char* sudo_user = std::getenv("SUDO_USER");
+    const char* user_env = std::getenv("USER");
+    const char* username = sudo_user ? sudo_user : user_env;
+     if (!username) {
+        std::cerr << RED << "[Config Error] Could not determine username.\n" << RESET;
+        return;
+    }
+    struct passwd* pw = getpwnam(username);
+    if (!pw) {
+        std::cerr << RED << "[Config Error] Failed to get home directory for user: " << username << "\n" << RESET;
+        return;
+    }
+    std::string homeDir = pw->pw_dir;
+    std::string confDir = homeDir + "/.local/share/DriveMgr/data/config.conf";
+
+    std::ifstream config_file(confDir);
+    if (!config_file.is_open()) {
+        Logger::log("[Config ERROR] Cannot open config file");
+        std::cerr << RED << "[Config ERROR] Cannot open config file\n" << RESET;
+        return;
+    }
+
+    std::string line;
+    std::cout << "Reading config file...\n";
+    while (std::getline(config_file, line)) {
+        if (line.empty() || line == "#") {
+            continue;
+        }
+
+        size_t pos = line.find("=");
+        if (pos == std::string::npos) {
+            continue;
+        }
+
+        std::string UI_mode = line.substr(0, pos);
+        std::string compile_mode = line.substr(pos +1);
+        std::string root_mode = line.substr(pos + 1); 
+        std::cout << "config values:\n";
+        std::cout << "UI mode: " << UI_mode << "\n";
+        std::cout << "Compile mode: " << compile_mode << "\n";
+        std::cout << "Root mode: " << root_mode << "\n";   
+        int b = 1;
+        if (b=1) {
+            break;
+        }       
+    }
+
+    std::cout << "\n";
+    std::cout << "Do you want to edit the config file? (y/n)\n";
+    std::string config_edit;
+    std::cin >> config_edit;
+    if (config_edit == "n" || config_edit.empty()) {
+        return;
+    } else if (config_edit == "y") {
+        system("nano ~/.local/share/DriveMgr/data/config.conf");
+    }        
+}
+
 void log_viewer() {
     const char* sudo_user = getenv("SUDO_USER");
     const char* user_env = getenv("USER");
@@ -2078,7 +2137,7 @@ void checkRootMetadata() {
 enum MenuOptionsMain {
     EXITPROGRAM = 0, LISTDRIVES = 1, FORMATDRIVE = 2, ENCRYPTDECRYPTDRIVE = 3, RESIZEDRIVE = 4, 
     CHECKDRIVEHEALTH = 5, ANALYZEDISKSPACE = 6, OVERWRITEDRIVEDATA = 7, VIEWMETADATA = 8, VIEWINFO = 9,
-    MOUNTUNMOUNT = 10, FORENSIC = 11, DISKSPACEVIRTULIZER = 12, FUNCTION999 = 999, LOGVIEW = 13, CLONEDRIVE = 14
+    MOUNTUNMOUNT = 10, FORENSIC = 11, DISKSPACEVIRTULIZER = 12, FUNCTION999 = 999, LOGVIEW = 13, CLONEDRIVE = 14, CONFIGEDITOR = 15
 };
 
 class QuickAccess {
@@ -2242,7 +2301,7 @@ int main(int argc, char* argv[]) {
             {4, "Resize Drive"}, {5, "Check Drive Health"}, {6, "Analyze Disk Space"},
             {7, "Overwrite Drive Data"}, {8, "View Drive Metadata"}, {9, "View Info/help"},
             {10, "Mount/Unmount/restore (ISO/Drives/USB)"}, {11, "Forensic Analysis (Beta)"},
-            {12, "Disk Space Visualizer (Beta)"}, {13, "Log viewer"}, {14, "Clone a Drive"}, {0, "Exit"}
+            {12, "Disk Space Visualizer (Beta)"}, {13, "Log viewer"}, {14, "Clone a Drive"}, {15, "Config Editor"}, {0, "Exit"}
         };
 
         // enable raw mode for single-key reading
@@ -2395,6 +2454,11 @@ int main(int argc, char* argv[]) {
             case CLONEDRIVE: {
                 checkRoot();
                 Clone::mainClone();
+                MenuQues(running);
+                break;
+            }
+            case CONFIGEDITOR{
+                config_editor();
                 MenuQues(running);
                 break;
             }

@@ -96,7 +96,7 @@ _If during the installation somthing unexpected happens, you can ask for help by
 ### Requirements
 
 - Linux
-- C++17 compiler (e.g., g++)
+- C++17 compiler (e.g., g++) or higher
 - OpenSSL dev libraries
 - build-essential, smartmontools
 

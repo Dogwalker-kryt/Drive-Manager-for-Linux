@@ -88,7 +88,7 @@ config.conf        - Example config
 - Disk space visualization (experimental)
 - Log viewer
 - Clone a drive
-- Config file Editor, with my own tiny light weight text editor Lume
+- Config file Editor, with my own tiny light weight text editor [Lume](https://github.com/Dogwalker-kryt/Lume)
 - More in development or im too lazy to add them here
 
 ---

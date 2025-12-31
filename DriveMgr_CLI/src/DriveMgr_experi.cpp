@@ -2245,7 +2245,7 @@ int main(int argc, char* argv[]) {
         }
 
         if (a == "--version" || a == "-v") {
-            std::cout << "DriveMgr CLI version: 0.9.02-77-experimental\n";
+            std::cout << "DriveMgr CLI version: 0.9.04-77-experimental\n";
             return 0;
         }
 

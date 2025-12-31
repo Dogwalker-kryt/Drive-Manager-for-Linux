@@ -19,7 +19,7 @@
 // ! Warning this version is the experimental version of the program,
 // This version has the latest and newest functions, but may contain bugs and errors
 // Current version of this code is in the Info() function below
-// v0.9.02-74-experimental
+// v0.9.04-77experimental
 
 // standard C++ libraries, I think
 #include <iostream>
@@ -56,6 +56,9 @@
 #include <openssl/sha.h>
 // custom .h
 #include "../include/drivefunctions.h"
+
+struct termios oldt; 
+struct termios newt;
 
 static bool g_dry_run = false;
 static bool g_no_color = false;
@@ -111,32 +114,7 @@ static std::string runTerminalV3(const std::string &cmd) {
     return Terminalexec::execTerminalv3(cmd);
 }
 
-
-
-// helping/side function
-
-// namespace Color {
-//     inline std::string reset()   { return g_no_color ? std::string() : "\033[0m"; }
-//     inline std::string red()     { return g_no_color ? std::string() : "\033[31m"; }
-//     inline std::string green()   { return g_no_color ? std::string() : "\033[32m"; }
-//     inline std::string yellow()  { return g_no_color ? std::string() : "\033[33m"; }
-//     inline std::string blue()    { return g_no_color ? std::string() : "\033[34m"; }
-//     inline std::string magenta() { return g_no_color ? std::string() : "\033[35m"; }
-//     inline std::string cyan()    { return g_no_color ? std::string() : "\033[36m"; }
-//     inline std::string bold()    { return g_no_color ? std::string() : "\033[1m"; }
-//     inline std::string inverse() { return g_no_color ? std::string() : "\033[7m"; }
-// }
-
-// #define RESET   Color::reset()
-// #define RED     Color::red()
-// #define GREEN   Color::green()
-// #define YELLOW  Color::yellow()
-// #define BLUE    Color::blue()
-// #define MAGENTA Color::magenta()
-// #define CYAN    Color::cyan()
-// #define BOLD    Color::bold()
-// #define INVERSE Color::inverse()
-
+// side/helper functions
 static std::vector<std::string> g_last_drives;
 
 void ListDrives();
@@ -190,11 +168,13 @@ bool askForConfirmation(const std::string &prompt) {
 
 std::string getAndValidateDriveName(const std::string& prompt) {
     ListDrives();
+
     if (g_last_drives.empty()) {
         std::cerr << RED << "[ERROR] No drives available to select!\n";
         Logger::log("[ERROR] No drives available to select");
         throw std::runtime_error("No drives available");
     }
+
     std::cout << "\n" << prompt << ":\n";
     std::string driveName;
     std::cin >> driveName;
@@ -209,11 +189,8 @@ std::string getAndValidateDriveName(const std::string& prompt) {
     if (size_t pos = driveName.find_first_of("--'&|<>;\""); pos != std::string::npos) {
         std::cerr << RED << "[ERROR] Invalid characters in drive name!: " << pos << RESET << "\n";
         Logger::log("[ERROR] Invalid characters in drive name\n");
-        //throw std::runtime_error("Invalid characters in drive name");
     }
 
-
-    // Normalize: if input is just "sda", make it "/dev/sda"
     if (driveName.find("/dev/") != 0) {
         driveName = "/dev/" + driveName;
     }
@@ -225,10 +202,10 @@ std::string getAndValidateDriveName(const std::string& prompt) {
             break;
         }
     }
+
     if (!drive_found) {
         std::cerr << RED << "[ERROR] Drive '" << driveName << "' not found!\n";
         Logger::log("[ERROR] Drive not found");
-        //throw std::runtime_error("Drive not found");
     }
     return driveName;
 }
@@ -1837,7 +1814,7 @@ public:
                 break;
             }
             case Exit_Return: {
-                std::cout << "\nDo you want to return to the main menu or exit? (r/e)\n";
+                std::cout << "\nDo you want to (r)eturn to the main menu or (e)xit? (r/e)\n";
                 char exitreturninput;
                 std::cin >> exitreturninput;
                 if (exitreturninput == 'r' || exitreturninput == 'R') return;
@@ -1985,7 +1962,45 @@ class Clone {
         }
 };
 
+
+void log_viewer() {
+    const char* sudo_user = getenv("SUDO_USER");
+    const char* user_env = getenv("USER");
+    const char* username = sudo_user ? sudo_user : user_env;
+
+    if (!username) {
+        std::cerr << RED << "[Error] Could not determine username.\n" << RESET;
+        return;
+    }
+
+    struct passwd* pw = getpwnam(username);
+
+    if (!pw) {
+        std::cerr << RED << "[Error] Could not get home directory for user: " << username << RESET << "\n";
+        return;
+    }
+
+    std::string homeDir = pw->pw_dir;
+    std::string path = homeDir + "/.local/share/DriveMgr/data/log.dat";
+    std::ifstream file(path);
+    if (!file) {
+        Logger::log("[ERROR] Unable to read log file at " + path);
+        std::cerr << RED << "[Error] Unable to read log file at path: " << path << RESET << "\n";
+        return;
+    }
+
+    std::cout << "\nLog file content:\n";
+    std::string line;
+    while (std::getline(file, line)) {
+        std::cout << line << "\n";
+    }
+}
+
+
+bool fileExists(const std::string& path) { struct stat buffer; return (stat(path.c_str(), &buffer) == 0); }
+
 void config_editor() {
+    extern struct termios oldt, newt;
     const char* sudo_user = std::getenv("SUDO_USER");
     const char* user_env = std::getenv("USER");
     const char* username = sudo_user ? sudo_user : user_env;
@@ -2040,41 +2055,48 @@ void config_editor() {
     if (config_edit == "n" || config_edit.empty()) {
         return;
     } else if (config_edit == "y") {
-        system("nano ~/.local/share/DriveMgr/data/config.conf");
+        const char* sudo_user = std::getenv("SUDO_USER");
+        const char* user_env = std::getenv("USER");
+        const char* username = sudo_user ? sudo_user : user_env;
+        
+        if (!username) {
+            std::cerr << "[Config Editor Error] Could not determine username.\n";
+            return;
+        }
+
+        struct passwd* pw = getpwnam(username);
+        if (!pw) {
+            std::cerr << "[Config Editor Error] Failed to get home directory for user: " << username << "\n";
+            return;
+        }
+
+        std::string homeDir = pw->pw_dir;
+        // std::string lumeDir = homeDir + "/.local/share/DriveMgr/bin/Lume/Lume";
+        // //system(" ~/.local/share/DriveMgr/data/config.conf");
+        // std::string config_editor_command = " ~/.local/share/DriveMgr/data/config.conf";
+        // system(config_editor_command);
+        std::string lumePath = homeDir + "/.local/share/DriveMgr/bin/Lume/Lume";
+
+        if (!fileExists(lumePath)) {
+            std::cerr << RED << "[Config Editor Error] Lume editor not found at:" << lumePath << "\n" << RESET;
+            return;
+        }
+
+        std::string configPath = homeDir + "/.local/share/DriveMgr/data/config.conf";
+        std::string config_editor_cmd = "\"" + lumePath + "\" \"" + configPath + "\"";
+        // Leave alt screen
+        std::cout << "\033[?1049l" << std::flush;
+        // Restore terminal to normal mode
+        tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+        // Run Lume
+        system(config_editor_cmd.c_str());
+        // Re-enter alt screen
+        std::cout << "\033[?1049h" << std::flush;
+        // Re-enable raw mode
+        tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+        return;
+
     }        
-}
-
-void log_viewer() {
-    const char* sudo_user = getenv("SUDO_USER");
-    const char* user_env = getenv("USER");
-    const char* username = sudo_user ? sudo_user : user_env;
-
-    if (!username) {
-        std::cerr << RED << "[Error] Could not determine username.\n" << RESET;
-        return;
-    }
-
-    struct passwd* pw = getpwnam(username);
-
-    if (!pw) {
-        std::cerr << RED << "[Error] Could not get home directory for user: " << username << RESET << "\n";
-        return;
-    }
-
-    std::string homeDir = pw->pw_dir;
-    std::string path = homeDir + "/.local/share/DriveMgr/data/log.dat";
-    std::ifstream file(path);
-    if (!file) {
-        Logger::log("[ERROR] Unable to read log file at " + path);
-        std::cerr << RED << "[Error] Unable to read log file at path: " << path << RESET << "\n";
-        return;
-    }
-
-    std::cout << "\nLog file content:\n";
-    std::string line;
-    while (std::getline(file, line)) {
-        std::cout << line << "\n";
-    }
 }
 
 
@@ -2085,7 +2107,7 @@ void Info() {
     std::cout << "│ Warning! You should know the basics about drives so you don't lose any data.\n";
     std::cout << "│ If you find problems or have ideas, visit the GitHub page and open an issue.\n";
     std::cout << "│ Other info:\n";
-    std::cout << "│ Version: 0.9.02-74-experimental\n";
+    std::cout << "│ Version: 0.9.04-77-experimental\n";
     std::cout << "│ Github: https://github.com/Dogwalker-kryt/Drive-Manager-for-Linux\n";
     std::cout << "│ Author: Dogwalker-kryt\n";
     std::cout << "└───────────────────────────\n";
@@ -2137,7 +2159,7 @@ void checkRootMetadata() {
 enum MenuOptionsMain {
     EXITPROGRAM = 0, LISTDRIVES = 1, FORMATDRIVE = 2, ENCRYPTDECRYPTDRIVE = 3, RESIZEDRIVE = 4, 
     CHECKDRIVEHEALTH = 5, ANALYZEDISKSPACE = 6, OVERWRITEDRIVEDATA = 7, VIEWMETADATA = 8, VIEWINFO = 9,
-    MOUNTUNMOUNT = 10, FORENSIC = 11, DISKSPACEVIRTULIZER = 12, FUNCTION999 = 999, LOGVIEW = 13, CLONEDRIVE = 14, CONFIGEDITOR = 15
+    MOUNTUNMOUNT = 10, FORENSIC = 11, DISKSPACEVIRTULIZER = 12, LOGVIEW = 13, CLONEDRIVE = 14, CONFIG = 15
 };
 
 class QuickAccess {
@@ -2146,45 +2168,56 @@ public:
         std::vector<std::string> drives;
         listDrives(drives);
     }
+
     static void foramt_drive() {
         checkRoot();
         formatDrive();
     }
+
     static void de_en_crypt() {
         checkRoot();
         DeEncrypting::main();
     }
+
     static void resize_drive() {
         checkRoot();
         resizeDrive();
     }
+
     static void check_drive_health() {
         checkRoot();
         checkDriveHealth();
     }
+
     static void analyze_disk_space() {
         analyDiskSpace();
     }
+
     static void overwrite_drive_data() {
         checkRoot();
         OverwriteDriveData();
     }
+
     static void view_metadata() {
         checkRootMetadata();
         MetadataReader::mainReader();
     }
+
     static void info() {
         Info();
     }
+
     static void Forensics() {
         bool no = false;
         checkRoot();
         ForensicAnalysis::mainForensic(no);
     }
+
     static void disk_space_visulizer() {
         checkRoot();
         DSV::DSVmain();
     }
+
     static void clone_drive() {
         checkRoot();
         Clone::mainClone();
@@ -2200,71 +2233,93 @@ int main(int argc, char* argv[]) {
             g_dry_run = true;
             continue;
         }
+
         if (a == "--no-color" || a == "--no_color" || a == "-C") {
             g_no_color = true;
             continue;
         }
+
         if (a == "--help" || a == "-h") {
             printUsage(argv[0]);
             return 0;
         }
+
         if (a == "--version" || a == "-v") {
-            std::cout << "DriveMgr CLI version: 0.9.02-74-experimental\n";
+            std::cout << "DriveMgr CLI version: 0.9.02-77-experimental\n";
             return 0;
         }
+
         if (a == "--logs") {
             log_viewer();
+            return 0;
         }
+
         if (a == "--list-drives") {
             QuickAccess::list_drives();
             return 0;
         }
+
         if (a == "--format-drive") {
             QuickAccess::foramt_drive();
             return 0;
         }
+
         if (a == "--encrypt-decrypt") {
             QuickAccess::de_en_crypt();
             return 0;
         }
+
         if (a == "--resize-drive") {
             QuickAccess::resize_drive();
             return 0;
         }
+
         if (a == "--check-drive-health") {
             QuickAccess::check_drive_health();
             return 0;
         }
+
         if (a == "--analyze-disk-space") {
             QuickAccess::analyze_disk_space();
             return 0;
         }
+
         if (a == "--overwrite-drive-data") {
             QuickAccess::overwrite_drive_data();
             return 0;
         }
+
         if (a == "--view-metadata") {
             QuickAccess::view_metadata();
             return 0;
         }
+
         if (a == "--info") {
             QuickAccess::info();
             return 0;
         }
+
         if (a == "--forensics") {
             QuickAccess::Forensics();
             return 0;
         }
+
         if (a == "--disk-space-visualizer") {
             QuickAccess::disk_space_visulizer();
             return 0;
         }
+
         if (a == "--clone-drive") { 
             QuickAccess::clone_drive();
             return 0;
         }
     }
     
+    struct termios oldt, newt;
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);
+
     bool running = true;
     while (running == true) {
         /* Original CLI menu (commented out so it's preserved for later):
@@ -2296,19 +2351,20 @@ int main(int argc, char* argv[]) {
 
         // New cursor-driven menu for easier selection (arrow keys + Enter).
         // This only replaces the selection mechanism; operations still prompt for drive names.
+
         std::vector<std::pair<int, std::string>> menuItems = {
             {1, "List Drives"}, {2, "Format Drive"}, {3, "Encrypt/Decrypt Drive (AES-256)"},
             {4, "Resize Drive"}, {5, "Check Drive Health"}, {6, "Analyze Disk Space"},
             {7, "Overwrite Drive Data"}, {8, "View Drive Metadata"}, {9, "View Info/help"},
-            {10, "Mount/Unmount/restore (ISO/Drives/USB)"}, {11, "Forensic Analysis (Beta)"},
+            {10, "Mount/Unmount/restore (ISO/Drives/USB)"}, {11, "Forensic Analysis/Disk Image"},
             {12, "Disk Space Visualizer (Beta)"}, {13, "Log viewer"}, {14, "Clone a Drive"}, {15, "Config Editor"}, {0, "Exit"}
         };
 
         // enable raw mode for single-key reading
-        struct termios oldt, newt;
-        tcgetattr(STDIN_FILENO, &oldt);
-        newt = oldt;
-        newt.c_lflag &= ~(ICANON | ECHO);
+        // struct termios oldt, newt;
+        // tcgetattr(STDIN_FILENO, &oldt);
+        // newt = oldt;
+        // newt.c_lflag &= ~(ICANON | ECHO);
         tcsetattr(STDIN_FILENO, TCSANOW, &newt);
 
         int selected = 0;
@@ -2457,9 +2513,9 @@ int main(int argc, char* argv[]) {
                 MenuQues(running);
                 break;
             }
-            case CONFIGEDITOR{
+            case CONFIG: {
                 config_editor();
-                MenuQues(running);
+                //MenuQues(running);
                 break;
             }
             default: {

@@ -82,11 +82,13 @@ config.conf        - Example config
 - S.M.A.R.T. drive health checking
 - Partition management
 - Data overwrite/wiping
-- Change/history log
+- Change/history log (aka. Loggin system)
 - Metadata viewing
 - Forensic tools (experimental)
 - Disk space visualization (experimental)
 - Log viewer
+- Clone a drive
+- Config file Editor, with my own tiny light weight ext editor
 - More in development or im too lazy to add them here
 
 ---

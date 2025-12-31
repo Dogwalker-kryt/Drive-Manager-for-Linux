@@ -113,6 +113,7 @@ def install_Dmgr():
         os.path.join(base_dir, "bin", "launcher"),
         os.path.join(base_dir, "bin", "bin"),
         os.path.join(base_dir, "bin", "other_src"),
+        os.path.join(base_dir, "bin", "Lume"),
     ]
     for d in dirs:
         os.makedirs(d, exist_ok=True)
@@ -135,6 +136,8 @@ def install_Dmgr():
         (".github", "other"),
         ("log and key file/key.bin", "data"),
         ("log and key file/log.dat", "data"),
+        ("Lume/Lume", "bin/Lume"),
+        ("Lume/main_Lume.cpp", "bin/other_src"),
     ]
 
     for src_rel, dst_rel in files_to_copy:
@@ -214,7 +217,8 @@ def main():
     print("NOTE:\n")
     print("Make sure the setup script is in the folder with the Drive Manager files!\n")
     print("When reinstalling the program, make sure it is FULLY uninstalled and the dirs etc. are deleted, "
-          "otherwise the installation will corrupt\n")
+          "otherwise the installation will corrupt.\n")
+    print("It is also better if you run the setup with sudo, if you want to add a command to quickly call the application\n")
     print("––––––––––––––––––––––––––––––––––––––––––––––––––––––")
     print("Do you want to install or uninstall Drive Manager? (inst/uninst)\n")
     input_choice_install_uninstall = input().strip().lower()

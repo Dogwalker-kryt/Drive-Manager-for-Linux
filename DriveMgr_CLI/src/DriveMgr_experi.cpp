@@ -19,7 +19,7 @@
 // ! Warning this version is the experimental version of the program,
 // This version has the latest and newest functions, but may contain bugs and errors
 // Current version of this code is in the Info() function below
-// v0.9.04-77experimental
+// v0.9.05-77experimental
 
 // standard C++ libraries, I think
 #include <iostream>
@@ -1118,7 +1118,7 @@ private:
     static DriveMetadata getMetadata(const std::string& drive) {
         DriveMetadata metadata;
         std::string cmd = "lsblk -J -o NAME,SIZE,MODEL,SERIAL,TYPE,MOUNTPOINT,VENDOR,FSTYPE,UUID -p " + drive;
-    std::string json = runTerminalV3(cmd);
+        std::string json = runTerminalV3(cmd);
         size_t deviceStart = json.find("{", json.find("["));
         size_t childrenPos = json.find("\"children\"", deviceStart);
         std::string deviceBlock = json.substr(deviceStart, childrenPos - deviceStart);
@@ -2100,6 +2100,256 @@ void config_editor() {
 }
 
 
+double benchmarkSequentialWrite(const std::string& path, size_t totalMB = 512) {
+    const size_t blockSize = 4 * 1024 * 1024; // 4MB blocks
+    std::vector<char> buffer(blockSize, 'A');
+
+    std::string tempFile = path + "/dmgr_benchmark.tmp";
+    std::ofstream out(tempFile, std::ios::binary);
+
+    if (!out.is_open()) return -1;
+
+    auto start = std::chrono::high_resolution_clock::now();
+
+    size_t written = 0;
+    while (written < totalMB * 1024 * 1024) {
+        out.write(buffer.data(), blockSize);
+        written += blockSize;
+    }
+
+    out.close();
+    auto end = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double> diff = end - start;
+    double seconds = diff.count();
+    double mbps = (double)totalMB / seconds;
+
+    std::remove(tempFile.c_str());
+    return mbps;
+}
+
+double benchmarkSequentialRead(const std::string& path, size_t totalMB = 512) {
+    const size_t blockSize = 4 * 1024 * 1024;
+
+    std::string tempFile = path + "/dmgr_benchmark.tmp";
+    {
+        std::ofstream out(tempFile, std::ios::binary);
+        std::vector<char> buffer(blockSize, 'A');
+        for (size_t i = 0; i < totalMB * 1024 * 1024; i += blockSize)
+            out.write(buffer.data(), blockSize);
+    }
+
+    std::ifstream in(tempFile, std::ios::binary);
+    if (!in.is_open()) return -1;
+
+    std::vector<char> buffer(blockSize);
+
+    auto start = std::chrono::high_resolution_clock::now();
+
+    while (in.read(buffer.data(), blockSize)) {}
+
+    auto end = std::chrono::high_resolution_clock::now();
+    in.close();
+
+    std::chrono::duration<double> diff = end - start;
+    double seconds = diff.count();
+    double mbps = (double)totalMB / seconds;
+
+    std::remove(tempFile.c_str());
+    return mbps;
+}
+
+double benchmarkRandomRead(const std::string& path, size_t operations = 50000) {
+    const size_t blockSize = 4096;
+
+    std::string tempFile = path + "/dmgr_benchmark.tmp";
+    {
+        std::ofstream out(tempFile, std::ios::binary);
+        std::vector<char> buffer(blockSize, 'A');
+        for (size_t i = 0; i < operations * blockSize; i += blockSize)
+            out.write(buffer.data(), blockSize);
+    }
+
+    std::ifstream in(tempFile, std::ios::binary);
+    if (!in.is_open()) return -1;
+
+    std::vector<char> buffer(blockSize);
+
+    auto start = std::chrono::high_resolution_clock::now();
+
+    for (size_t i = 0; i < operations; i++) {
+        size_t offset = (rand() % operations) * blockSize;
+        in.seekg(offset);
+        in.read(buffer.data(), blockSize);
+    }
+
+    auto end = std::chrono::high_resolution_clock::now();
+    in.close();
+
+    std::chrono::duration<double> diff = end - start;
+    double seconds = diff.count();
+
+    std::remove(tempFile.c_str());
+    return operations / seconds; // IOPS
+}
+
+struct Rule {
+    std::function<bool(double,double,double)> match;
+    std::string label;
+};
+
+std::string classifyDrive(double w, double r, double iops) {
+    std::vector<Rule> rules = {
+        { [](double w, double r, double i){ return w > 0 && r > 0; },
+          "The Benchmark failed\n" },
+
+        { [](double w, double r, double i){ return w < 50 && r < 200; },
+          "Your device has the performance of a USB Flash Drive\n" },
+
+        { [](double w, double r, double i){ return w < 150 && r < 150; },
+          "Your device has the performance of a Hard Disk Drive (HDD)\n" },
+
+        { [](double w, double r, double i){ return w < 600 && r < 600; },
+          "Your device has the performance of a SATA SSD\n" },
+
+        { [](double w, double r, double i){ return w < 3500 && r < 3500; },
+          "Your device has the performance of an NVMe SSD (Gen3)\n" },
+
+        { [](double w, double r, double i){ return w >= 3500; },
+          "Your device has the performance of a high‑performance NVMe SSD (Gen4/Gen5)\n" }
+    };
+
+    for (auto& rule : rules)
+        if (rule.match(w, r, iops))
+            return rule.label;
+
+    return "[ERROR] Program failed to classify your Drive type\nDrive type: Unkown\n";
+}
+
+void printBenchmarkSpeeds(double wirte_speed_seq, double read_speed_seq, double iops_speed) {
+    std::string w_str = std::to_string(wirte_speed_seq);
+    std::string r_str = std::to_string(read_speed_seq);
+    std::string i_str = std::to_string(iops_speed);
+
+    auto fmt = [](double v) {
+    std::ostringstream ss;
+    ss << std::fixed << std::setprecision(2) << v;
+    return ss.str();
+    };
+
+    std::string w_str2 = fmt(wirte_speed_seq);
+    std::string r_str2 = fmt(read_speed_seq);
+    std::string i_str2 = fmt(iops_speed);
+
+    const int innerWidth = 30;
+
+    int pad_w = innerWidth - (2 + w_str2.length());
+    int pad_r = innerWidth - (2 + r_str2.length());
+    int pad_i = innerWidth - (2 + i_str2.length());
+
+
+
+    std::cout << "┌────────────────────────────────┐\n";
+    std::cout << "│       Benchmark results        │\n";
+    std::cout << "├────────────────────────────────┤\n";
+    std::cout << "│                                │\n";
+    std::cout << "├──   Seqential Write speed    ──┤\n";
+    std::cout << "│: " << w_str << std::setw(pad_w) <<"│\n";
+    std::cout << "│                                │\n";
+    std::cout << "├──   Sequential Read speed    ──┤\n";
+    std::cout << "│: " << r_str << std::setw(pad_r) << "│\n";
+    std::cout << "├──         IOPS speed         ──┤\n";
+    std::cout << "│: " << i_str << std::setw(pad_i) << "│\n";
+    std::cout << "└──────────────────────────── \n";
+
+    std::string aprox_drive_type = classifyDrive(wirte_speed_seq, read_speed_seq, iops_speed);
+    std::cout << aprox_drive_type;
+}
+
+void Benchmark_main() {
+    std::string benchmark_drive_name = getAndValidateDriveName("Enter the Drive name of the Drive you want to Benchmark\n");
+    std::cout << "Make sure you have around 1 GB free space on the Drive\n";
+    std::cout << "And dont kill the program during the Benchmark, this can cause the temp benchmark file to be not deleted!";
+
+    double write_speed_seq = benchmarkSequentialWrite(benchmark_drive_name);
+    double read_speed_seq = benchmarkSequentialRead(benchmark_drive_name);
+    double iops_speed = benchmarkRandomRead(benchmark_drive_name);
+
+    printBenchmarkSpeeds(write_speed_seq, read_speed_seq, iops_speed);
+}
+
+
+class DriveFingerprinting {
+private:
+    struct DriveMetadata {
+        std::string name;
+        std::string size;
+        std::string model;
+        std::string serial;
+        std::string uuid;
+    };
+
+    static DriveMetadata getMetadata(const std::string& drive) {
+        DriveMetadata metadata;
+        std::string cmd = "lsblk -J -o NAME,SIZE,MODEL,SERIAL,TYPE,MOUNTPOINT,VENDOR,FSTYPE,UUID -p " + drive;
+        std::string json = runTerminalV3(cmd);
+        size_t deviceStart = json.find("{", json.find("["));
+        size_t childrenPos = json.find("\"children\"", deviceStart);
+        std::string deviceBlock = json.substr(deviceStart, childrenPos - deviceStart);
+
+        auto extractValue = [&](const std::string& key, const std::string& from) -> std::string {
+            std::regex pattern("\"" + key + "\"\\s*:\\s*(null|\"(.*?)\")");
+            std::smatch match;
+            if (std::regex_search(from, match, pattern)) {
+                if (match[1] == "null")
+                    return "";
+                else
+                    return match[2].str();
+            }
+            return "";
+        };
+
+        metadata.name       = extractValue("name", deviceBlock);
+        metadata.size       = extractValue("size", deviceBlock);
+        metadata.model      = extractValue("model", deviceBlock);
+        metadata.serial     = extractValue("serial", deviceBlock);
+        metadata.uuid       = extractValue("uuid", deviceBlock);
+        return metadata;
+    }
+
+    static std::string fingerprinting(const std::string& input) {
+        unsigned char hash[SHA256_DIGEST_LENGTH];
+        SHA256((unsigned char*)input.c_str(), input.size(), hash);
+        std::string fingerprint;
+        for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+            char hex[3];
+            snprintf(hex, sizeof(hex), "%02x", hash[i]);
+            fingerprint += hex;
+        }
+        return fingerprint;
+    }
+
+
+public:
+    static void fingerprinting_main() {
+        std::string drive_name_fingerprinting = getAndValidateDriveName("Enter the Name of the drive you want to fingerprint");
+
+        DriveMetadata metadata = getMetadata(drive_name_fingerprinting);
+        std::string combined_metadatat =
+            metadata.name + "|" +
+            metadata.size + "|" +
+            metadata.model + "|" +
+            metadata.serial + "|" +
+            metadata.uuid;
+        std::string fingerprint = fingerprinting(combined_metadatat);
+
+        std::cout << "A custom fingerprint was made for your drive:\n";
+        std::cout << fingerprint << "\n";
+    }
+
+};
+
+
 // main and Info
 void Info() {
     std::cout << "\n┌────────── Info ──────────\n";
@@ -2107,7 +2357,7 @@ void Info() {
     std::cout << "│ Warning! You should know the basics about drives so you don't lose any data.\n";
     std::cout << "│ If you find problems or have ideas, visit the GitHub page and open an issue.\n";
     std::cout << "│ Other info:\n";
-    std::cout << "│ Version: 0.9.04-77-experimental\n";
+    std::cout << "│ Version: 0.9.05-77-experimental\n";
     std::cout << "│ Github: https://github.com/Dogwalker-kryt/Drive-Manager-for-Linux\n";
     std::cout << "│ Author: Dogwalker-kryt\n";
     std::cout << "└───────────────────────────\n";
@@ -2159,7 +2409,7 @@ void checkRootMetadata() {
 enum MenuOptionsMain {
     EXITPROGRAM = 0, LISTDRIVES = 1, FORMATDRIVE = 2, ENCRYPTDECRYPTDRIVE = 3, RESIZEDRIVE = 4, 
     CHECKDRIVEHEALTH = 5, ANALYZEDISKSPACE = 6, OVERWRITEDRIVEDATA = 7, VIEWMETADATA = 8, VIEWINFO = 9,
-    MOUNTUNMOUNT = 10, FORENSIC = 11, DISKSPACEVIRTULIZER = 12, LOGVIEW = 13, CLONEDRIVE = 14, CONFIG = 15
+    MOUNTUNMOUNT = 10, FORENSIC = 11, DISKSPACEVIRTULIZER = 12, LOGVIEW = 13, CLONEDRIVE = 14, CONFIG = 15, BENCHMAKR = 16, FINGERPRINT = 17
 };
 
 class QuickAccess {
@@ -2245,7 +2495,7 @@ int main(int argc, char* argv[]) {
         }
 
         if (a == "--version" || a == "-v") {
-            std::cout << "DriveMgr CLI version: 0.9.04-77-experimental\n";
+            std::cout << "DriveMgr CLI version: 0.9.05-77-experimental\n";
             return 0;
         }
 
@@ -2357,7 +2607,7 @@ int main(int argc, char* argv[]) {
             {4, "Resize Drive"}, {5, "Check Drive Health"}, {6, "Analyze Disk Space"},
             {7, "Overwrite Drive Data"}, {8, "View Drive Metadata"}, {9, "View Info/help"},
             {10, "Mount/Unmount/restore (ISO/Drives/USB)"}, {11, "Forensic Analysis/Disk Image"},
-            {12, "Disk Space Visualizer (Beta)"}, {13, "Log viewer"}, {14, "Clone a Drive"}, {15, "Config Editor"}, {0, "Exit"}
+            {12, "Disk Space Visualizer (Beta)"}, {13, "Log viewer"}, {14, "Clone a Drive"}, {15, "Config Editor"}, {16, "Benchmark"}, {17, "Fingerprint Drive"}, {0, "Exit"}
         };
 
         // enable raw mode for single-key reading
@@ -2516,6 +2766,18 @@ int main(int argc, char* argv[]) {
             case CONFIG: {
                 config_editor();
                 //MenuQues(running);
+                break;
+            }
+            case BENCHMAKR: {
+                checkRoot();
+                Benchmark_main();
+                MenuQues(running);
+                break;
+            }
+            case FINGERPRINT: {
+                checkRootMetadata();
+                DriveFingerprinting::fingerprinting_main();
+                MenuQues(running);
                 break;
             }
             default: {

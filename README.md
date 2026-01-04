@@ -89,6 +89,8 @@ config.conf        - Example config
 - Log viewer
 - Clone a drive
 - Config file Editor, with my own tiny light weight text editor [Lume](https://github.com/Dogwalker-kryt/Lume)
+- Fingerprinting
+- Benchmarking
 - More in development or im too lazy to add them here
 
 ---

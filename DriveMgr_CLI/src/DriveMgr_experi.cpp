@@ -19,7 +19,7 @@
 // ! Warning this version is the experimental version of the program,
 // This version has the latest and newest functions, but may contain bugs and errors
 // Current version of this code is in the Info() function below
-// v0.9.05-77experimental
+// v0.9.07-79_experimental
 
 // standard C++ libraries, I think
 #include <iostream>
@@ -56,6 +56,9 @@
 #include <openssl/sha.h>
 // custom .h
 #include "../include/drivefunctions.h"
+
+// global variables and definitions
+static const std::string VERSION = "v0.9.07-79_experimental";
 
 struct termios oldt; 
 struct termios newt;
@@ -117,11 +120,12 @@ static std::string runTerminalV3(const std::string &cmd) {
 // side/helper functions
 static std::vector<std::string> g_last_drives;
 
-void ListDrives();
+//void ListDrives();
+std::string listDrives(bool input_mode);
 
 void checkDriveName(const std::string &driveName) {
-    ListDrives();
-
+    //ListDrives();
+    listDrives(false);
     bool drive_found = false;
     for (const auto& drive : g_last_drives) {
         // match either full device path (/dev/sda) or the basename (sda)
@@ -166,56 +170,60 @@ bool askForConfirmation(const std::string &prompt) {
     return true;
 }
 
-std::string getAndValidateDriveName(const std::string& prompt) {
-    ListDrives();
+// keeping as fall back if problems arise with the TUI drive selection
 
-    if (g_last_drives.empty()) {
-        std::cerr << RED << "[ERROR] No drives available to select!\n";
-        Logger::log("[ERROR] No drives available to select");
-        throw std::runtime_error("No drives available");
-    }
+// std::string getAndValidateDriveName(const std::string& prompt) {
+//     ListDrives();
 
-    std::cout << "\n" << prompt << ":\n";
-    std::string driveName;
-    std::cin >> driveName;
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+//     if (g_last_drives.empty()) {
+//         std::cerr << RED << "[ERROR] No drives available to select!\n";
+//         Logger::log("[ERROR] No drives available to select");
+//         throw std::runtime_error("No drives available");
+//     }
 
-    if (driveName.empty()) {
-        std::cerr << RED << "[ERROR] Drive name cannot be empty!\n";
-        Logger::log("[ERROR] drive name cannot be empty\n");
-        throw std::runtime_error("Drive name cannot be empty");
-    }
+//     std::cout << "\n" << BOLD << prompt << ":" << RESET << "\n";
+//     std::string driveName;
+//     std::cin >> driveName;
+//     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
-    if (size_t pos = driveName.find_first_of("--'&|<>;\""); pos != std::string::npos) {
-        std::cerr << RED << "[ERROR] Invalid characters in drive name!: " << pos << RESET << "\n";
-        Logger::log("[ERROR] Invalid characters in drive name\n");
-    }
+//     if (driveName.empty()) {
+//         std::cerr << RED << "[ERROR] Drive name cannot be empty!\n";
+//         Logger::log("[ERROR] drive name cannot be empty\n");
+//         throw std::runtime_error("Drive name cannot be empty");
+//     }
 
-    if (driveName.find("/dev/") != 0) {
-        driveName = "/dev/" + driveName;
-    }
+//     if (size_t pos = driveName.find_first_of("--'&|<>;\""); pos != std::string::npos) {
+//         std::cerr << RED << "[ERROR] Invalid characters in drive name!: " << pos << RESET << "\n";
+//         Logger::log("[ERROR] Invalid characters in drive name\n");
+//     }
 
-    bool drive_found = false;
-    for (const auto& drive : g_last_drives) {
-        if (drive == driveName || std::filesystem::path(drive).filename() == std::filesystem::path(driveName).filename()) {
-            drive_found = true;
-            break;
-        }
-    }
+//     if (driveName.find("/dev/") != 0) {
+//         driveName = "/dev/" + driveName;
+//     }
 
-    if (!drive_found) {
-        std::cerr << RED << "[ERROR] Drive '" << driveName << "' not found!\n";
-        Logger::log("[ERROR] Drive not found");
-    }
-    return driveName;
-}
+//     bool drive_found = false;
+//     for (const auto& drive : g_last_drives) {
+//         if (drive == driveName || std::filesystem::path(drive).filename() == std::filesystem::path(driveName).filename()) {
+//             drive_found = true;
+//             break;
+//         }
+//     }
+
+//     if (!drive_found) {
+//         std::cerr << RED << "[ERROR] Drive '" << driveName << "' not found!\n";
+//         Logger::log("[ERROR] Drive not found");
+//     }
+//     return driveName;
+// }
+
 
 void file_recovery_quick(const std::string& drive, const std::string& signature_key);
 void file_recovery_full(const std::string& drive, const std::string& signature_key);
 
+
 //main functions
 
-// checksfielsytem
+// checkfilesystem
 std::string checkFilesystem(const std::string& device, const std::string& fstype) {
     if (fstype.empty()) return "Unknown filesystem";
     std::string result;
@@ -244,72 +252,228 @@ std::string checkFilesystem(const std::string& device, const std::string& fstype
     return "Unknown state";
 }
 
-// ListDrives
-void listDrives(std::vector<std::string>& drives) {
+// keeping as fall back if problems arise with the TUI drive selection
+
+// // ListDrives
+// void listDrives(std::vector<std::string>& drives) {
+//     drives.clear();
+//     std::string lsblk = runTerminal("lsblk -o NAME,SIZE,TYPE,MOUNTPOINT,FSTYPE -d -n -p");
+//     std::cout << "\nAvailable Drives:\n";
+//     std::cout << std::left 
+//               << std::setw(3) << "#" 
+//               << std::setw(18) << BOLD << "Device" << RESET 
+//               << std::setw(10) << BOLD << "Size" << RESET 
+//               << std::setw(10) << BOLD << "Type" << RESET
+//               << std::setw(15) << BOLD << "Mountpoint" << RESET
+//               << std::setw(10) << BOLD << "FSType" << RESET
+//               << "Status" << std::endl;
+//     std::cout << std::string(90, '-') << "\n";
+//     std::istringstream iss(lsblk);
+//     std::string line;
+//     int idx = 0;
+
+//     while (std::getline(iss, line)) {
+//         if (line.find("disk") != std::string::npos) {
+//             std::istringstream lss(line);
+//             std::string device, size, type, mountpoint, fstype;
+//             lss >> device >> size >> type;
+            
+//             std::string rest;
+//             std::getline(lss, rest);
+//             std::istringstream rss(rest);
+//             if (rss >> mountpoint >> fstype) {
+//                 if (mountpoint == "-") mountpoint = "";
+//                 if (fstype == "-") fstype = "";
+//             }
+//             std::string status = checkFilesystem(device, fstype);
+            
+//             std::cout << std::left 
+//                       << std::setw(3) << idx 
+//                       << std::setw(18) << device 
+//                       << std::setw(10) << size 
+//                       << std::setw(10) << type 
+//                       << std::setw(15) << (mountpoint.empty() ? "" : mountpoint)
+//                       << std::setw(10) << (fstype.empty() ? "" : fstype)
+//                       << status << std::endl;
+                      
+//             drives.push_back(device);
+//             idx++;
+//         }
+//     }
+//     if (drives.empty()) {
+//         std::cerr << RED << "No drives found!\n" << RESET;
+//         return;
+//     }
+// }
+
+// TUI drive selection
+std::string g_selected_drive;
+
+std::string listDrives(bool input_mode) {
+    static std::vector<std::string> drives;
     drives.clear();
+
+    // Run lsblk
     std::string lsblk = runTerminal("lsblk -o NAME,SIZE,TYPE,MOUNTPOINT,FSTYPE -d -n -p");
-    std::cout << "\nAvailable Drives:\n";
-    std::cout << std::left 
-              << std::setw(3) << "#" 
-              << std::setw(18) << "Device" 
-              << std::setw(10) << "Size" 
-              << std::setw(10) << "Type" 
-              << std::setw(15) << "Mountpoint"
-              << std::setw(10) << "FSType"
+
+    // Print header
+    std::cout << CYAN << "\nAvailable Drives:" << RESET << "\n";
+    std::cout << std::left
+              << std::setw(2) 
+              << std::setw(5)  << "#"
+              << BOLD << std::setw(18) << "Device"      << RESET
+              << BOLD << std::setw(10) << "Size"        << RESET
+              << BOLD << std::setw(10) << "Type"        << RESET
+              << BOLD << std::setw(15) << "Mountpoint"  << RESET
+              << BOLD << std::setw(10) << "FSType"      << RESET
               << "Status" << std::endl;
-    std::cout << std::string(90, '-') << "\n";
+
+    std::cout << CYAN;
+    std::cout << std::string(90, '-') << "\n" << RESET;
+
+    // Parse lsblk output
     std::istringstream iss(lsblk);
     std::string line;
     int idx = 0;
 
+    struct Row {
+        std::string device, size, type, mount, fstype, status;
+    };
+
+    std::vector<Row> rows;
+
     while (std::getline(iss, line)) {
-        if (line.find("disk") != std::string::npos) {
-            std::istringstream lss(line);
-            std::string device, size, type, mountpoint, fstype;
-            lss >> device >> size >> type;
-            
-            std::string rest;
-            std::getline(lss, rest);
-            std::istringstream rss(rest);
-            if (rss >> mountpoint >> fstype) {
-                if (mountpoint == "-") mountpoint = "";
-                if (fstype == "-") fstype = "";
+        if (line.find("disk") == std::string::npos) continue;
+
+        std::istringstream lss(line);
+        Row r;
+
+        lss >> r.device >> r.size >> r.type;
+
+        std::string rest;
+        std::getline(lss, rest);
+        std::istringstream rss(rest);
+
+        rss >> r.mount >> r.fstype;
+        if (r.mount == "-") r.mount = "";
+        if (r.fstype == "-") r.fstype = "";
+
+        r.status = checkFilesystem(r.device, r.fstype);
+
+        // Print row
+        std::cout << std::left
+                  << std::setw(3)  << idx
+                  << std::setw(18) << r.device
+                  << std::setw(10) << r.size
+                  << std::setw(10) << r.type
+                  << std::setw(15) << r.mount
+                  << std::setw(10) << r.fstype
+                  << r.status << "\n";
+
+        drives.push_back(r.device);
+        rows.push_back(r);
+        idx++;
+    }
+
+    if (drives.empty()) {
+        std::cerr << RED << "No drives found!\n" << RESET;
+        return "";
+    }
+
+    if (input_mode == true) {
+        // enable raw mode
+        struct termios oldt, newt;
+        tcgetattr(STDIN_FILENO, &oldt);
+        newt = oldt;
+        newt.c_lflag &= ~(ICANON | ECHO);
+        tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+
+
+
+
+        // --- INLINE TUI SELECTION ---
+        int selected = 0;
+        int total = drives.size();
+
+        // Move cursor UP to the first drive row
+        std::cout << "\033[" << total << "A";
+
+        while (true) {
+            for (int i = 0; i < total; i++) {
+                std::cout << "\r"; // go to start of line
+
+                // Arrow indicator
+                if (i == selected)
+                    std::cout << MAGENTA << "> " << RESET;
+                else
+                    std::cout << "  ";
+
+                // Highlight row
+                if (i == selected) std::cout << MAGENTA;
+
+                std::cout << std::left
+                        << std::setw(3)  << i
+                        << std::setw(18) << rows[i].device
+                        << std::setw(10) << rows[i].size
+                        << std::setw(10) << rows[i].type
+                        << std::setw(15) << rows[i].mount
+                        << std::setw(10) << rows[i].fstype
+                        << rows[i].status;
+
+                if (i == selected) std::cout << RESET;
+
+                std::cout << "\n"; 
             }
-            std::string status = checkFilesystem(device, fstype);
+            // Move cursor back up
+            std::cout << "\033[" << total << "A";
             
-            std::cout << std::left 
-                      << std::setw(3) << idx 
-                      << std::setw(18) << device 
-                      << std::setw(10) << size 
-                      << std::setw(10) << type 
-                      << std::setw(15) << (mountpoint.empty() ? "" : mountpoint)
-                      << std::setw(10) << (fstype.empty() ? "" : fstype)
-                      << status << std::endl;
-                      
-            drives.push_back(device);
-            idx++;
+            // Read key
+            char c;
+            if (read(STDIN_FILENO, &c, 1) <= 0) continue;
+
+            if (c == '\x1b') {
+                char seq[2];
+                if (read(STDIN_FILENO, &seq, 2) == 2) {
+                    if (seq[1] == 'A') selected = (selected - 1 + total) % total; // up
+                    if (seq[1] == 'B') selected = (selected + 1) % total;         // down
+                }
+            } else if (c == '\n' || c == '\r') {
+                break; // Enter
+            }
         }
-    }
-    if (drives.empty()) {
-        std::cerr << RED << "No drives found!\n" << RESET;
-        return;
+
+        // Move cursor down past the table so next output prints normally
+        int tableheight = total + 3;
+        std::cout << "\033[" << tableheight << "B" << std::flush;
+        std::cout << "\n";
+        // restore terminal
+        tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+
+        g_selected_drive = drives[selected];
+        return g_selected_drive;
+    } else {
+        return "";
     }
 }
 
+// Keep as fall back if problems arise with the TUI drive selection
 
-void ListDrives() {
-    std::vector<std::string> drives;
-    listDrives(drives);
+// wrapper for listDrives [---- IGRNORE ----]
+// void ListDrives() {
+//     std::vector<std::string> drives;
+//     listDrives(drives);
 
-    if (drives.empty()) {
-        std::cerr << RED << "No drives found!\n" << RESET;
-        Logger::log("[ERROR] No Drives found!");
-        return;
-    }
+//     if (drives.empty()) {
+//         std::cerr << RED << "No drives found!\n" << RESET;
+//         Logger::log("[ERROR] No Drives found!");
+//         return;
+//     }
 
-    // Cache the last-listed drives so checkDriveName() can use them
-    g_last_drives = drives;
-}
+//     // Cache the last-listed drives so checkDriveName() can use them
+//     g_last_drives = drives;
+// }
+
+
 
 
 // Partitions
@@ -356,8 +520,9 @@ class PartitionsUtils {
         }
 };
 
-void listpartisions(std::vector<std::string>& drive) {
-    std::string drive_name = getAndValidateDriveName("Enter the Name of the Drive you want to see the partitions of");
+void listpartisions() { //std::vector<std::string>& drive
+    //std::string drive_name = getAndValidateDriveName("Enter the Name of the Drive you want to see the partitions of");
+    std::string drive_name = listDrives(true); 
 
     std::cout << "\nPartitions of drive " << drive_name << ":\n";
     std::string list_partitions_cmd = "lsblk --ascii -o NAME,SIZE,TYPE,MOUNTPOINT,FSTYPE -n -p " + drive_name;
@@ -505,9 +670,10 @@ void listpartisions(std::vector<std::string>& drive) {
 
 // analyzeDriskapce··−· 
 void analyDiskSpace() {
-    std::string drive_name = getAndValidateDriveName("Enter the Name of the Drive you want to analyze");
+    //std::string drive_name = getAndValidateDriveName("Enter the Name of the Drive you want to analyze");
+    std::string drive_name = listDrives(true); 
 
-    std::cout << "\n------ Disk Information ------\n";
+    std::cout  << CYAN << "\n------ Disk Information ------\n" << RESET;
     std::string analy_disk_space_cmd = "lsblk -b -o NAME,SIZE,TYPE,MOUNTPOINT -n -p " + drive_name;
     std::string analy_disk_space_cmd_output = runTerminal(analy_disk_space_cmd);
     std::istringstream iss(analy_disk_space_cmd_output);
@@ -559,15 +725,17 @@ void analyDiskSpace() {
             std::cout << "No mountpoint, cannot show used/free space.\n";
         }
     }
-    std::cout << "------------------------------\n";
+    std::cout << CYAN << "------------------------------\n" << RESET;
 }
 
 
 // Dummy implementations for the other functions (to avoid linker errors)
+// Dont know if you need them anymore
 bool formatDrive(const std::string&, const std::string&, const std::string&) { return false; }
 bool encryptDrive(const std::string&, bool) { return false; }
 bool resizeDrive(const std::string&, int) { return false; }
 bool checkDriveHealth(const std::string&) { return false; }
+
 
 //Format
 void formatDrive() {
@@ -583,7 +751,8 @@ void formatDrive() {
         case 1:
             std::cout << "Choose a Drive to Format\n";
             {
-                std::string driveName = getAndValidateDriveName("Enter name of a drive you want to format");
+                //std::string driveName = getAndValidateDriveName("Enter name of a drive you want to format");
+                std::string driveName = listDrives(true);
 
                 std::cout << "Are you sure you want to format drive " << driveName << "? (y/n):\n";
                 std::string confirmationfd;
@@ -608,7 +777,8 @@ void formatDrive() {
             break;
         case 2:
             {
-                std::string driveName = getAndValidateDriveName("Enter name of a drive you want to format with label");
+                //std::string driveName = getAndValidateDriveName("Enter name of a drive you want to format with label");
+                std::string driveName = listDrives(true);
 
                 std::cout << "Enter label: ";
                 std::string label;
@@ -642,7 +812,8 @@ void formatDrive() {
             break;
         case 3:
             {
-                std::string driveName = getAndValidateDriveName("Enter name of a drive you want to format with label and filesystem type");
+                //std::string driveName = getAndValidateDriveName("Enter name of a drive you want to format with label and filesystem type");
+                std::string driveName = listDrives(true);
 
                 std::string label, fsType;
                 std::cout << "Enter label: ";
@@ -671,15 +842,17 @@ void formatDrive() {
                 }
             }
             break;
-        default:
+        default: {
             std::cerr << RED << "[Error] Invalid option selected.\n" << RESET;
             return;
+        }
     }
 }
 
 // checkDriveHealth
 int checkDriveHealth() {
-    std::string driveHealth_name = getAndValidateDriveName("Enter the name of the drive to check health");
+    //std::string driveHealth_name = getAndValidateDriveName("Enter the name of the drive to check health");
+    std::string driveHealth_name = listDrives(true);
 
     try {
         std::string check_drive_helth_cmd = "sudo smartctl -H " + driveHealth_name;
@@ -696,7 +869,8 @@ int checkDriveHealth() {
 
 // resizeDrive
 void resizeDrive() {
-    std::string driveName = getAndValidateDriveName("Enter the name of the drive to resize");
+    //std::string driveName = getAndValidateDriveName("Enter the name of the drive to resize");
+    std::string driveName = listDrives(true);
 
     std::cout << "Enter new size in GB for drive " << driveName << ":\n";
     int new_size;
@@ -710,7 +884,7 @@ void resizeDrive() {
 
     try {
         std::string resize_cmd = "sudo parted --script " + driveName +  " resizepart 1 " + std::to_string(new_size) + "GB";
-    std::string resize_output = runTerminal(resize_cmd);
+        std::string resize_output = runTerminal(resize_cmd);
         std::cout << resize_output << "\n";
         if (resize_output.find("error") != std::string::npos) {
             std::cout << RED << "[Error] Failed to resize drive: " << driveName << "\n" << RESET;
@@ -857,8 +1031,10 @@ class EnDecryptionUtils {
                     Logger::log("[ERROR] Unable to create temporary key file -> decryptDrive()");
                     return;
                 }
+
                 kf.write(reinterpret_cast<const char*>(info.key), 32);
             }
+
             chmod(tmpKeyFile.c_str(), S_IRUSR | S_IWUSR);
 
             std::stringstream ss;
@@ -906,7 +1082,8 @@ class EnDecryptionUtils {
 class DeEncrypting {
 private:
     static void encrypting() {
-        std::string driveName = getAndValidateDriveName("Enter the NAME of a drive to encrypt:\n");
+        //std::string driveName = getAndValidateDriveName("Enter the NAME of a drive to encrypt:\n");
+        std::string driveName = listDrives(true);
 
         std::cout << YELLOW << "[Warning] Are you sure you want to encrypt " << driveName << "? (y/n)\n" << RESET;
         char endecrypt_confirm;
@@ -938,6 +1115,7 @@ private:
             Logger::log("[ERROR] Failed to generate encryption key -> void EnDecrypt()");
             return;
         }
+
         EnDecryptionUtils::loadEncryptionInfo(driveName, info);
 
         std::cout << "\n[Input] Enter a name for the encrypted device (e.g., encrypted_drive): ";
@@ -949,7 +1127,7 @@ private:
            << "--key-file <(echo -n '" << std::string((char*)info.key, 32) << "') "
            << "open " << driveName << " " << device_Name_Encrypt;
         
-    std::string output = runTerminal(ss.str());
+        std::string output = runTerminal(ss.str());
         if (output.find("Command failed") != std::string::npos) {
             std::cerr << RED << "[Error] Failed to encrypt the drive: " << output << RESET << "\n";
             Logger::log("[ERROR] failed to encrypt the drive -> void EnDecrypt()");
@@ -962,7 +1140,8 @@ private:
     }
 
     static void decrypting() {
-        std::string driveName = getAndValidateDriveName("Enter the NAME of a drive to decrypt:\n");
+        //std::string driveName = getAndValidateDriveName("Enter the NAME of a drive to decrypt:\n");
+        std::string driveName = listDrives(true);
 
         std::cout << "[Warning] Are you sure you want to decrypt " << driveName << "? (y/n)\n";
         char decryptconfirm;
@@ -1003,7 +1182,7 @@ private:
            << "--key-file <(echo -n '" << std::string((char*)info.key, 32) << "') "
            << "open " << driveName << " " << deviceNameDecrypt << "_decrypted";
         
-    std::string output = runTerminal(ss.str());
+        std::string output = runTerminal(ss.str());
         if (output.find("Command failed") != std::string::npos) {
             std::cerr << RED << "[Error] Failed to decrypt the drive: " << output << RESET << "\n";
             Logger::log("[ERROR] failed to decrypt the drive -> void EnDecrypt()");
@@ -1036,7 +1215,8 @@ public:
 // Overwrite drive data
 void OverwriteDriveData() {
     try {
-        std::string driveName = getAndValidateDriveName("Enter the NAME of a drive to overwrite all data (this will erase everything):\n");
+        //std::string driveName = getAndValidateDriveName("Enter the NAME of a drive to overwrite all data (this will erase everything):\n");
+        std::string driveName = listDrives(true);
 
         std::cout << "Are you sure you want to overwrite the drive " << driveName << "? (y/n)\n";
         char confirmation_zero_drive;
@@ -1045,17 +1225,17 @@ void OverwriteDriveData() {
         if (confirmation_zero_drive == 'y' || confirmation_zero_drive == 'Y' ) {
             std::string Key = confirmationKeyGenerator();
 
-            std::cout << "\nPlease enter the confirmationkey to proceed with the operation:\n";
+            std::cout << CYAN << "\nPlease enter the confirmationkey to proceed with the operation:\n" << RESET;
             std::cout << Key << "\n";
             std::string random_confirmation_key_input;
             std::cin >> random_confirmation_key_input;
             if (random_confirmation_key_input != Key) {
-                std::cerr << RED << "[Error] Invalid confirmation of the Key or unexpected error\n" << RESET;
+                std::cerr << RED << "[ERROR] Invalid confirmation of the Key or unexpected error\n" << RESET;
                 Logger::log("[ERROR] Invalid confirmation of the Key or unexpected error -> OverwriteData");
                 return;
             }
 
-            std::cout << "Proceeding with Overwriting " << driveName << "...\n";
+            std::cout << YELLOW << "Proceeding with Overwriting " << driveName << "...\n" << RESET;
 
             try {
                     std::string devrandom = runTerminalV2("sudo dd if=/dev/urandom of=" + driveName + " bs=1M status=progress && sync");
@@ -1064,7 +1244,7 @@ void OverwriteDriveData() {
                 if (devZero.find("error") != std::string::npos && devrandom.find("error") != std::string::npos) {
                     Logger::log("[ERROR] failed to overwrite drive data\n");
                     std::cerr << RED;
-                    throw std::runtime_error("[Error] Failed to Overwrite drive data");
+                    throw std::runtime_error("[ERROR] Failed to Overwrite drive data");
 
                 } else if (devZero.find("error") != std::string::npos || devrandom.find("error") != std::string::npos) {
                     std::cout << YELLOW <<"[Warning] Failed to overwrite: only one of two overwriting operations succeeded\n"
@@ -1099,6 +1279,7 @@ void OverwriteDriveData() {
         return;
     }
 }
+
 
 // medatareader
 class MetadataReader {
@@ -1182,7 +1363,8 @@ public:
         // std::cin >> driveName;
         // checkDriveName(driveName);
         try{
-            std::string driveName = getAndValidateDriveName("Enter Drive name for reading metadata");
+            //std::string driveName = getAndValidateDriveName("Enter Drive name for reading metadata");
+            std::string driveName = listDrives(true);
 
             try {
                 DriveMetadata metadata = getMetadata(driveName);
@@ -1205,7 +1387,8 @@ class MountUtility {
 private:
     static void BurnISOToStorageDevice() { //const std::string& isoPath, const std::string& drive
         try {
-            std::string driveName = getAndValidateDriveName("[Burn ISO/IMG] Enter the Name of a drive you want to burn an iso/img to:");
+            //std::string driveName = getAndValidateDriveName("[Burn ISO/IMG] Enter the Name of a drive you want to burn an iso/img to:");
+            std::string driveName = listDrives(true);
 
             std::cout << "Are you sure you want to select " << driveName << " for this operation? (y/n)\n";
             char confirmation_burn;
@@ -1267,7 +1450,8 @@ private:
 
     static void MountDrive2() {
         try{
-            std::string driveName = getAndValidateDriveName("[Mount] Enter the Name of a drive you want to mount:");
+            //std::string driveName = getAndValidateDriveName("[Mount] Enter the Name of a drive you want to mount:");
+            std::string driveName = listDrives(true);
 
             std::string mountpoint = "sudo mount " + driveName + " /mnt/" + std::filesystem::path(driveName).filename().string();
             std::string mountoutput = runTerminalV2(mountpoint);
@@ -1285,7 +1469,8 @@ private:
 
     static void UnmountDrive2() {
         try {
-            std::string driveName = getAndValidateDriveName("[Unmount] Enter the Name of a drive you want to unmount:");
+            //std::string driveName = getAndValidateDriveName("[Unmount] Enter the Name of a drive you want to unmount:");
+            std::string driveName = listDrives(true );
 
             std::string unmountpoint = "sudo umount " + driveName;
             std::string unmountoutput = runTerminalV2(unmountpoint);
@@ -1302,7 +1487,8 @@ private:
     }
 
     static void Restore_USB_Drive() {
-        std::string restore_device_name = getAndValidateDriveName("[Restore] Enter the name of a USB device you want to restore from an ISO");
+        //std::string restore_device_name = getAndValidateDriveName("[Restore] Enter the name of a USB device you want to restore from an ISO");
+        std::string restore_device_name = listDrives(true);
         // if (std::find(drives.begin(), drives.end(), restore_device_name) == drives.end()) {
         //     std::cout << "[Error] Drive " << restore_device_name << " not found!\n";
         //     Logger::log("[ERROR] Drive " + restore_device_name + " not found -> Restore_USB_Drive()");
@@ -1418,7 +1604,8 @@ private:
 
     static void CreateDiskImage() {
         try {
-            std::string driveName = getAndValidateDriveName("[Drive_image_creation] Enter the NAME of a drive to create a disk image (e.g., /dev/sda):");
+            //std::string driveName = getAndValidateDriveName("[Drive_image_creation] Enter the NAME of a drive to create a disk image (e.g., /dev/sda):");
+            std::string driveName = listDrives(true);
 
             std::cout << "Enter the path where the disk image should be saved (e.g., /path/to/image.img):\n";
             std::string imagePath;
@@ -1481,7 +1668,8 @@ private:
 
     //·−−− recovery side functions
     static void filerecovery() {
-        std::string device = getAndValidateDriveName("Enter the NAME of a drive or image to scan for recoverable files (e.g., /dev/sda:");
+        //std::string device = getAndValidateDriveName("Enter the NAME of a drive or image to scan for recoverable files (e.g., /dev/sda:");
+        std::string device = listDrives(true);
 
         static const std::vector<std::string> signature_names = {"all","png","jpg","elf","zip","pdf","mp3","mp4","wav","avi","tar.gz","conf","txt","sh","xml","html","csv"};
         std::cout << "Type signature to search (e.g. png) or 'all':\n";
@@ -1665,7 +1853,8 @@ private:
         // std::string device;
         // std::cin >> device;
         // checkDriveName(device);
-        std::string device = getAndValidateDriveName("Enter the name of the drive to analyse for partition recovery (e.g. /dev/sdb):");
+        //std::string device = getAndValidateDriveName("Enter the name of the drive to analyse for partition recovery (e.g. /dev/sdb):");
+        std::string device = listDrives(true);
 
         std::cout << "\n--- Partition table (parted) ---\n";
         std::string parted_out = Terminalexec::execTerminalv2(("sudo parted -s " + device + " print").c_str());
@@ -1718,7 +1907,8 @@ private:
     }
     
     static void systemrecovery() {
-        std::string device = getAndValidateDriveName("Enter the name of the drive containing the system to inspect (e.g. /dev/sda):");
+        //std::string device = getAndValidateDriveName("Enter the name of the drive containing the system to inspect (e.g. /dev/sda):");
+        std::string device = listDrives(true);
 
         std::cout << "\nListing partitions and filesystems for " << device << "\n";
         std::string lsblk_cmd = "lsblk -o NAME,FSTYPE,SIZE,MOUNTPOINT,LABEL -p -n " + device;
@@ -1873,7 +2063,8 @@ private:
 
 public:
     static void DSVmain() {
-        std::string driveName = getAndValidateDriveName("Enter the name of a drive to visualize its contents");
+        //std::string driveName = getAndValidateDriveName("Enter the name of a drive to visualize its contents");
+        std::string driveName = listDrives(true);
 
         std::string currentPath = "/"; 
         listFirstLayerFolders(currentPath);
@@ -1939,7 +2130,8 @@ class Clone {
     public:
         static void mainClone() {
             try {
-                std::string sourceDrive = getAndValidateDriveName("Enter the source drive name to clone");
+                //std::string sourceDrive = getAndValidateDriveName("Enter the source drive name to clone");
+                std::string sourceDrive = listDrives(true);
 
                 std::cout << "\nEnter the target drive name to clone the data on to:\n";
                 std::string targetDrive;
@@ -2267,9 +2459,12 @@ void printBenchmarkSpeeds(double wirte_speed_seq, double read_speed_seq, double 
 }
 
 void Benchmark_main() {
-    std::string benchmark_drive_name = getAndValidateDriveName("Enter the Drive name of the Drive you want to Benchmark\n");
+    std::cout << BOLD << "\n[Drive Benchmark Tool]\n" << RESET;
+    std::cout << "Enter a path like '/home', '/mnt/drive' or 'media/[user]/usb_device' to benchmark\n";
+    std::string benchmark_drive_name;
     std::cout << "Make sure you have around 1 GB free space on the Drive\n";
     std::cout << "And dont kill the program during the Benchmark, this can cause the temp benchmark file to be not deleted!";
+    std::cin >> benchmark_drive_name;
 
     double write_speed_seq = benchmarkSequentialWrite(benchmark_drive_name);
     double read_speed_seq = benchmarkSequentialRead(benchmark_drive_name);
@@ -2326,15 +2521,22 @@ private:
             snprintf(hex, sizeof(hex), "%02x", hash[i]);
             fingerprint += hex;
         }
+        
+        if (fingerprint.empty()) {
+            Logger::log("[ERROR] Failed to generate fingerprint -> DriveFingerprinting::fingerprinting()");
+            std::cerr << RED << "[ERROR] Failed to generate fingerprint\n" << RESET << "\n";
+            return "";
+        }
         return fingerprint;
     }
 
 
 public:
     static void fingerprinting_main() {
-        std::string drive_name_fingerprinting = getAndValidateDriveName("Enter the Name of the drive you want to fingerprint");
-
+        //std::string drive_name_fingerprinting = getAndValidateDriveName("Enter the Name of the drive you want to fingerprint");
+        std::string drive_name_fingerprinting = listDrives(true);
         DriveMetadata metadata = getMetadata(drive_name_fingerprinting);
+        Logger::log("[INFO] Retrieved metadata for drive: " + drive_name_fingerprinting + " -> DriveFingerprinting::fingerprinting_main()");
         std::string combined_metadatat =
             metadata.name + "|" +
             metadata.size + "|" +
@@ -2342,22 +2544,24 @@ public:
             metadata.serial + "|" +
             metadata.uuid;
         std::string fingerprint = fingerprinting(combined_metadatat);
+        Logger::log("[INFO] Generated fingerprint for drive: " + drive_name_fingerprinting + " -> DriveFingerprinting::fingerprinting_main()");
 
-        std::cout << "A custom fingerprint was made for your drive:\n";
+        std::cout << "A custom fingerprint was made for your drive\n";
+        std::cout << BOLD << "Fingerprint:\n" << RESET;
+        std::cout << "\r\033[K\n";
         std::cout << fingerprint << "\n";
     }
-
 };
 
 
 // main and Info
 void Info() {
-    std::cout << "\n┌────────── Info ──────────\n";
+    std::cout << "\n┌──────────" << BOLD << " Info " << RESET << "──────────\n";
     std::cout << "│ Welcome to Drive Manager — a program for Linux to view and operate your storage devices.\n"; 
     std::cout << "│ Warning! You should know the basics about drives so you don't lose any data.\n";
     std::cout << "│ If you find problems or have ideas, visit the GitHub page and open an issue.\n";
     std::cout << "│ Other info:\n";
-    std::cout << "│ Version: 0.9.05-77-experimental\n";
+    std::cout << "│ Version: " << VERSION << "\n";
     std::cout << "│ Github: https://github.com/Dogwalker-kryt/Drive-Manager-for-Linux\n";
     std::cout << "│ Author: Dogwalker-kryt\n";
     std::cout << "└───────────────────────────\n";
@@ -2365,7 +2569,7 @@ void Info() {
 
 static void printUsage(const char* progname) {
     std::cout << "Usage: " << progname << " [options]\n";
-    std::cout << "Options:\n";
+    std::cout << BOLD << "Options:\n" << RESET;
     std::cout << "  --version, -v     Print program version and exit\n";
     std::cout << "  --help, -h        Show this help and exit\n";
     std::cout << "  -n, --dry-run     Do not perform destructive operations\n";
@@ -2374,7 +2578,7 @@ static void printUsage(const char* progname) {
 }
 
 void MenuQues(bool& running) {   
-    std::cout << "\nPress '1' for returning to the main menu, '2' to exit\n";
+    std::cout << BOLD <<"\nPress '1' for returning to the main menu, '2' to exit:\n" << RESET;
     int menuques;
     std::cin >> menuques;
     if (menuques == 1) {
@@ -2415,8 +2619,7 @@ enum MenuOptionsMain {
 class QuickAccess {
 public:
     static void list_drives() {
-        std::vector<std::string> drives;
-        listDrives(drives);
+        listDrives(false);
     }
 
     static void foramt_drive() {
@@ -2495,7 +2698,7 @@ int main(int argc, char* argv[]) {
         }
 
         if (a == "--version" || a == "-v") {
-            std::cout << "DriveMgr CLI version: 0.9.05-77-experimental\n";
+            std::cout << "DriveMgr CLI version: " << VERSION << "\n";
             return 0;
         }
 
@@ -2622,17 +2825,21 @@ int main(int argc, char* argv[]) {
             std::string clear = runTerminal("clear");
             std::cout << clear;
             std::cout << "Use Up/Down arrows and Enter to select an option.\n\n";
-            std::cout << "┌─────────────────────────────────────────────────┐\n";
-            std::cout << "│              DRIVE MANAGEMENT UTILITY           │\n";
-            std::cout << "├─────────────────────────────────────────────────┤\n";
+            std::cout << CYAN << "┌─────────────────────────────────────────────────┐\n" << RESET;
+            std::cout << CYAN << "│" << RESET << BOLD << "              DRIVE MANAGEMENT UTILITY           " << RESET << CYAN << "│\n" << RESET;
+            std::cout << CYAN << "├─────────────────────────────────────────────────┤\n" << RESET;
             for (size_t i = 0; i < menuItems.size(); ++i) {
                 // Print left border
-                std::cout << "│ ";
+                std::cout << CYAN << "│ " << RESET;
 
                 // Build inner content with fixed width
                 std::ostringstream inner;
                 inner << std::setw(2) << menuItems[i].first << ". " << std::left << std::setw(43) << menuItems[i].second;
                 std::string innerStr = inner.str();
+
+                if (menuItems[i].first == 0) {
+                    innerStr = CYAN + innerStr + RESET;
+                }
 
                 // Apply inverse only to inner content
                 if ((int)i == selected) std::cout << INVERSE;
@@ -2640,9 +2847,13 @@ int main(int argc, char* argv[]) {
                 if ((int)i == selected) std::cout << RESET;
 
                 // Print right border and newline
-                std::cout << " │\n";
+                std::cout << CYAN << " │\n" << RESET;
+
+
+
+
             }
-            std::cout << "└─────────────────────────────────────────────────┘\n";
+            std::cout  << CYAN << "└─────────────────────────────────────────────────┘\n" << RESET;
 
             char c = 0;
             if (read(STDIN_FILENO, &c, 1) <= 0) continue;
@@ -2670,13 +2881,12 @@ int main(int argc, char* argv[]) {
         int menuinput = menuItems[selected].first;
         switch (static_cast<MenuOptionsMain>(menuinput)) {
             case LISTDRIVES: {
-                std::vector<std::string> drives;
-                listDrives(drives);
-                std::cout << "\nPress '1' to return, '2' for advanced listing, or '3' to exit\n";
+                listDrives(false);
+                std::cout << "\nPress '1' to return, '2' for advanced listing, or '3' to exit:\n";
                 int menuques2;
                 std::cin >> menuques2;
                 if (menuques2 == 1) continue;
-                else if (menuques2 == 2) listpartisions(drives);
+                else if (menuques2 == 2) listpartisions();
                 else if (menuques2 == 3) running = false;
                 break;
             }
@@ -2687,7 +2897,6 @@ int main(int argc, char* argv[]) {
                 break;
             }
             case ENCRYPTDECRYPTDRIVE: {
-                //EnDecryptDrive();
                 checkRoot();
                 DeEncrypting::main();
                 MenuQues(running);
@@ -2765,7 +2974,7 @@ int main(int argc, char* argv[]) {
             }
             case CONFIG: {
                 config_editor();
-                //MenuQues(running);
+                MenuQues(running);
                 break;
             }
             case BENCHMAKR: {

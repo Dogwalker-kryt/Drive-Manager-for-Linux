@@ -22,22 +22,33 @@ A terminal-based drive management tool for Linux (Debian-based), written primari
 - Stable: `v0.8.88-08`  
   _(Stable version is functional but serves mostly as a safe baseline — the experimental version is recommended for more features)_
   
-- Experimental: `v0.9.05-77`  
+- Experimental: `v0.9.07-79`  
   _(New Fingerprinting and benchmakring functions. fingerprinting is working, while benchmakring is in development)_
 
-**GUI (Not Regularly Updated):**
+**GUI (Not getting Updated anymore):**
 
 - Rust GUI: `v0.1.5-alpha` (Lists drives; not feature complete)
 - C++ GUI: `v0.1.1-alpha`  
-  _(GUI versions may lag behind CLI/TUI)_
+  _(GUI versions lag behind CLI/TUI)_
 
 **TUI (Experimental/In Progress):**
 
 - The TUI may be unstable depending on system and configuration.
+- TUI elements will be implmented in CLI version
 
 **General Notes:**
 - Check for new releases regularly.
-- Help with GUI development is welcome.
+- **GUI** -> discontiued
+
+	-> _(not recommended to use!)_
+  
+- **TUI** -> mixed with CLI
+
+	-> _(not recommended to use!)_
+  
+- **CLI** -> Main programm and getting TUI 	`use this`
+
+	-> _(use this)_
 
 ---
 

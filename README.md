@@ -206,11 +206,9 @@ For dangerous actions, an extra key (e.g., generated security key) is required a
    sudo ./DriveMgr_experi
    ```
 2. **Select an operation:**
-   - E.g., View drive metadata: select `8`
-3. **Choose a drive by its Name**
+   - E.g., View drive metadata: select with arrow and enter keys
+3. **Choose a drive with arrow and enter keys**
 4. **Follow prompts to complete your selected operation**
-
-Menu numbers and feature sets may vary between releases.
 
 ---
 

@@ -19,7 +19,7 @@
 // ! Warning this version is the experimental version of the program,
 // This version has the latest and newest functions, but may contain bugs and errors
 // Current version of this code is in the Info() function below
-// v0.9.07-79_experimental
+// v0.9.08-86_experimental
 
 // standard C++ libraries, I think
 #include <iostream>
@@ -57,15 +57,21 @@
 // custom .h
 #include "../include/drivefunctions.h"
 
-// global variables and definitions
-static const std::string VERSION = "v0.9.07-79_experimental";
 
+// ==================== global variables and definitions ====================
+
+// Version
+#define VERSION std::string("v0.9.08-86_experimental")
+
+// TUI
 struct termios oldt; 
 struct termios newt;
 
+// flags
 static bool g_dry_run = false;
 static bool g_no_color = false;
 
+// Color
 namespace Color {
     inline std::string reset()   { return g_no_color ? std::string() : "\033[0m"; }
     inline std::string red()     { return g_no_color ? std::string() : "\033[31m"; }
@@ -88,8 +94,12 @@ namespace Color {
 #define BOLD    Color::bold()
 #define INVERSE Color::inverse()
 
+static std::string THEME_COLOR = RESET;
+static std::string SELECTION_COLOR = RESET;
 
+// ==================== Command Wrapper ====================
 // Wrapper helpers so the program can be run in a non-destructive "dry-run" mode
+
 static std::string runTerminal(const std::string &cmd) {
     if (g_dry_run) {
         std::cout << YELLOW << "[DRY-RUN] Would run: " << cmd << RESET << "\n";
@@ -117,10 +127,10 @@ static std::string runTerminalV3(const std::string &cmd) {
     return Terminalexec::execTerminalv3(cmd);
 }
 
-// side/helper functions
+// ==================== Side/Helper Functions ====================
+
 static std::vector<std::string> g_last_drives;
 
-//void ListDrives();
 std::string listDrives(bool input_mode);
 
 void checkDriveName(const std::string &driveName) {
@@ -216,14 +226,12 @@ bool askForConfirmation(const std::string &prompt) {
 //     return driveName;
 // }
 
-
 void file_recovery_quick(const std::string& drive, const std::string& signature_key);
 void file_recovery_full(const std::string& drive, const std::string& signature_key);
 
 
-//main functions
+// ==================== Main Logic Function and Classes ====================
 
-// checkfilesystem
 std::string checkFilesystem(const std::string& device, const std::string& fstype) {
     if (fstype.empty()) return "Unknown filesystem";
     std::string result;
@@ -389,8 +397,6 @@ std::string listDrives(bool input_mode) {
         tcsetattr(STDIN_FILENO, TCSANOW, &newt);
 
 
-
-
         // --- INLINE TUI SELECTION ---
         int selected = 0;
         int total = drives.size();
@@ -404,12 +410,12 @@ std::string listDrives(bool input_mode) {
 
                 // Arrow indicator
                 if (i == selected)
-                    std::cout << MAGENTA << "> " << RESET;
+                    std::cout << SELECTION_COLOR << "> " << RESET;
                 else
                     std::cout << "  ";
 
                 // Highlight row
-                if (i == selected) std::cout << MAGENTA;
+                if (i == selected) std::cout << SELECTION_COLOR;
 
                 std::cout << std::left
                         << std::setw(3)  << i
@@ -476,7 +482,8 @@ std::string listDrives(bool input_mode) {
 
 
 
-// Partitions
+// ==================== Partition Management ==================== 
+
 class PartitionsUtils {
     public:
         // 1
@@ -668,7 +675,7 @@ void listpartisions() { //std::vector<std::string>& drive
     }
 }
 
-// analyzeDriskapce··−· 
+// ==================== Disk Space Analysis ====================··−· 
 void analyDiskSpace() {
     //std::string drive_name = getAndValidateDriveName("Enter the Name of the Drive you want to analyze");
     std::string drive_name = listDrives(true); 
@@ -737,7 +744,8 @@ bool resizeDrive(const std::string&, int) { return false; }
 bool checkDriveHealth(const std::string&) { return false; }
 
 
-//Format
+// ==================== Drive Formatting ====================
+
 void formatDrive() {
     std::cout << "\nChoose an option for how to format:\n";
     std::cout << "------------------\n";
@@ -849,7 +857,9 @@ void formatDrive() {
     }
 }
 
-// checkDriveHealth
+
+// ==================== Drive Health Check ====================
+
 int checkDriveHealth() {
     //std::string driveHealth_name = getAndValidateDriveName("Enter the name of the drive to check health");
     std::string driveHealth_name = listDrives(true);
@@ -867,7 +877,9 @@ int checkDriveHealth() {
    return 0;
 }
 
-// resizeDrive
+
+// ==================== Drive Resizing ====================
+
 void resizeDrive() {
     //std::string driveName = getAndValidateDriveName("Enter the name of the drive to resize");
     std::string driveName = listDrives(true);
@@ -899,7 +911,9 @@ void resizeDrive() {
     }
 }
 
-// encryption
+
+// ==================== Drive Encryption Utilities ==================== 
+
 class EnDecryptionUtils {
     public:
         static void saveEncryptionInfo(const EncryptionInfo& info) {
@@ -1079,6 +1093,8 @@ class EnDecryptionUtils {
         
 };
 
+// ==================== Drive Encryption/Decryption main ====================
+
 class DeEncrypting {
 private:
     static void encrypting() {
@@ -1212,7 +1228,8 @@ public:
 };
 
 
-// Overwrite drive data
+// ==================== Drive Data Overwriting ====================
+
 void OverwriteDriveData() {
     try {
         //std::string driveName = getAndValidateDriveName("Enter the NAME of a drive to overwrite all data (this will erase everything):\n");
@@ -1281,7 +1298,8 @@ void OverwriteDriveData() {
 }
 
 
-// medatareader
+// ==================== Drive Metadata Reader ====================
+
 class MetadataReader {
 private:
     struct DriveMetadata {
@@ -1382,6 +1400,8 @@ public:
     }
 };
 
+
+// ==================== Mounting and Burning Utilities ====================
 
 class MountUtility {
 private:
@@ -1595,6 +1615,8 @@ public:
     }
 };
 
+
+// ==================== Forensic Analysis Utilities ====================
 
 class ForensicAnalysis {
 private:
@@ -1972,7 +1994,6 @@ private:
         }
     }
     //−·−
-    // end of recovery
 public:
     static void mainForensic(bool& running) {
         enum ForensicMenuOptions {
@@ -2023,6 +2044,8 @@ public:
     }
 };
 
+
+// ==================== Drive Structure Visualization (DSV) ====================
 
 class DSV {
 private:
@@ -2095,6 +2118,8 @@ public:
 };
 
 
+// ==================== Clone Drive Utility ====================
+
 class Clone {
     private:
         static void CloneDrive(const std::string &source, const std::string &target) {
@@ -2155,6 +2180,8 @@ class Clone {
 };
 
 
+// ==================== Log Viewer Utility ====================
+
 void log_viewer() {
     const char* sudo_user = getenv("SUDO_USER");
     const char* user_env = getenv("USER");
@@ -2189,57 +2216,95 @@ void log_viewer() {
 }
 
 
+// ==================== Configuration Editor Utility ====================
+
+std::string config_path() {
+    const char* sudo_user = std::getenv("SUDO_USER");
+    const char* user_env = std::getenv("USER");
+    const char* username = sudo_user ? sudo_user : user_env;
+
+    if (!username) {
+        std::cerr << RED << "[Config Error] Could not determine username.\n" << RESET;
+        return ""; // return empty string on error
+    }
+
+    struct passwd* pw = getpwnam(username);
+    if (!pw) {
+        std::cerr << RED << "[Config Error] Failed to get home directory for user: " << username << "\n" << RESET;
+        return "";
+    }
+
+    std::string homeDir = pw->pw_dir;
+    return homeDir + "/.local/share/DriveMgr/data/config.conf";
+}
+
+
+struct CONFIG_VALUES {
+    std::string UI_MODE;
+    std::string COMPILE_MODE;
+    std::string ROOT_MODE;
+    std::string THEME_COLOR_MODE;
+    std::string SELECTION_COLOR_MODE;
+};
+
+CONFIG_VALUES config_handler() {
+    CONFIG_VALUES cfg{}; 
+
+    std::string conf_file = config_path();
+    if (conf_file.empty()) {
+        return cfg;
+    }
+
+    std::ifstream config_file(conf_file);
+    if (!config_file.is_open()) {
+        Logger::log("[Config_handler ERROR] Cannot open config file");
+        std::cerr << RED << "[Config_handler ERROR] Cannot open config file\n" << RESET;
+        return cfg;
+    }
+
+    std::string line;
+    while (std::getline(config_file, line)) {
+
+        if (line.empty() || line[0] == '#')
+            continue;
+
+        size_t pos = line.find('=');
+        if (pos == std::string::npos)
+            continue;
+
+        std::string key = line.substr(0, pos);
+        std::string value = line.substr(pos + 1);
+
+        // trim whitespace
+        key.erase(0, key.find_first_not_of(" \t"));
+        key.erase(key.find_last_not_of(" \t") + 1);
+
+        value.erase(0, value.find_first_not_of(" \t"));
+        value.erase(value.find_last_not_of(" \t") + 1);
+
+        if (key == "UI_MODE") cfg.UI_MODE = value;
+        else if (key == "COMPILE_MODE") cfg.COMPILE_MODE = value;
+        else if (key == "ROOT_MODE") cfg.ROOT_MODE = value;
+        else if (key == "COLOR_THEME") cfg.THEME_COLOR_MODE = value;
+        else if (key == "SELECTION_COLOR") cfg.SELECTION_COLOR_MODE = value;
+    }
+    return cfg;
+}
+
 bool fileExists(const std::string& path) { struct stat buffer; return (stat(path.c_str(), &buffer) == 0); }
 
 void config_editor() {
     extern struct termios oldt, newt;
-    const char* sudo_user = std::getenv("SUDO_USER");
-    const char* user_env = std::getenv("USER");
-    const char* username = sudo_user ? sudo_user : user_env;
-     if (!username) {
-        std::cerr << RED << "[Config Error] Could not determine username.\n" << RESET;
-        return;
-    }
-    struct passwd* pw = getpwnam(username);
-    if (!pw) {
-        std::cerr << RED << "[Config Error] Failed to get home directory for user: " << username << "\n" << RESET;
-        return;
-    }
-    std::string homeDir = pw->pw_dir;
-    std::string confDir = homeDir + "/.local/share/DriveMgr/data/config.conf";
-
-    std::ifstream config_file(confDir);
-    if (!config_file.is_open()) {
-        Logger::log("[Config ERROR] Cannot open config file");
-        std::cerr << RED << "[Config ERROR] Cannot open config file\n" << RESET;
-        return;
-    }
-
-    std::string line;
-    std::cout << "Reading config file...\n";
-    while (std::getline(config_file, line)) {
-        if (line.empty() || line == "#") {
-            continue;
-        }
-
-        size_t pos = line.find("=");
-        if (pos == std::string::npos) {
-            continue;
-        }
-
-        std::string UI_mode = line.substr(0, pos);
-        std::string compile_mode = line.substr(pos +1);
-        std::string root_mode = line.substr(pos + 1); 
-        std::cout << "config values:\n";
-        std::cout << "UI mode: " << UI_mode << "\n";
-        std::cout << "Compile mode: " << compile_mode << "\n";
-        std::cout << "Root mode: " << root_mode << "\n";   
-        int b = 1;
-        if (b=1) {
-            break;
-        }       
-    }
-
+    CONFIG_VALUES cfg = config_handler();
+    
+    std::cout<< "┌─────" << BOLD << " config values " << RESET << "─────┐\n";
+    std::cout << "│ UI mode: " << cfg.UI_MODE << "\n";
+    std::cout << "│ Compile mode: " << cfg.COMPILE_MODE << "\n";
+    std::cout << "│ Root mode: " << cfg.ROOT_MODE << "\n";
+    std::cout << "│ Theme Color: " << cfg.THEME_COLOR_MODE << "\n";
+    std::cout << "│ Selection Color: " << cfg.SELECTION_COLOR_MODE << "\n";
+    std::cout << "└─────────────────────────┘\n";   
+   
     std::cout << "\n";
     std::cout << "Do you want to edit the config file? (y/n)\n";
     std::string config_edit;
@@ -2263,10 +2328,7 @@ void config_editor() {
         }
 
         std::string homeDir = pw->pw_dir;
-        // std::string lumeDir = homeDir + "/.local/share/DriveMgr/bin/Lume/Lume";
-        // //system(" ~/.local/share/DriveMgr/data/config.conf");
-        // std::string config_editor_command = " ~/.local/share/DriveMgr/data/config.conf";
-        // system(config_editor_command);
+
         std::string lumePath = homeDir + "/.local/share/DriveMgr/bin/Lume/Lume";
 
         if (!fileExists(lumePath)) {
@@ -2291,6 +2353,41 @@ void config_editor() {
     }        
 }
 
+// if you add any colors then you must add them here!!! very important
+std::string avilable_colores[6] = { "RED", "GREEN", "YELLOW", "BLUE", "MAGENTA", "CYAN"};
+std::string color_codes[6] = {RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN};
+
+void Color_theme_handler() {
+    CONFIG_VALUES cfg = config_handler();
+    std::string color_theme_name = cfg.THEME_COLOR_MODE;
+    std::string selection_theme_name = cfg.SELECTION_COLOR_MODE;
+
+    size_t count = sizeof(avilable_colores) / sizeof(avilable_colores[0]);
+
+    // color Theme handler
+    //THEME_COLOR = RESET;
+
+    for (size_t i = 0; i < count; i++) {
+        if (avilable_colores[i] == color_theme_name) {
+            THEME_COLOR = color_codes[i];
+            break;
+        }
+    }
+
+
+    // Selection color handler
+    //SELECTION_COLOR = RESET;
+
+    for (size_t i = 0; i < count; i++) {
+        if (avilable_colores[i] == selection_theme_name) {
+            SELECTION_COLOR = color_codes[i];
+            break;
+        }
+    }
+}
+
+
+// ==================== Drive Benchmark Utility ====================
 
 double benchmarkSequentialWrite(const std::string& path, size_t totalMB = 512) {
     const size_t blockSize = 4 * 1024 * 1024; // 4MB blocks
@@ -2441,18 +2538,22 @@ void printBenchmarkSpeeds(double wirte_speed_seq, double read_speed_seq, double 
 
 
 
-    std::cout << "┌────────────────────────────────┐\n";
-    std::cout << "│       Benchmark results        │\n";
-    std::cout << "├────────────────────────────────┤\n";
-    std::cout << "│                                │\n";
-    std::cout << "├──   Seqential Write speed    ──┤\n";
-    std::cout << "│: " << w_str << std::setw(pad_w) <<"│\n";
-    std::cout << "│                                │\n";
-    std::cout << "├──   Sequential Read speed    ──┤\n";
-    std::cout << "│: " << r_str << std::setw(pad_r) << "│\n";
-    std::cout << "├──         IOPS speed         ──┤\n";
-    std::cout << "│: " << i_str << std::setw(pad_i) << "│\n";
-    std::cout << "└──────────────────────────── \n";
+    // std::cout << "┌────────────────────────────────┐\n";
+    // std::cout << "│       Benchmark results        │\n";
+    // std::cout << "├────────────────────────────────┤\n";
+    // std::cout << "│                                │\n";
+    // std::cout << "├──   Seqential Write speed    ──┤\n";
+    // std::cout << "│: " << w_str << std::setw(pad_w) <<"│\n";
+    // std::cout << "│                                │\n";
+    // std::cout << "├──   Sequential Read speed    ──┤\n";
+    // std::cout << "│: " << r_str << std::setw(pad_r) << "│\n";
+    // std::cout << "├──         IOPS speed         ──┤\n";
+    // std::cout << "│: " << i_str << std::setw(pad_i) << "│\n";
+    // std::cout << "└──────────────────────────── \n";
+    std::cout << BOLD << "\n[Benchmark results]\n" << RESET;
+    std::cout << " Sequential Write speed : " << w_str2 << " MB/s\n";
+    std::cout << " Sequential Read speed  : " << r_str2 << " MB/s\n";
+    std::cout << " IOPS speed             : " << i_str2 << " IOPS\n";
 
     std::string aprox_drive_type = classifyDrive(wirte_speed_seq, read_speed_seq, iops_speed);
     std::cout << aprox_drive_type;
@@ -2473,6 +2574,8 @@ void Benchmark_main() {
     printBenchmarkSpeeds(write_speed_seq, read_speed_seq, iops_speed);
 }
 
+
+// ==================== Drive Fingerprinting Utility ====================
 
 class DriveFingerprinting {
 private:
@@ -2554,7 +2657,8 @@ public:
 };
 
 
-// main and Info
+// ==================== Main Menu and Utilities ====================
+
 void Info() {
     std::cout << "\n┌──────────" << BOLD << " Info " << RESET << "──────────\n";
     std::cout << "│ Welcome to Drive Manager — a program for Linux to view and operate your storage devices.\n"; 
@@ -2678,8 +2782,13 @@ public:
 };
 
 
+// ==================== Main Function ====================
+
 int main(int argc, char* argv[]) {
     std::cout << "\033[?1049h";
+
+    Color_theme_handler();
+
     for (int i = 1; i < argc; ++i) {
         std::string a(argv[i]);
         if (a == "--dry-run" || a == "-n") {
@@ -2809,7 +2918,7 @@ int main(int argc, char* argv[]) {
             {1, "List Drives"}, {2, "Format Drive"}, {3, "Encrypt/Decrypt Drive (AES-256)"},
             {4, "Resize Drive"}, {5, "Check Drive Health"}, {6, "Analyze Disk Space"},
             {7, "Overwrite Drive Data"}, {8, "View Drive Metadata"}, {9, "View Info/help"},
-            {10, "Mount/Unmount/restore (ISO/Drives/USB)"}, {11, "Forensic Analysis/Disk Image"},
+            {10, "Mount/Unmount/Restore (ISO/Drives/USB)"}, {11, "Forensic Analysis/Disk Image"},
             {12, "Disk Space Visualizer (Beta)"}, {13, "Log viewer"}, {14, "Clone a Drive"}, {15, "Config Editor"}, {16, "Benchmark"}, {17, "Fingerprint Drive"}, {0, "Exit"}
         };
 
@@ -2825,12 +2934,12 @@ int main(int argc, char* argv[]) {
             std::string clear = runTerminal("clear");
             std::cout << clear;
             std::cout << "Use Up/Down arrows and Enter to select an option.\n\n";
-            std::cout << CYAN << "┌─────────────────────────────────────────────────┐\n" << RESET;
-            std::cout << CYAN << "│" << RESET << BOLD << "              DRIVE MANAGEMENT UTILITY           " << RESET << CYAN << "│\n" << RESET;
-            std::cout << CYAN << "├─────────────────────────────────────────────────┤\n" << RESET;
+            std::cout << THEME_COLOR << "┌─────────────────────────────────────────────────┐\n" << RESET;
+            std::cout << THEME_COLOR << "│" << RESET << BOLD << "              DRIVE MANAGEMENT UTILITY           " << RESET << THEME_COLOR << "│\n" << RESET;
+            std::cout << THEME_COLOR << "├─────────────────────────────────────────────────┤\n" << RESET;
             for (size_t i = 0; i < menuItems.size(); ++i) {
                 // Print left border
-                std::cout << CYAN << "│ " << RESET;
+                std::cout << THEME_COLOR << "│ " << RESET;
 
                 // Build inner content with fixed width
                 std::ostringstream inner;
@@ -2847,13 +2956,13 @@ int main(int argc, char* argv[]) {
                 if ((int)i == selected) std::cout << RESET;
 
                 // Print right border and newline
-                std::cout << CYAN << " │\n" << RESET;
+                std::cout << THEME_COLOR << " │\n" << RESET;
 
 
 
 
             }
-            std::cout  << CYAN << "└─────────────────────────────────────────────────┘\n" << RESET;
+            std::cout  << THEME_COLOR << "└─────────────────────────────────────────────────┘\n" << RESET;
 
             char c = 0;
             if (read(STDIN_FILENO, &c, 1) <= 0) continue;

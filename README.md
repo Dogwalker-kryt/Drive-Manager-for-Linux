@@ -64,6 +64,7 @@ A terminal-based drive management tool for Linux (Debian-based), written primari
 ## Currently in Development
 
 - TUI and CLI enhancements
+- Architecture documentaion
 
 See [issues](https://github.com/Dogwalker-kryt/Drive-Manager-for-Linux/issues) and [projects](https://github.com/Dogwalker-kryt/Drive-Manager-for-Linux/projects) for more.
 

@@ -103,6 +103,7 @@ config.conf        - Example config
 - Config file Editor, with my own tiny light weight text editor [Lume](https://github.com/Dogwalker-kryt/Lume)
 - Fingerprinting
 - Benchmarking
+- Color theme choosable
 - More in development or im too lazy to add them here
 
 ---
